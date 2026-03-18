@@ -1,0 +1,9 @@
+{
+  "name": "docs",
+  "version": "1.0.0",
+  "description": "Documentation authoring workflow. Outline, write, review, rewrite, audit, and compound documentation following a style guide.",
+  "author": {
+    "name": "Cyril Ghali"
+  },
+  "license": "MIT"
+}
