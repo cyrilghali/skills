@@ -6,11 +6,21 @@ Claude Code skills, hooks, and statusline. Drop into `~/.claude/` and go.
 
 ### Skills
 
-**[lint](skills/lint/)** — Lint agents and skills against official best practices. Auto-detects type, runs criteria checks, grades A-F, suggests fixes.
+| Skill | What it does |
+|-------|-------------|
+| **[lint](skills/lint/)** | Lint agents and skills against best practices. Grades A-F, suggests fixes. |
+| **[babysit-pr](skills/babysit-pr/)** | Monitor open PRs, surface blockers, auto-rebase stale branches, fix review comments. |
+| **[handover](skills/handover/)** | Generate a structured handover doc from current git state for the next engineer/session. |
+| **[permissions-audit](skills/permissions-audit/)** | Scan session transcripts for repeated approvals, suggest allowlist rules by risk level. |
+| **[session-analyzer](skills/session-analyzer/)** | Analyze past sessions for skill gaps, repeated failures, workflow friction. |
+| **[pm-review](skills/pm-review/)** | Review Linear issues in batch for completeness, consistency, scope creep. |
+| **[linear-plan-review](skills/linear-plan-review/)** | Transform an implementation plan into a 3-part digest (Product/Tech Specs + DAG). |
+| **[linear-orchestration](skills/linear-orchestration/)** | Convert a plan into Linear tickets with blocking dependencies. |
 
 ```
 /lint my-agent
-/lint ~/.claude/skills/review-pr/SKILL.md
+/babysit-pr quiet
+/permissions-audit scan
 ```
 
 ### Plugins
@@ -48,10 +58,14 @@ Requires a `docs/style-guide.md` in your project. The skills reference it for ru
 
 ### Skills
 
-Copy to `~/.claude/skills/`:
+Copy any skill to `~/.claude/skills/`:
 
 ```sh
-cp -r skills/lint ~/.claude/skills/
+# All skills
+cp -r skills/* ~/.claude/skills/
+
+# Or pick one
+cp -r skills/babysit-pr ~/.claude/skills/
 ```
 
 ### Docs Plugin
