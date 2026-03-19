@@ -8,9 +8,12 @@ Claude Code skills, hooks, and statusline. Drop into `~/.claude/` and go.
 
 **[lint](skills/lint/)** — Lint agents and skills against official best practices. Auto-detects type, runs criteria checks, grades A-F, suggests fixes.
 
+**[pr-comments](skills/pr-comments/)** — Fetch, classify, fact-check, and fix GitHub review comments on your open PRs. Ships with 2 companion agents ([orchestrator](agents/pr-comments.md) + [analyzer](agents/pr-comments-analyzer.md)).
+
 ```
 /lint my-agent
-/lint ~/.claude/skills/review-pr/SKILL.md
+/pr-comments                          # scan current repo
+/pr-comments owner/repo#42            # specific PR
 ```
 
 ### Plugins
@@ -48,10 +51,12 @@ Requires a `docs/style-guide.md` in your project. The skills reference it for ru
 
 ### Skills
 
-Copy to `~/.claude/skills/`:
+Copy skills to `~/.claude/skills/` and agents to `~/.claude/agents/`:
 
 ```sh
 cp -r skills/lint ~/.claude/skills/
+cp -r skills/pr-comments ~/.claude/skills/
+cp agents/pr-comments*.md ~/.claude/agents/
 ```
 
 ### Docs Plugin
