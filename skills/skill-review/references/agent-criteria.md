@@ -2,6 +2,18 @@
 
 Criteria that apply **only to agents** (`.md` files in `.claude/agents/`). Source: code.claude.com/docs/en/sub-agents (March 2026).
 
+## Contents
+
+- [Official Spec Reference](#official-spec-reference) — frontmatter fields, location priority, design principles
+- [Metadata (META)](#metadata-meta) — name validation
+- [Description (DESC)](#description-desc) — existence, length
+- [Tools (TOOLS)](#tools-tools) — tool list validation
+- [Body (ABODY)](#body--agent-specific-abody) — output format, input spec, line count, failure handling
+- [Scope (SCOPE)](#scope-scope) — single responsibility, boundaries
+- [Permission & Safety (PERM)](#permission--safety-perm) — permission mode, maxTurns
+- [Model Selection (MODEL)](#model-selection-model) — model-task match
+- [Anti-Patterns](#agent-anti-patterns) — common mistakes
+
 ---
 
 ## Official Spec Reference
@@ -43,6 +55,48 @@ Criteria that apply **only to agents** (`.md` files in `.claude/agents/`). Sourc
 
 ## Agent-Specific Checklist
 
+### Metadata (META)
+
+**META-01** | `name` field valid | **error**
+- `name` exists in frontmatter
+- Lowercase letters, numbers, hyphens only
+- Max 64 characters
+- Must match the filename (without `.md`). E.g., `name: review-pr` in `review-pr.md`
+- Fail: `name: ReviewPR`, name missing, or name/filename mismatch
+
+**META-02** | `name` not reserved or vague | **warning**
+- Does not start with `anthropic-` or `claude-`
+- Not a generic word: `helper`, `utils`, `tools`, `assistant`, `agent`
+- Pass: `review-correctness`, `deploy-staging`, `fix-flaky-test`
+- Fail: `helper`, `claude-agent`, `tools`
+
+### Description (DESC)
+
+**DESC-01** | `description` exists and valid length | **error**
+- `description` field present in frontmatter
+- Under 1024 characters, not empty
+- Pass: Any non-empty description under 1024 chars
+- Fail: Missing, empty, or over 1024 chars
+
+**DESC-02** | Description says WHAT and WHEN | **error**
+- Contains what it does (capability)
+- Contains when to use it ("Use when...", "Use in...", "Use after...", "Triggers on...")
+- Pass: `"Builds CRUD endpoints. Use for CRUD endpoint tickets."`
+- Fail: `"Builds endpoints"` (no when)
+
+**DESC-03** | Third person voice | **warning**
+- Uses third person ("Reviews...", "Orchestrates...", "Processes...")
+- Imperative "Use when..." is acceptable (directive, not second-person)
+- Not first person ("I review...", "I will...")
+- Pass: `"Reviews PR for logic correctness."`
+- Fail: `"I review PRs for logic correctness."`
+
+**DESC-04** | Not vague | **error**
+- Specific about capabilities — includes concrete actions or outputs
+- Does not use vague phrases: "helps with", "does stuff", "works with", "handles"
+- Pass: `"Extract text and tables from PDF files, fill forms, merge documents."`
+- Fail: `"Helps with documents"`, `"Does stuff with files"`
+
 ### Tools (TOOLS)
 
 **TOOLS-01** | `tools` field present | **error**
@@ -69,6 +123,20 @@ Criteria that apply **only to agents** (`.md` files in `.claude/agents/`). Sourc
 - Fail: Body references `mcp__github-gh__pr_diff` but it's not in `tools`
 
 ### Body — Agent-Specific (ABODY)
+
+**ABODY-00a** | Has clear workflow/instructions | **error**
+- Contains actionable steps, workflow, or procedures
+- Not just a description — tells Claude what to DO
+- Steps are numbered or clearly sequenced
+- Pass: `## WORKFLOW`, numbered steps, clear directives
+- Fail: Only background info with no actionable guidance
+
+**ABODY-00b** | Imperative form, no second person | **warning**
+- Uses imperative/infinitive form: "Extract text", "Run the command", "Validate inputs"
+- Avoids "you should", "you can", "you need", "you will", "you must"
+- Exception: "You are..." in an opening role statement is acceptable
+- Pass: "Extract the data. Validate the schema. Generate the report."
+- Fail: "You should extract the data. You can then validate the schema."
 
 **ABODY-01** | Has structured output format | **error**
 - Defines what the agent returns when done

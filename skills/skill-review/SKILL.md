@@ -1,14 +1,14 @@
 ---
-name: lint
-description: Lints Claude Code agents and skills against official best practices. Auto-detects type from path, runs shared + type-specific criteria, produces pass/warn/fail report with grades and actionable fixes. Triggers on "lint agent", "lint skill", "review this agent", "review this skill", "check my agent", "check my skill", "audit agent", "audit skill", "claude best practices".
+name: skill-review
+description: Lints Claude Code agents and skills against official best practices. Runs type-specific criteria (skill-criteria.md or agent-criteria.md), produces pass/warn/fail report with grades and actionable fixes. Triggers on "lint skill", "lint agent", "review this skill", "review this agent", "check my skill", "audit skill", "claude best practices".
 disable-model-invocation: true
 argument-hint: "<name-or-path>"
 allowed-tools: Read, Glob, Grep
 ---
 
-# Claude Lint
+# Skill Review
 
-Lint Claude Code agents and skills against official best practices (code.claude.com, March 2026).
+Review Claude Code agents and skills against official best practices (code.claude.com).
 
 ## Workflow
 
@@ -18,10 +18,11 @@ Resolve `$ARGUMENTS` into a file path and detect its type.
 
 **If empty:** list all available agents and skills, ask which to lint.
 
-```
-find ./.claude/agents ~/.claude/agents -name "*.md" 2>/dev/null | sort
-find ./.claude/skills ~/.claude/skills -name "SKILL.md" 2>/dev/null | sort
-```
+Use Glob to find them:
+- Agents: `**/.claude/agents/*.md` and `**/.claude/agents/**/*.md`
+- Skills: `**/.claude/skills/*/SKILL.md`
+
+Also check `~/.claude/agents/` and `~/.claude/skills/` for personal ones.
 
 **If path** (starts with `.`, `/`, or `~`):
 1. Resolve to absolute path
@@ -29,7 +30,7 @@ find ./.claude/skills ~/.claude/skills -name "SKILL.md" 2>/dev/null | sort
 3. If it contains `/skills/` or filename is `SKILL.md` → type is **skill**
 4. If ambiguous, check file content for agent frontmatter (`tools:`) vs skill frontmatter (`allowed-tools:`)
 
-**If bare name** (e.g. `review-pr`, `riot-api`):
+**If bare name** (e.g. `review-pr`, `deploy`):
 1. Search agents first:
    - `./.claude/agents/$ARGUMENTS.md`
    - `~/.claude/agents/$ARGUMENTS.md`
@@ -41,7 +42,7 @@ find ./.claude/skills ~/.claude/skills -name "SKILL.md" 2>/dev/null | sort
 3. If found in both, ask which to lint.
 4. If not found, list similar names and ask.
 
-**If qualified name** (e.g. `parrot/riot-api`):
+**If qualified name** (e.g. `backend/deploy`):
 1. Split on `/` → repo + name
 2. Try `{repo}/.claude/skills/{name}/SKILL.md`
 3. Try `{repo}/.claude/agents/{name}.md`
@@ -57,11 +58,10 @@ Record: **resolved path**, **type** (agent or skill), **name**.
 
 ### Step 3: Load Review Criteria
 
-Load all applicable criteria files:
+Load the criteria file:
 
-1. **Always load** [references/shared-criteria.md](references/shared-criteria.md) — META, DESC, BODY, QUAL criteria shared by both types
-2. **If agent:** load [references/agent-criteria.md](references/agent-criteria.md) — TOOLS, ABODY, SCOPE, PERM, MODEL criteria
-3. **If skill:** load [references/skill-criteria.md](references/skill-criteria.md) — SDESC, SBODY, STRUCT, INV, QUAL-03 criteria
+1. **If skill:** load [references/skill-criteria.md](references/skill-criteria.md) — META, DESC, SDESC, SBODY, STRUCT, INV, QUAL criteria
+2. **If agent:** load [references/agent-criteria.md](references/agent-criteria.md) — META, DESC, TOOLS, ABODY, SCOPE, PERM, MODEL criteria
 
 ### Step 4: Evaluate
 
@@ -78,7 +78,10 @@ For each criterion in the loaded rubrics:
 
 **Skill evaluation tips:**
 - SDESC-01: check if description includes natural-language trigger phrases a user would say.
-- SBODY-02: look for "you should", "you can", "you need" — these indicate second person.
+- SBODY-00b: look for "you should", "you can", "you need" — these indicate second person in the body.
+- SBODY-18: if the skill has multiple valid paths (e.g., create vs edit, bug vs feature), check for decision-tree branching.
+- SBODY-19: if the skill produces structured output, check for a template marked as strict or flexible.
+- SBODY-20: measure description length — warn if over ~500 chars.
 - INV-01: look for Bash commands, file writes, git ops, API calls — side effects need `disable-model-invocation: true`.
 - STRUCT-01: verify every `[text](path)` link resolves to an existing file.
 
@@ -86,10 +89,8 @@ For each criterion in the loaded rubrics:
 
 Search for how this agent/skill is used:
 
-1. Grep for the name in skills and agents:
-   ```
-   grep -r "<name>" .claude/skills/ .claude/agents/ --include="*.md"
-   ```
+1. Use Grep to search for the name across skills and agents:
+   - Pattern: `<name>` in `.claude/skills/` and `.claude/agents/` (glob `*.md`)
 2. **If agent:** check if referenced as `subagent_type` in any orchestrator
 3. Note if unused (orphaned) — informational, not a failure
 
@@ -120,6 +121,12 @@ Grade: A (0 errors) / B (0 errors, 1-2 warnings) / C (1 error or 3+ warnings) / 
 
 ### Usage
 - Referenced by: {list of skills/agents, or "none found"}
+```
+
+**Example failure finding:**
+```
+- **DESC-02** Description says WHAT and WHEN: description says "Builds endpoints" but never states when to use it.
+  Fix: Append "Use for CRUD endpoint tickets." to the description.
 ```
 
 **Done when:** Report is printed with grade, all criteria evaluated, and user asked about fixes.
