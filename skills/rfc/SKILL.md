@@ -13,7 +13,7 @@ An RFC is a thinking tool, not an implementation spec. It exists to help a team 
 
 Five principles guide the writing:
 
-**1. Every word earns its place by serving the reader's decision.** Tufte's data-ink ratio applies to prose: if a sentence doesn't help the reader say "yes," "no," or "have you considered X," it's noise. Module names, file paths, and line numbers are the textual equivalent of chartjunk — decorative detail that doesn't help anyone decide anything. Remove them. Describe systems by what they do, not what they're called.
+**1. Every word earns its place by serving the reader's decision.** Tufte's data-ink ratio — the principle that every drop of ink on a graphic should present data — extends naturally to prose: if a sentence doesn't help the reader say "yes," "no," or "have you considered X," it's noise. Module names, file paths, and line numbers are the textual equivalent of chartjunk — decorative detail that doesn't help anyone decide anything. Remove them. Describe systems by what they do, not what they're called.
 
 **2. Write at the floor where the reader lives.** An RFC is read by people making "what should we build" decisions, not "how should we code it" decisions. When you write implementation details — function signatures, module paths, plug orderings — you're on the wrong floor of the abstraction ladder. Stay on the "what" floor: capabilities, behaviors, constraints, trade-offs. The "how" floor is for the implementation PR.
 

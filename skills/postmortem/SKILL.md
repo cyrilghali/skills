@@ -122,9 +122,17 @@ Action items that can't be started tomorrow aren't action items — they're wish
 | **Impact** | Quantify everything possible: duration, number of affected users/workspaces, business function interrupted, SLA breach Y/N. "Some users were affected" is not impact. "Campaign emails were delayed for 847 affected workspaces over a 6-hour window" is impact. |
 | **Timeline** | Chronological, UTC timestamps, factual. Start before the incident — the last known-good state or the relevant preceding change. Include detection, key investigation decisions, remediation steps, and resolution. Do not editorialize. |
 | **Contributing Factors** | This is the heart of the analysis. Not "root cause" — which implies a single, locatable cause (Cook says this is "fundamentally wrong"). Instead: the set of conditions each necessary but only jointly sufficient for the incident to occur. Use the "how" framing: "How did X become possible?" List 3–7 factors. Each should describe a system condition, not a human decision. If a factor is a human decision, ask one level deeper: what system condition made that decision more likely? |
-| **What Worked** | What detection, communication, or mitigation strategies performed well? This is Safety-II thinking in practice: it tells the team what NOT to change and what to reinforce. It also counteracts the implicit framing that everything about the incident was failure. |
+| **What Worked** | What detection, communication, or mitigation strategies performed well? Be specific — "the on-call rotation worked" is thin; "the Datadog alert on error rate fired within 2 minutes of the first failed request, giving the responder a 4-minute head start on diagnosis" is useful. Also ask: "Where did we get lucky?" — things that prevented worse outcomes by chance, not by design. This is Safety-II thinking: understand what creates safety, not just what caused failure. A post-mortem that only analyzes the breakdown misses half the picture. |
 | **Action Items** | Verb-first, specific, assigned, due-dated. Categorize as: **prevent** (eliminate conditions that made this possible), **detect** (improve alerting so you catch it earlier), **mitigate** (reduce impact if it recurs), **repair** (fix the immediate technical issue), **investigate** (understand something you don't yet). Limit to 10; prioritize ruthlessly. Items with no owner are wishes. Items addressed to a person's behavior are blame. |
 | **Unresolved Questions** | Genuine unknowns discovered during analysis. Not placeholders — only include if you actively investigated and couldn't determine the answer. This section builds trust by being honest about the limits of the post-mortem. |
+
+## Sections to ban
+
+Two common post-mortem sections actively produce worse analysis:
+
+**"Root Cause."** Delete it. Use "Contributing Factors." The section name implies a single answer, which contradicts everything Cook, Dekker, and Allspaw established about complex system failure. When the template says "Root Cause," writers produce one cause. When it says "Contributing Factors," they produce three to seven. The section name shapes the investigation.
+
+**"Lessons Learned."** Delete it. This section almost always produces moralizing and counterfactuals ("we learned that we should always check staging before deploying"). Insights belong in Contributing Factors (what we now understand about the system) and Action Items (what we will change). A "Lessons Learned" section is a parking lot for blame that doesn't know it's blame.
 
 ## What to skip
 
