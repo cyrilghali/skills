@@ -1,0 +1,149 @@
+{
+  "skill_name": "rfc",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Write an RFC for adding webhook support to parrot. Workspaces should be able to register URLs and get notified when certain events happen (campaign completed, employee enrolled, breach detected). Think Stripe-style webhooks.",
+      "expected_output": "An RFC saved to parrot/docs/rfc/ that describes the current state, neutrally explains why webhooks are needed, and proposes a readable design.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "describes-current-state",
+          "description": "The RFC has a clear section or paragraph explaining how things work TODAY — what notification mechanisms exist (if any), how customers currently learn about events. Not just 'we don't have webhooks' but a real description of the status quo.",
+          "type": "llm_judge"
+        },
+        {
+          "name": "current-state-drawbacks-brief",
+          "description": "The RFC briefly and factually explains what's insufficient about the current state. No dramatic language, no manufactured urgency — just 'here's what doesn't work and why'. Should be 2-4 sentences, not a rant.",
+          "type": "llm_judge"
+        },
+        {
+          "name": "neutral-tone",
+          "description": "The RFC reads as a neutral analysis, not an advocacy piece. It should NOT use superlatives ('massive improvement', 'critical need'), hype language, value claims ('low-risk and high-value'), or unqualified assertions ('industry standard'). It should present facts and let the reader decide.",
+          "type": "llm_judge"
+        },
+        {
+          "name": "honest-drawbacks-of-proposal",
+          "description": "The Drawbacks section acknowledges real costs of the PROPOSED solution (not just the current state). Complexity, maintenance burden, failure modes, operational overhead. Not perfunctory.",
+          "type": "llm_judge"
+        },
+        {
+          "name": "alternatives-not-strawmen",
+          "description": "The Alternatives Considered section has at least 2 genuine alternatives with honest 'why rejected' reasoning. The rejected options should sound like things a reasonable engineer might actually propose.",
+          "type": "llm_judge"
+        },
+        {
+          "name": "readable-not-code-dump",
+          "description": "The RFC reads like a design conversation between engineers, not a code exploration report. It should NOT list module paths, file locations, or line numbers. Technical references should be minimal — a table name to anchor a schema discussion or an endpoint pattern to show a convention, not an inventory of every module touched. Count the number of backtick-quoted code references (module names, file paths, function signatures) — fewer than 15 in the whole document is a good sign, more than 30 is a red flag.",
+          "type": "llm_judge"
+        },
+        {
+          "name": "includes-diagrams",
+          "description": "Includes at least 1 Mermaid diagram that clarifies a flow better than prose would.",
+          "type": "llm_judge"
+        },
+        {
+          "name": "template-structure",
+          "description": "Follows the RFC template structure from .claude/templates/rfc.md — has Summary, Motivation, Detailed Design, and Rollout Plan sections at minimum.",
+          "type": "script"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Write an RFC for moving the employee import flow from api-v2 to parrot. Currently the CSV upload goes through the NestJS GraphQL API and we need to rebuild it as a v3 REST endpoint.",
+      "expected_output": "An RFC that describes the current import flow at the design level, explains neutrally why migration is needed, and proposes a readable parrot implementation.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "describes-current-state",
+          "description": "The RFC explains how the employee import currently works — the flow, the key steps (encoding, parsing, dedup, writes), what happens to the CSV. Should demonstrate understanding without listing every module and file path.",
+          "type": "llm_judge"
+        },
+        {
+          "name": "current-state-drawbacks-brief",
+          "description": "Explains briefly why the current api-v2 implementation needs to move. Should reference the decommissioning strategy factually, not dramatically. 2-4 sentences.",
+          "type": "llm_judge"
+        },
+        {
+          "name": "neutral-tone",
+          "description": "Doesn't trash api-v2 or NestJS. Doesn't cheerfully oversell the parrot migration. Just states what is, what needs to change, and why. Treats the migration as an engineering task, not a crusade.",
+          "type": "llm_judge"
+        },
+        {
+          "name": "honest-drawbacks-of-proposal",
+          "description": "Acknowledges real costs of the migration — dual maintenance during transition, risk of behavioral differences, testing burden, potential downtime or data issues.",
+          "type": "llm_judge"
+        },
+        {
+          "name": "rollout-addresses-transition",
+          "description": "The rollout plan addresses the transition period — how both systems coexist, how traffic is shifted, what happens if the new implementation has bugs, rollback strategy.",
+          "type": "llm_judge"
+        },
+        {
+          "name": "readable-not-code-dump",
+          "description": "The RFC reads like a design conversation between engineers, not a code exploration report. It should NOT list module paths, file locations, or line numbers. Technical references should be minimal — a table name to anchor a schema discussion or an endpoint pattern to show a convention, not an inventory of every module touched. Count the number of backtick-quoted code references — fewer than 15 in the whole document is a good sign, more than 30 is a red flag.",
+          "type": "llm_judge"
+        },
+        {
+          "name": "includes-diagrams",
+          "description": "Includes at least 1 Mermaid diagram that clarifies a flow better than prose would.",
+          "type": "llm_judge"
+        },
+        {
+          "name": "template-structure",
+          "description": "Follows the RFC template structure with Summary, Motivation, Detailed Design, and Rollout Plan at minimum.",
+          "type": "script"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Write an RFC for rate limiting the v3 API. We're getting hit by some customers doing thousands of requests per minute and it's affecting other tenants.",
+      "expected_output": "An RFC that describes the current rate limiting state at the design level, proposes a design without overselling, and honestly weighs the tradeoffs.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "describes-current-state",
+          "description": "Describes what rate limiting or throttling exists today — the mechanism, the limits, the gaps. Should show understanding without listing every plug and line number.",
+          "type": "llm_judge"
+        },
+        {
+          "name": "current-state-drawbacks-brief",
+          "description": "Briefly and factually explains why the current state is a problem — noisy neighbor effect, no per-tenant fairness. Should not catastrophize or use scare language.",
+          "type": "llm_judge"
+        },
+        {
+          "name": "neutral-tone",
+          "description": "Presents rate limiting as a standard infrastructure concern, not an emergency. Doesn't blame customers for high usage. Doesn't oversell the solution. Factual throughout.",
+          "type": "llm_judge"
+        },
+        {
+          "name": "honest-drawbacks-of-proposal",
+          "description": "Acknowledges real costs: added latency per request, operational complexity, risk of false positives blocking legitimate traffic, customer communication needed.",
+          "type": "llm_judge"
+        },
+        {
+          "name": "alternatives-substantive",
+          "description": "Compares at least 2 real rate limiting strategies (e.g., token bucket vs sliding window, application-level vs reverse proxy, per-tenant vs global) with genuine tradeoffs.",
+          "type": "llm_judge"
+        },
+        {
+          "name": "readable-not-code-dump",
+          "description": "The RFC reads like a design conversation between engineers, not a code exploration report. It should NOT list module paths, file locations, or line numbers. Technical references should be minimal. Count the number of backtick-quoted code references — fewer than 15 is good, more than 30 is a red flag.",
+          "type": "llm_judge"
+        },
+        {
+          "name": "includes-diagrams",
+          "description": "Includes at least 1 Mermaid diagram that clarifies a flow better than prose would.",
+          "type": "llm_judge"
+        },
+        {
+          "name": "template-structure",
+          "description": "Follows the RFC template structure with Summary, Motivation, Detailed Design, and Rollout Plan at minimum.",
+          "type": "script"
+        }
+      ]
+    }
+  ]
+}
