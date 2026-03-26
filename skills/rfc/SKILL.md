@@ -29,7 +29,7 @@ Five principles guide the writing:
 
 Start by understanding what the user wants to propose. They might give you:
 - A feature description or problem statement
-- A Linear ticket (fetch it via MCP if referenced)
+- A ticket from your issue tracker (fetch via MCP if available)
 - A conversation where they've been exploring an idea
 - Just a topic ("RFC for rate limiting")
 
@@ -45,7 +45,7 @@ Use subagents to parallelize research when exploring multiple areas of the codeb
 
 ### 3. Draft the RFC
 
-Use the template in `.claude/templates/rfc.md` as the structure.
+Use the RFC template if one exists in the repo (check `.claude/templates/` or `docs/templates/`). If none exists, use the section structure from the guidance table at the bottom of this skill.
 
 #### Writing at the right level
 
@@ -83,15 +83,15 @@ Someone should be able to read the rollout plan and know where to start. Feature
 - **Author**: Use the user's name (from git config or conversation context)
 - **Status**: Always `Draft` for new RFCs
 - **Date**: Today's date
-- **Ticket**: Link to the Linear ticket if one exists
+- **Ticket**: Link to the relevant issue/ticket if one exists
 
 ### 5. Save the RFC
 
-Save to `docs/rfc/` in the relevant subrepo (e.g., `parrot/docs/rfc/` for a backend RFC). Create the directory if it doesn't exist.
+Save to `docs/rfc/` in the relevant repo. Create the directory if it doesn't exist.
 
 File naming: `YYYY-MM-DD-short-slug.md` (e.g., `2026-03-26-rate-limiting.md`).
 
-If a change spans multiple repos, put the RFC in the repo where the primary work happens and reference the other repos in the Dependencies section.
+If a change spans multiple repos, put the RFC in the repo where the primary work happens and reference the others in the Dependencies section.
 
 ### 6. Present to the user
 
