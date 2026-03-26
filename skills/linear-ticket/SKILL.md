@@ -9,163 +9,204 @@ Write Linear tickets that give an engineer enough context to start — and enoug
 
 ## Philosophy
 
-A ticket is a communication device, not a specification. It exists to transfer understanding from the person who discovered a problem or need to the person who will solve it.
+A ticket is not a specification. It is a placeholder for a conversation that has already happened or still needs to happen. Jeff Patton's observation cuts to the core: "shared documents aren't shared understanding." The document is evidence that understanding *might* exist — the ticket author's job is to make it real enough that the builder can start working without interruption, while leaving their expertise fully engaged.
 
-The central failure modes are not opposites of each other — they're both failures of abstraction:
+This sets up the central tension: too little information and the builder stalls, guesses wrong, or solves the wrong problem. Too much information and the builder becomes a transcriber, not a thinker — their expertise is atrophied, not used.
 
-**Too vague**: "Fix the CSV import bug." The engineer opens the ticket and has to reconstruct the problem from scratch. They don't know when the bug appears, what the user was doing, or what outcome is expected. They'll ask three Slack questions before writing a line of code, and possibly solve the wrong problem.
+### The core problem: dead-level abstracting
 
-**Too prescriptive**: "Add a `charset` column to the `employee_imports` table, set it to `utf8mb4`, and update the ImportParser module to use it." The engineer becomes an executor, not a solver. They can't use their judgment about whether a column is even the right approach, or whether the root cause is elsewhere. Over-prescribed tickets atrophy the engineering instinct that makes your team good.
+S.I. Hayakawa's abstraction ladder explains most bad tickets. Hayakawa described language as existing on rungs: at the bottom, concrete specifics ("Bessie the cow"); at the top, pure abstractions ("wealth"). Most failed communication is *dead-level abstracting* — writing stuck at a single rung without moving up or down.
 
-The right level: **state the problem clearly, describe the expected behavior, and give the implementer room to find the best solution.** Unless the solution is itself the point — when a particular approach was specifically decided and the ticket is tracking that decision — stay on the problem floor.
+Tickets fail in both directions:
 
-Four principles guide this:
+**Dead-level abstracting upward:** "Improve the user experience of imports." No toehold. The builder cannot determine what "improve" means, what behavior to change, or when they're done. It's a goal dressed as a task.
 
-**1. Abstraction laddering.** Hayakawa's ladder of abstraction applies directly: every ticket lives at a rung. Too low ("add column X") bypasses engineering judgment. Too high ("improve reliability") gives no toehold. The right rung is the one where the engineer understands the problem completely and still has to do the thinking about how to solve it. A useful test: could a thoughtful engineer read this and propose two different valid implementations? If yes, the rung is right.
+**Dead-level abstracting downward:** "Add a `charset` column to the `employee_imports` table, set it to `utf8mb4`, and update the `ImportParser` to use it." All rungs removed except implementation coordinates. The builder cannot question whether this is the right diagnosis, whether the real issue is elsewhere, or whether there is a simpler fix.
 
-**2. Separate diagnosis from prescription.** Write the problem statement as if you had no solution in mind. "Three customers this month couldn't import employee files with names containing é, ñ, or similar characters — the import appeared to succeed but no records were created" is a diagnosis. "Fix the encoding handling in the import parser" is a prescription disguised as a diagnosis. The prescription might be wrong. Write the diagnosis; let the engineer prescribe.
+The right rung is where the builder understands the problem completely and still has to do the thinking about how to solve it. A practical test: could two thoughtful engineers read this ticket and propose different valid solutions? If yes, the rung is right. If the solution is implicit in the problem statement, the rung is too low.
 
-**3. As little as possible.** Rams applied to prose: not minimal, but essential. Every sentence earns its place. A reproduction case that can be stated in three steps shouldn't take eight. Context that the engineer already has (because it's in the codebase or obvious from the domain) doesn't need restating. The goal is signal density, not comprehensiveness.
+### Diagnosis, not prescription
 
-**4. Acceptance criteria, not implementation criteria.** The "done" condition should describe observable behavior, not implementation choices. "Imports with UTF-8 characters in name fields complete successfully and create the expected records" is an acceptance criterion. "The ImportParser correctly handles multi-byte characters" is an implementation criterion dressed as acceptance. Write the former; let the engineer satisfy it however they judge best.
+Write the problem statement as if you have no solution in mind. This is harder than it sounds — most tickets are written after a solution has occurred to the author, and the problem statement gets unconsciously shaped around it.
+
+The prescription-as-diagnosis failure looks like: "Fix the encoding handling in the import parser." This embeds a diagnosis (the issue is in the import parser) and a solution direction (encoding handling) in what claims to be a problem statement. If the actual bug is at the HTTP layer — if the file is being mangled on upload before it ever reaches the parser — this ticket sends the builder to the wrong place.
+
+The diagnosis looks like: "Three customers this month couldn't import employee files with names containing é, ñ, or similar characters. The import shows a success message but creates no records." This states the observable gap without hypothesizing its cause. The builder starts with clear symptoms and does the diagnostic work themselves — which is their job.
+
+### Appetite, not estimate
+
+Ryan Singer's distinction is precise: "Estimates start with a design and end with a number. Appetites start with a number and end with a design."
+
+An appetite is a time budget set before the solution is known. It forces the ticket author to decide how much this problem is worth solving — which is a product and business decision, not an engineering decision. Once the appetite is explicit, scope becomes the variable: "given two weeks, what's the most important version of this to build?"
+
+Tickets without appetite force engineers to make an implicit bet: they try to build the complete solution they imagine, with no constraint to force tradeoffs. Either they under-build (no scope guidance) or over-build (gold plating), and either way the result is arbitrary.
+
+### Out-of-scope bounding is a gift
+
+Every ticket should state what it is *not* asking for. This is not a limitation — it is a decision made in advance by someone with more context, preventing the builder from spending time on work that will be thrown away or that has been deliberately deferred.
+
+Singer names these "no-gos." Without them, engineers reasonably infer that related-looking problems are in scope. The CSV import ticket that doesn't say "out of scope: handling non-UTF-8 files" leaves the builder uncertain: should I add charset detection? UTF-16 support? SFTP imports? Each looks adjacent. The no-go removes that uncertainty before the builder wastes time on it.
+
+### Tickets preserve autonomy for cognitive work
+
+Daniel Pink's research on motivation: for cognitive work — design, problem-solving, engineering — intrinsic motivation (autonomy, mastery, purpose) outperforms extrinsic reward. An over-specified ticket attacks all three:
+
+- **Autonomy:** It removes the builder's ability to make implementation decisions.
+- **Mastery:** There is nothing to figure out — the thinking has already been done.
+- **Purpose:** The problem the work serves is buried under implementation steps. The builder loses the thread of why it matters.
+
+An engineer who reads a ticket and feels like they're executing instructions rather than solving a problem will do worse work — not from lack of effort, but from lack of engagement. The ticket format shapes the quality of the thinking that follows.
+
+### Herbert Simon: specify the right things, not everything
+
+Simon's bounded rationality: agents have limited information, limited time, limited cognitive capacity. The ticket author cannot know everything about how the solution will work. Any attempt to fully specify the implementation embeds the author's current ignorance into the requirement.
+
+The question is not "what is the complete specification?" It is "what is the minimum specification that enables good decisions?" For a bug: the observable symptoms, reproduction steps, and expected behavior. For a feature: the user need, acceptance criteria, and appetite. For a refactor: the current friction, the improved state, and why now. Everything else is the engineer's to work out.
 
 ---
 
 ## Ticket Types
 
-Different problems need different structures. The four types below cover most engineering work.
+Different problems need different structures.
 
 ### Bug Report
 
-A bug is a gap between observed behavior and expected behavior. The ticket should make that gap unmistakable.
+A bug is a gap between observed behavior and expected behavior. The ticket should make that gap unmistakable without hypothesizing its cause.
 
 **What to include:**
 - What the user was doing (the trigger, not the cause)
 - What happened (observed behavior — concrete, specific)
 - What should have happened (expected behavior)
-- Reproduction steps, if known
-- Frequency / scope (every time? sometimes? for which customers?)
+- Reproduction steps, if known (numbered, atomic, complete)
+- Frequency and scope (always? sometimes? for which users or conditions?)
 - Customer or business impact
 
 **What to omit:**
-- Hypotheses about root cause (unless you're certain — and even then, put them in a note, not the problem statement)
+- Root cause hypotheses (put them in a note, never in the problem statement — they corrupt the diagnosis)
 - Implementation steps
-- References to specific files, functions, or database tables unless the bug is isolated there
+- File paths, function names, database tables — unless the bug is definitively isolated there
+
+**Title format:** "Employee CSV import silently fails for files with accented characters" — not "Fix the import bug." The title should describe the gap, not the desired action.
 
 **Good example:**
-> **Employee CSV imports silently fail for files with accented characters**
->
-> When a CSV file contains employee names with accented characters (é, ñ, ü, etc.), the import appears to succeed — the UI shows a success message — but no records are created. We've had 3 customer complaints this month. Imports with plain ASCII names work correctly.
+> When a CSV file contains employee names with accented characters (é, ñ, ü, etc.), the import appears to succeed — the UI shows a success message — but no records are created in the system. Three customers have reported this month; imports with plain ASCII names work correctly.
 >
 > Steps to reproduce:
 > 1. Prepare a CSV with at least one name containing an accented character (e.g. "José García")
 > 2. Upload via the employee import flow
 > 3. Observe the success toast
-> 4. Check employee list — no new records appear
+> 4. Check the employee list — no new records appear
 >
 > Expected: records are created for all rows, including those with accented characters.
-> Actual: no records created; no error surfaced to the user.
+> Actual: no records created, no error surfaced.
+>
+> Frequency: reproducible for any file with accented characters. Plain ASCII files succeed.
+> Impact: customers with non-English employee rosters cannot use this feature.
 
 **Bad example:**
-> Fix the ImportParser so it handles UTF-8 characters correctly. The issue is in the charset handling when reading CSV rows.
+> Fix the ImportParser so it handles UTF-8 correctly. The issue is in charset handling when reading CSV rows.
 
-The bad example tells the engineer where to look and what to fix before they've diagnosed anything. If the actual bug is in how the file is read at the HTTP layer, this ticket sends them to the wrong place.
+The bad example embeds a diagnosis (the ImportParser is at fault) and a solution direction (charset handling) in what claims to be a problem statement. If the bug is actually at the upload layer — if the file is being mangled before the parser sees it — this ticket sends the engineer to the wrong place.
 
 ---
 
 ### Feature Request
 
-A feature request describes a capability the system doesn't have, framed around the user need it serves.
+A feature ticket describes a capability the system doesn't have, framed around the user's job to be done. Christensen: "A job is not a task. A job is progress." The user isn't asking for a feature — they're trying to make progress in their work. The ticket should describe the progress, not the feature.
 
 **What to include:**
-- Who needs this and why (the job to be done)
-- What the current experience is (so the engineer understands the gap)
+- Who needs this and why (the job to be done — what progress are they trying to make?)
+- What the current experience is (the gap, stated concretely)
 - What "done" looks like from the user's perspective
-- Acceptance criteria (observable behavior)
-- What's explicitly out of scope (prevents scope creep)
-- Appetite, if it's been decided (a rough time budget: S/M/L, or days)
+- Acceptance criteria (observable behavior — testable, outcome-focused)
+- What's explicitly out of scope
+- Appetite (a time budget: S/M/L, or a number of days)
 
 **What to omit:**
-- Database schema changes
-- API endpoint shapes (unless these are the deliverable — e.g. a contract with a third party)
-- Component names or file paths
+- Database schema
+- API endpoint signatures (unless the API contract is itself the deliverable)
+- Component names, file paths
+- The implementation approach (this is what the appetite + acceptance criteria define the space for)
+
+**Acceptance criteria test:** Each criterion should be verifiable with a yes/no. "The export succeeds" is testable. "The export is performant" is not. "The export succeeds for files up to 50,000 rows within 30 seconds" is testable. Write the former kind.
 
 **Good example:**
-> **Rate limiting headers on v3 API responses**
+> API clients currently have no visibility into rate limit state until they receive a 429. This produces thundering-herd failures: clients retry immediately, compounding the problem, because they have no signal about when the window resets.
 >
-> Currently, clients who are approaching the API rate limit have no way to know until they receive a 429. This leads to thundering herd failures — clients retry immediately and compound the problem, or build their own exponential backoff without knowing when to reset.
+> The job: clients need to pace their requests to avoid hitting the limit, and need to know how long to back off when they do.
 >
-> We need to surface rate limit state in response headers so clients can pace themselves. The standard approach (Retry-After, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset) is documented in IETF draft-ietf-httpapi-ratelimit-headers and used by GitHub, Stripe, and others — clients often expect this shape.
+> The standard for surfacing this (Retry-After, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset) is documented in IETF draft-ietf-httpapi-ratelimit-headers and used by GitHub and Stripe — clients often already implement handling for this shape.
 >
 > Acceptance criteria:
-> - Every API response that goes through the rate limiter includes the headers above, populated with the current state for that client
-> - Clients that respect Retry-After stop retrying until the window resets
-> - Documentation updated (OpenAPI spec)
+> - [ ] Every API response that goes through the rate limiter includes these headers, populated with the current state for that client
+> - [ ] A client that reads Retry-After and waits before retrying does not receive a second 429 in the same window
+> - [ ] The OpenAPI spec documents these headers
 >
-> Out of scope: changing the rate limit thresholds, adding per-endpoint limits, client SDKs.
+> Out of scope: changing rate limit thresholds, adding per-endpoint limits, client SDK changes.
+> Appetite: M (one week).
 
 **Bad example:**
 > Add Retry-After, X-RateLimit-Remaining headers to the v3 API. Update the RateLimiter plug to inject these headers. See the plug pipeline in router.ex.
 
-The bad example skips the "why" entirely and jumps to implementation. An engineer following it would add headers without understanding what clients will do with them — meaning they can't make good decisions about what values to put in them, or whether the headers are sufficient on their own.
+The bad example skips the "why" entirely and jumps to implementation coordinates. An engineer following it would add headers without understanding what clients will do with them — meaning they can't make good decisions about what values to put in them, or whether the headers are sufficient on their own.
 
 ---
 
 ### Tech Debt / Refactor
 
-Tech debt tickets are easy to write poorly: either too abstract ("clean up the import code") or too prescriptive ("extract X into Y module"). The right level describes the friction clearly and the improvement condition.
+Tech debt is invisible by nature. The primary job of a tech debt ticket is making the cost concrete enough to compete for prioritization alongside features.
+
+"Too many responsibilities" is a conclusion, not a description. "We can't write a test for encoding logic without also setting up CSV parsing, validation, and record creation" is a description. Lead with the friction.
 
 **What to include:**
-- What the current state is and why it's causing friction (concrete: builds are slow, tests are hard to write, onboarding engineers are confused)
-- What the improved state looks like (also concrete — not "cleaner" but "a new endpoint can be added without touching the auth logic")
-- Why now (or why this is worth doing at all)
+- Current state and the friction it creates (concrete: this is how long X takes, this is what breaks when you change Y)
+- The improved state (measurable — not "cleaner" but "a new validation rule can be added and tested without reading the whole pipeline")
+- Why now (what is making this worth doing, what is the cost of deferring)
 - Appetite
 
 **What to omit:**
-- The exact refactor strategy (the engineer doing the work should own this)
-- Promises about what will become easier — state the current friction instead
+- The exact refactor strategy (the engineer doing the work should own this — this is the no-gold-plating principle applied to tech debt)
+- Promises about future velocity — state the current friction instead; let the reader draw their own conclusions
 
 **Good example:**
-> **Employee import module is hard to test and growing toward a second responsibility**
+> The employee import module currently handles CSV parsing, validation, encoding normalization, and record creation in a single pass. Adding a test for any one behavior requires wiring up all the others. When the encoding bug from RIO-412 appeared, it took two days to isolate because we couldn't write a test for the encoding path in isolation.
 >
-> The current import module handles CSV parsing, validation, encoding normalization, and record creation in a single pass. Adding a test for any one behavior requires setting up all the others. The recent encoding bug (RIO-412) was hard to isolate because we couldn't write a test for encoding logic in isolation.
+> The improved state: each concern can be tested independently. A new validation rule or a new file format doesn't require reading the full module to understand the impact.
 >
-> The improved state: each of the four concerns can be tested independently. A new validation rule or a new file format doesn't require reading the full module to understand the impact.
+> Why now: we're about to add SFTP imports and a second file format (XLSX). Adding those without this work will compound the problem.
 >
-> Appetite: M (this shouldn't require touching the API layer or changing behavior — just restructuring internals).
+> Appetite: M. This shouldn't touch the API layer or change any external behavior — just restructure internals.
 
 **Bad example:**
 > Refactor the ImportParser module. It has too many responsibilities and should be split up.
-
-"Too many responsibilities" is a conclusion, not a description. The engineer doesn't know what the friction actually feels like, so they can't judge whether their refactor addressed it.
 
 ---
 
 ### Spike / Investigation
 
-A spike is a time-boxed investigation with a specific question to answer, not a task with a deliverable. The output is knowledge, not code.
+A spike is a time-boxed investigation with a specific question to answer. The output is knowledge, not code.
+
+The title of a spike is always a question. "Investigate authentication options" is not a spike title — "Determine whether Auth0 or a home-built OAuth server is viable for our compliance requirements within a 6-week window" is.
 
 **What to include:**
-- The specific question(s) to answer
+- The specific question(s) to answer (not "explore X" — every spike needs a question)
 - Why this uncertainty blocks other work
-- The time box (how long is this worth?)
-- What the output should look like (written summary? prototype? decision?)
+- The time box (explicit, enforced — if the answer arrives early, stop)
+- What the output should look like (written summary? prototype? decision? ADR?)
 
 **What to omit:**
-- Anything that implies you already know the answer
-- Open-ended "explore X" framing — every spike needs a question it's trying to answer
+- Anything that implies the answer is already known
+- Open-ended scope — if there's no question, there's no spike
 
 **Good example:**
-> **Spike: how do third-party HRIS providers (BambooHR, Workday) export employee data, and what encoding/format guarantees do they provide?**
->
-> Before hardening the import pipeline against encoding issues, we need to know what we're hardening against. We don't know if these systems export UTF-8, whether they have documented guarantees, or whether the format varies by customer configuration.
+> Before hardening the import pipeline against encoding issues, we need to know what we're hardening against. We don't know whether HRIS providers like BambooHR and Workday export UTF-8, whether they document encoding guarantees, or whether the format varies by customer configuration.
 >
 > Questions to answer:
-> 1. What formats and encodings do BambooHR and Workday use in their CSV/SFTP exports?
-> 2. Do they document this? Are there edge cases known in the wild?
-> 3. Do any providers export in a format we can't easily normalize?
+> 1. What file formats and encodings do BambooHR and Workday use in their CSV/SFTP exports?
+> 2. Do they document this? Are there known edge cases in the wild?
+> 3. Are there providers that export in a format we can't easily normalize?
 >
-> Output: written summary posted to the ticket, answering the three questions above with enough specificity to inform the encoding work.
+> Output: written summary on this ticket, answering the three questions with enough specificity to inform the encoding work.
 > Time box: 2 hours.
 
 **Bad example:**
@@ -175,13 +216,29 @@ No question, no time box, no output format. This ticket will either run forever 
 
 ---
 
-## What Context to Always Include
+## The Five Failure Modes
 
-Regardless of ticket type, three questions should always be answerable from the ticket:
+These are patterns worth recognizing by name.
+
+**1. Solution masquerading as problem.** The problem description embeds the approach. "Add a `charset` column to the `employee_imports` table" — this is an implementation step dressed as a problem. If you removed the solution, there would be nothing left. The test: can you state what goes wrong for a user, without mentioning code?
+
+**2. Scope creep by omission.** The ticket says what to build but not what not to build. Engineers correctly assume that related-looking problems are in scope unless told otherwise. Without explicit no-gos, scope expands to fill whatever time the engineer has.
+
+**3. Context rot.** The ticket was clear when written — to the person who wrote it, standing in the context of a specific conversation. Two weeks later, the builder starts the work and finds the ticket makes assumptions the reader can't recover. Tickets written for the author's current mental model instead of the builder's future mental state decay quickly.
+
+**4. Gold plating.** Database schema, API signatures, UI layouts, pixel dimensions. The builder's job is reduced to transcription. This embeds the author's current (possibly wrong) understanding as a constraint, prevents the builder from discovering better approaches, and destroys the autonomy that makes cognitive work worth doing.
+
+**5. Memory dump.** Everything the author knows — background history, related tickets, design alternatives considered, edge cases, open questions, file names — without prioritization. Signal lost in noise. The builder cannot tell what is essential vs. informational vs. speculative. Cost: cognitive load before a line of work begins.
+
+---
+
+## What Every Ticket Should Answer
+
+Regardless of type, three questions should always be answerable from the ticket:
 
 1. **Why does this matter?** Who is affected, how much, and what happens if we don't address it?
-2. **What does done look like?** Observable behavior, not internal state.
-3. **What's out of scope?** Explicitly bound the work. Engineers correctly assume that related-looking things are in scope unless told otherwise.
+2. **What does done look like?** Observable behavior from the user's perspective, not internal system state.
+3. **What's out of scope?** Explicitly bound the work. Silence implies everything adjacent is in scope.
 
 ---
 
@@ -189,35 +246,29 @@ Regardless of ticket type, three questions should always be answerable from the 
 
 ### 1. Gather context
 
-Start with what the user gives you. They might provide:
-- A Slack message or customer complaint
-- A vague description ("the import is broken")
-- A detailed problem description
-- A Linear ticket ID to update
+Start with what the user gives you. They might provide a Slack message, a customer complaint, a vague description, or a detailed problem statement. Ask clarifying questions if you're missing the impact, the reproduction case, or the acceptance criteria — but don't over-interview. Start with what you have.
 
-Ask clarifying questions if you're missing the impact, the reproduction case, or the acceptance criteria — but don't over-interview. Start with what you have.
-
-If given a ticket ID or URL, fetch it via available MCP tools to read the current state.
+If given a Linear ticket ID or URL, fetch it via the Linear MCP tools to read the current state.
 
 ### 2. Research the codebase (for bugs and features)
 
-For bugs: understand the system well enough to write a precise problem statement. You're not diagnosing the root cause in the ticket — but you need to know enough to describe the trigger and the gap accurately. The risk here is the opposite of vagueness: codebase knowledge tempts you to prescribe. If you discover the root cause, note it as a hypothesis in the ticket, not as the problem statement.
+For bugs: understand the system well enough to write a precise problem statement — what the trigger is, what the gap looks like, how to reproduce it. You are not diagnosing the root cause in the ticket. But codebase knowledge tempts you toward prescription: if you find the likely cause, put it as a hypothesis in a note, not as the problem statement.
 
-For features: understand the existing surface so the acceptance criteria are grounded in how the system actually works.
+For features: understand the existing surface so acceptance criteria are grounded in how the system actually works.
 
 Use subagents to parallelize exploration of large codebases.
 
-**Note on scope:** This skill is for tickets written for human engineers. If you need to write a ticket optimized for an AI agent to implement (with file lists, implementation steps, and test scaffolding), check if your project has an agent-specific ticket-writing skill.
+**Note on scope:** This skill is for tickets written for human engineers. If you need to write a ticket optimized for an AI agent to implement (with file lists, implementation steps, and test scaffolding), that is a different format.
 
 ### 3. Draft the ticket
 
-Pick the right type. Write the problem statement first, before thinking about solutions. Then write acceptance criteria from the user's perspective. Add reproduction steps or context as needed. State what's out of scope.
+Pick the right type. Write the problem statement first, before thinking about solutions. Apply the abstraction test: could two thoughtful engineers read this and propose different valid implementations? If not, move up a rung.
 
-Title format: `[Noun phrase describing the problem or capability]` — not a verb command. Titles like "Employee CSV import silently fails for accented characters" are scannable. Titles like "Fix the import bug" are not.
+Title format: `[Noun phrase describing the gap or capability]` — not a verb command. "Employee CSV import silently fails for accented characters" is scannable. "Fix the import bug" is not.
 
 ### 4. Publish or display
 
-If issue tracker MCP tools are available, use them to create the issue directly. Ask the user which team to assign if not specified.
+If Linear MCP tools are available, use `mcp__linear__save_issue` to create the issue, or update an existing one. Ask the user which team to assign if not specified.
 
 If no MCP tools are available, display the ticket as formatted markdown for copy-paste.
 
@@ -228,9 +279,9 @@ If no MCP tools are available, display the ticket as formatted markdown for copy
 ### Bug Report
 
 ```markdown
-**[Short noun-phrase title describing the gap]**
+**[Noun phrase describing the observable gap]**
 
-[1-2 sentences describing what the user was doing and what went wrong. Be concrete.]
+[1-2 sentences: what the user was doing and what went wrong. Concrete and specific. No root cause hypotheses.]
 
 **Steps to reproduce:**
 1. [Step]
@@ -240,7 +291,7 @@ If no MCP tools are available, display the ticket as formatted markdown for copy
 **Expected:** [What should happen]
 **Actual:** [What happens instead]
 
-**Frequency / scope:** [Every time? Sometimes? For which customers/conditions?]
+**Frequency / scope:** [Always? Sometimes? For which users or conditions?]
 
 **Impact:** [Who is affected and what is the consequence?]
 ```
@@ -248,31 +299,31 @@ If no MCP tools are available, display the ticket as formatted markdown for copy
 ### Feature Request
 
 ```markdown
-**[Short noun-phrase title describing the capability]**
+**[Noun phrase describing the capability]**
 
-[1-2 sentences describing the user need or gap this addresses. Why does this matter now?]
+[1-2 sentences: the user's job to be done and the current gap. Why does this matter now?]
 
-**Current experience:** [What the user has to do today, or what's missing]
+**Current experience:** [What the user has to do today, or what's missing or broken]
 
 **Acceptance criteria:**
-- [ ] [Observable behavior from the user's perspective]
-- [ ] [Observable behavior from the user's perspective]
+- [ ] [Observable behavior, testable with yes/no]
+- [ ] [Observable behavior, testable with yes/no]
 
-**Out of scope:** [Things that might seem related but aren't part of this ticket]
+**Out of scope:** [Things that might look related but aren't part of this ticket]
 
-**Appetite:** [S / M / L, or a time budget if it's been set]
+**Appetite:** [S / M / L, or a number of days]
 ```
 
 ### Tech Debt / Refactor
 
 ```markdown
-**[Short noun-phrase title describing the friction or improvement]**
+**[Noun phrase describing the friction or improvement]**
 
-**Current friction:** [Specific, concrete description of what's hard, slow, or brittle today]
+**Current friction:** [Specific, concrete description of what's slow, brittle, or hard today — include numbers where possible]
 
 **Improved state:** [What becomes possible or easier — measurable, not just "cleaner"]
 
-**Why now:** [What's making this worth doing at this point?]
+**Why now:** [What makes this worth doing at this point?]
 
 **Appetite:** [S / M / L]
 
@@ -282,15 +333,15 @@ If no MCP tools are available, display the ticket as formatted markdown for copy
 ### Spike / Investigation
 
 ```markdown
-**Spike: [Question or topic being investigated]**
+**Spike: [Question being investigated — must be a question]**
 
-**Why this is blocking:** [What decision or work depends on this answer]
+**Why this is blocking:** [What decision or work depends on the answer]
 
 **Questions to answer:**
 1. [Specific question]
 2. [Specific question]
 
-**Output:** [Written summary / prototype / ADR / decision — be specific about what lands on the ticket]
+**Output:** [Written summary / prototype / decision / ADR — specific about what lands on the ticket]
 
-**Time box:** [X hours / half a day / etc.]
+**Time box:** [X hours / half a day]
 ```
