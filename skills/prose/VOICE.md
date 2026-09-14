@@ -12,13 +12,27 @@ The third pass of `prose`. Subtraction first: delete before you tweak, and leave
 - [ ] Three items where two carry the meaning (tricolon)? Drop one.
 - [ ] Three consecutive sentences of the same length? Break one.
 - [ ] A vague declarative ("the implications are significant")? Name the implication.
+- [ ] A phrase in quotation marks the author coined while working ("had its chance"), read as an established term? Write what it means; quotation marks hold UI text, a user's words or a document.
+- [ ] An image the reader must translate to know what happens ("waiting for December")? State the fact ("until the end of the year").
+- [ ] A comparison pointing outside the section ("the same count that already escalates X", "as the rescan does")? Cut it; the fact stands alone, or X is stated here in full.
 - [ ] "Serves as", "acts as", "functions as"? Use "is".
 - [ ] Meta-commentary ("the rest of this section", "as mentioned above")? Delete.
 - [ ] Every bullet opening with a bold keyword? Reformulate as sentences.
-- [ ] An em dash? Replace with a colon, a comma, or two sentences.
+- [ ] A label and a colon standing in for a sentence ("Résultat : le job tourne la nuit", "Bottom line: ship it", "Cost: two days")? Write the sentence; the label becomes its subject or disappears ("Le job tourne la nuit", "It costs two days"). A colon stays only inside a sentence, before a list or a quote.
+- [ ] An em dash? Replace with a comma, two sentences, or a colon inside the sentence.
 - [ ] An adverb that adds no precision ("very", "really", "essentially", "basically")? Delete. An adverb that narrows a claim ("only", "monthly", "retroactively") stays.
 - [ ] Elegant variation (three names for one thing to avoid repeating a word)? Repeat the word.
 - [ ] A patronising analogy or hand-holding ("think of it as a mailbox")? Delete unless the reader is new to the domain.
+- [ ] An opener that flatters or a closer that offers more ("Great question", "Let me know if", "N'hésitez pas")? Start on the answer, end on content or the ask.
+- [ ] Glue opening a sentence ("That said", "Moving forward", "Cela dit")? Delete it; the sentence stands alone.
+- [ ] "First… Second… Finally" carrying a sequence? A table, or plain sentences.
+- [ ] A sentence starting on a dangling "this" ("This ensures", "Cela permet")? Name the noun ("The index ensures").
+- [ ] Hedges stacked on one claim ("may potentially", "it seems that", "arguably")? State the claim, or name the uncertainty in its own sentence.
+- [ ] "Not only X but also Y", "more than just X"? "X and Y".
+- [ ] Bullets in changelog voice ("Added X", "Improved Y")? A subject for each, or a table.
+- [ ] Scare quotes on an ordinary word (the "engine")? Drop them.
+- [ ] A status emoji or a checkmark? Words.
+- [ ] An exclamation mark? A full stop.
 
 ## Vocabulary
 
@@ -33,6 +47,12 @@ The third pass of `prose`. Subtraction first: delete before you tweak, and leave
 | ensure that | make sure, or the verb alone |
 | facilitate | help, allow |
 | comprehensive | complete, or the scope in words |
+| key, crucial, critical, essential, significant, powerful, majeur, incontournable | the concrete property, or nothing |
+| the implementation of, la mise en place de, provide a solution for | implement, set up, solve |
+| permettre de, afin de | the verb alone, pour |
+| au niveau de | in, on, for |
+| impacter | change, or the effect named |
+| il s'agit de | est |
 
 ## Three deliberate departures from common anti-slop guides
 

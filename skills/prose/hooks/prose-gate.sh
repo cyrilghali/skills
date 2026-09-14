@@ -10,7 +10,9 @@
 #
 # Both modes: AI tells (delve, tapestry, "let's dive in", ...), emphasis and
 # scaffolding words (verbatim, exactement, clairement, "Conséquence :", ...),
-# em dashes, sentences over 40 words, paragraphs over 120 words outside
+# labels standing in for a sentence, flattering openers and closing offers,
+# sentence-start glue, hedges, changelog bullets, exclamation marks, status
+# emoji, generic headings, em dashes, sentences over 40 words, paragraphs over 120 words outside
 # tables, code and quotes. Doc mode adds the proof trail and session
 # bookkeeping ("j'ai vérifié", "session du", "décision du 04/09") and a bold
 # heading line that is not a question. Judgment calls (answer first, one why,
@@ -90,7 +92,7 @@ add() { findings="${findings}${findings:+
 }- $1"; }
 
 # 1. Emphasis and scaffolding words. Exact phrases: each one is a tell on its own.
-tells='verbatim|corroborations?|exactement|clairement|simplement|évidemment|bien sûr|il est important de|à noter que|notez que|conséquence :|note :|attention :|en résumé|pour résumer|autrement dit|en d'"'"'autres termes|il faut savoir que|tout d'"'"'abord|crucially|importantly|it is worth noting|clearly|obviously|essentially|basically|in other words|to put it simply|note that|consequently'
+tells='verbatim|corroborations?|exactement|clairement|simplement|évidemment|bien sûr|il est important de|à noter que|notez que|conséquence :|note :|attention :|en résumé|pour résumer|autrement dit|en d'"'"'autres termes|il faut savoir que|tout d'"'"'abord|crucially|importantly|it is worth noting|clearly|obviously|essentially|basically|in other words|to put it simply|note that|consequently|il convient de|il est à noter|force est de constater|il s'"'"'agit de|concrètement|in fine|au final|impacter|impactée?s?|crucial|incontournable'
 hits=$(printf '%s\n' "$prose" | grep -oiE "(^|[^[:alnum:]])($tells)([^[:alnum:]]|$)" 2>/dev/null | sed -E 's/^[^[:alnum:]]+//; s/[^[:alnum:]:]+$//' | sort -fu | head -8)
 [ -n "$hits" ] && add "emphasis or scaffolding words: $(printf '%s' "$hits" | paste -sd, - | sed 's/,/, /g'). State the point; the consequence leads, it does not get announced."
 
@@ -99,11 +101,54 @@ ai='here'"'"'s the thing|the truth is,|let me be clear|here'"'"'s the kicker|her
 ah=$(printf '%s\n' "$prose" | grep -oiE "$ai" 2>/dev/null | sort -fu | head -8)
 [ -n "$ah" ] && add "AI tells: $(printf '%s' "$ah" | paste -sd, - | sed 's/,/, /g'). State the point without the preamble, name the actor, use the plain verb (VOICE.md in the prose skill)."
 
+# 1c. Openers that flatter and closers that offer more: the reply starts on the answer and ends on content.
+frame='great question|good question|you'"'"'re absolutely right|you are absolutely right|bonne question|excellente question|bonne remarque|hope this helps|let me know if|feel free to|n'"'"'hésitez pas|don'"'"'t hesitate to'
+fh=$(printf '%s\n' "$prose" | grep -oiE "$frame" 2>/dev/null | sort -fu | head -6)
+[ -n "$fh" ] && add "openers or closers: $(printf '%s' "$fh" | paste -sd, - | sed 's/,/, /g'). Start on the answer, end on content or the directed ask."
+
+# 1d. Glue at the start of a sentence: transitions, signposting numerals, a dangling "this".
+glue='(that said|moving forward|going forward|building on this|with that in mind|at this point|in this context|cela dit|à ce stade|dans ce contexte|dans un (premier|second|deuxième) temps|first(ly)?|second(ly)?|third(ly)?|finally|lastly|ensuite|enfin|premièrement|deuxièmement),|(this|cela|ceci) (ensures|allows|means|enables|makes|helps|permet|garantit|signifie|assure)'
+gh=$(printf '%s\n' "$prose" | grep -oiE "(^|[.!?] +)($glue)" 2>/dev/null | sed -E 's/^[.!?] +//; s/,$//' | sort -fu | head -6)
+[ -n "$gh" ] && add "sentence-start glue: $(printf '%s' "$gh" | paste -sd, - | sed 's/,/, /g'). The sentence stands alone; a dangling \"this\" gets its noun; a numbered sequence goes in a table."
+
+# 1e. Hedge stacks and pair-up flourishes.
+hedge='may potentially|could potentially|it seems that|arguably|to some extent|in many cases|il semble que|dans une certaine mesure|not only [^.!?]{1,60} but also|more than just|beyond just|non seulement [^.!?]{1,60} mais (aussi|également)'
+hh=$(printf '%s\n' "$prose" | grep -oiE "$hedge" 2>/dev/null | sort -fu | head -6)
+[ -n "$hh" ] && add "hedges or pair-ups: $(printf '%s' "$hh" | paste -sd, - | sed 's/,/, /g'). One claim, stated; \"X and Y\" instead of \"not only X but also Y\"."
+
+# 1f. Bullets in changelog voice (a past participle with no subject).
+changelog=$(printf '%s\n' "$prose" | grep -oiE '^[[:space:]]*[-*] (\*\*)?(added|improved|fixed|updated|removed|refactored|implemented|ajouté|amélioré|corrigé|mis à jour|supprimé)' | sed -E 's/^[[:space:]]*[-*] //; s/\*\*//' | sort -fu | head -4)
+[ -n "$changelog" ] && add "bullets in changelog voice: $(printf '%s' "$changelog" | paste -sd, - | sed 's/,/, /g'). Give each one a subject, or move the list into a table."
+
+# 1f2. Test counts in prose: the check is named, the number is evidence.
+counts=$(printf '%s\n' "$prose" | grep -oiE '[0-9][0-9 ,]* (tests?|specs?|assertions?) ?(pass|green|run|ok|verts?|passent)?|0 (failures?|échecs?)' 2>/dev/null | sort -fu | head -4)
+[ -n "$counts" ] && add "test counts: $(printf '%s' "$counts" | paste -sd, - | sed 's/,/, /g'). Say the suite is green; the number stays out."
+
+# 1g. Exclamation marks in prose.
+if printf '%s\n' "$prose" | grep -qE '[[:alpha:])]!([[:space:]]|$)'; then
+  add "exclamation marks. A full stop."
+fi
+
 # 2. Em dashes.
 # Tables and headings count too: an em dash in a cell is still an em dash.
 if printf '%s\n' "$text" | awk '/^[[:space:]]*```/ { fence = !fence; next } fence { next } /^[[:space:]]*>/ { next } { print }' | grep -q '—'; then
-  add "em dashes. Use a colon, a comma, or two sentences."
+  add "em dashes. Use a comma, two sentences, or a colon inside the sentence."
 fi
+
+# 2b. A label and a colon standing in for a sentence ("Résultat : ...", "Bottom line: ...",
+# "- **Cost:** two days"): one to three words opening a line or a sentence, then a spaced colon.
+# A colon glued to its left neighbour (14:30, https://) is not a label.
+labels=$(printf '%s\n' "$prose" | grep -oE "(^|[.!?] +)([-*] |[0-9]+\. |#+ )?(\*\*)?[[:alpha:]][[:alnum:]'’-]*( [[:alnum:]'’-]+){0,2}(\*\*)? ?:(\*\*)? +[^ ]" 2>/dev/null \
+  | sed -E 's/^[.!?] +//; s/^([-*] |[0-9]+\. |#+ )//; s/\*\*//g; s/ *:.*$//' | sort -fu | head -6)
+[ -n "$labels" ] && add "labels standing in for a sentence: $(printf '%s' "$labels" | paste -sd, - | sed 's/,/, /g'). Write the sentence; the label becomes its subject or goes."
+
+# 2c. Status emoji, in tables and headings too.
+emoji=$(printf '%s\n' "$text" | awk '/^[[:space:]]*```/ { fence = !fence; next } fence { next } /^[[:space:]]*>/ { next } { print }' | grep -oE '✅|❌|⚠️|✔️?|✓|🚀|🔴|🟢|🟡|🟠|👉|💡|🎯|📌|🔥|⭐|🧠|🛠️?' 2>/dev/null | sort -u | paste -sd' ' -)
+[ -n "$emoji" ] && add "status emoji: $emoji. Words."
+
+# 2d. Generic headings, bold or #-prefixed: a heading is a question that carries its stake.
+generic=$(printf '%s\n' "$text" | grep -oiE '^[[:space:]]*(#+ |\*\*)(overview|summary|introduction|background|context|conclusion|next steps|key takeaways|takeaways|tl;dr|vue d'"'"'ensemble|résumé|contexte|prochaines étapes|points clés)(\*\*)?[[:space:]]*$' | sed -E 's/^[[:space:]]*(#+ |\*\*)//; s/\*\*//' | sort -fu | head -4)
+[ -n "$generic" ] && add "generic headings: $(printf '%s' "$generic" | paste -sd, - | sed 's/,/, /g'). A heading is the question the section answers."
 
 # 3. Doc-only: proof trail and session bookkeeping; bold headings that are not questions.
 if [ "$MODE" = doc ]; then
@@ -123,6 +168,10 @@ if [ "$MODE" = doc ]; then
       print h
     }' | head -4)
   [ -n "$bad_headings" ] && add "bold headings that are not questions: $(printf '%s' "$bad_headings" | paste -sd'|' - | sed 's/|/ | /g'). A heading is a question that carries its own alternatives."
+
+  # 3b. A quoted phrase inside a question heading is usually the author's coinage, not a real quote.
+  quoted_headings=$(printf '%s\n' "$text" | grep -E '^[[:space:]]*\*\*[^*]*\?[[:space:]]*\*\*[[:space:]]*$' | grep -oE '"[^"]{3,40}"|«[^»]{3,40}»|“[^”]{3,40}”' | head -3)
+  [ -n "$quoted_headings" ] && add "quoted phrase in a heading: $(printf '%s' "$quoted_headings" | paste -sd, - | sed 's/,/, /g'). Quotation marks hold a real quote (UI text, a user, a document); a phrase coined while working is written out as what it means."
 fi
 
 # 4. Long sentences (over MAX_SENTENCE words).

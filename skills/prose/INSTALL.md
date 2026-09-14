@@ -53,10 +53,20 @@ Skipped on purpose: files under `~/.claude/`, `.claude/`, `memory/`, `CLAUDE.md`
 | -- | -- |
 | emphasis and scaffolding words (French and English) | any |
 | AI tells (delve, leverage, seamless, "it is worth noting", ...) | any |
+| openers that flatter and closers that offer more ("great question", "let me know if") | any |
+| sentence-start glue ("that said", "firstly", a dangling "this ensures") | any |
+| hedge stacks and pair-ups ("may potentially", "not only X but also Y") | any |
+| bullets in changelog voice ("Added X") | any |
+| test counts in prose ("412 tests pass") | any |
+| exclamation marks | any |
 | em dashes | any, tables and headings included |
+| a label and a colon standing in for a sentence ("Résultat : ...", "Bottom line: ...") | any |
+| status emoji | any, tables and headings included |
+| generic headings (Overview, Summary, Contexte, ...) | any |
 | sentence length | 40 words |
 | paragraph length | 120 words |
 | proof trail and session bookkeeping ("j'ai vérifié", "I verified", "décidé le", ...) | documents only |
 | bold heading that is not a question | documents only |
+| a quoted phrase inside a question heading | documents only |
 
 To discuss a forbidden word without tripping the gate, put it in a code span or a blockquote.
