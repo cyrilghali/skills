@@ -14,8 +14,6 @@ Skills that shape how work is written, reviewed and delegated. French and Englis
 | [intent-pr](skills/intent-pr/) | A one-sentence PR body carrying the intent; the certification of what was checked goes to the author, in session. |
 | [design-props](skills/design-props/) | Several credible architectures compared on the real code, with the pivotal fact verified, before a design decision. |
 | [doc-pedagogique](skills/doc-pedagogique/) | An explanatory document for a newcomer: a running example, honest verdicts, decisions framed as questions. |
-| [page-visuelle](skills/page-visuelle/) | Turn a document into a visual page: diagrams, timelines, ER cards, QA by screenshot. |
-| [naming-review](skills/naming-review/) | Review identifiers so they read from the call site; with evals. |
 | [torture-test](skills/torture-test/) | An adversarial QA pass that attacks code and tests only where a named beneficiary gains. |
 | [mutation-test](skills/mutation-test/) | Mutation testing of a branch by parallel agents, one mutant at a time, survivors reported as the assertion that would kill them. |
 | [rewrite-commits](skills/rewrite-commits/) | Collapse a draft PR's iteration commits into one to three atomic commits. |
