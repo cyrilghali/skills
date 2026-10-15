@@ -1,31 +1,3 @@
-Tâche : invoque la skill torture-test sur ce qui suit et livre le résultat.
-
----
-
-```python
-# slugify.py
-import re
-import unicodedata
-
-
-def slugify(text: str, separator: str = "-") -> str:
-    """
-    Convert arbitrary text to a URL-safe slug.
-
-    Normalizes unicode to NFKD, strips non-ASCII bytes, lowercases,
-    collapses whitespace and punctuation into `separator`, and trims
-    leading/trailing separators.
-    """
-    text = unicodedata.normalize("NFKD", text)
-    text = text.encode("ascii", "ignore").decode("ascii")
-    text = text.lower()
-    text = re.sub(r"[^\w\s-]", "", text)
-    text = re.sub(rf"[-\s{re.escape(separator)}]+", separator, text)
-    return text.strip(separator)
-```
-
-```python
-# test_slugify.py
 import pytest
 from slugify import slugify
 
@@ -66,14 +38,9 @@ def test_numbers_preserved():
     assert slugify("item 42 version 3") == "item-42-version-3"
 
 
-def test_custom_separator():
-    assert slugify("hello world", separator="_") == "hello_world"
-
-
 def test_already_a_slug():
     assert slugify("already-a-slug") == "already-a-slug"
 
 
 def test_mixed_separators_collapsed():
     assert slugify("a - b -- c") == "a-b-c"
-```

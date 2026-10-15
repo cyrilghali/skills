@@ -1,83 +1,74 @@
 # intent-pr eval cases
 
-Each case gives a generation agent everything it needs to write the PR description WITHOUT asking
-questions (the AskUserQuestion step is pre-answered in `Context`). The agent applies the skill and
-returns only the final PR description markdown. A judge then scores it against `rubric.md`.
+Each case gives a generation agent everything it needs WITHOUT asking questions: the questions
+the skill would ask are pre-answered in **Context**. The agent returns two outputs:
+(1) the PR body markdown, or a split recommendation when the change does not fit one PR, and
+(2) its reply to the author. A judge scores both against `rubric.md`: dimensions 3, 4 and 9 on
+the reply, all others on the PR body. The **Trap** field names the failure mode the case catches.
 
-The `Trap` field names the specific failure mode the case is designed to catch.
+Cases 1, 2 and 4 come from real use, with names, code and data rewritten. Cases 3 and 5 are
+synthetic; case 5 moves to a front-end stack.
 
----
+## Case 1: a feature flag replaced by a column (canonical)
 
-## Case 1 — flag → column migration (the canonical case)
-
-**Diff summary (what the reviewer sees):**
-- New column `missions_enabled_at :utc_datetime` on `organizations`
-- `PortalController` mission-mode check reads the column instead of `Flags.enabled?(:security_mission)`
-- A data migration backfilling `missions_enabled_at` for orgs currently on the flag
+**Source:** transcript, rewritten
+**Input:** "Write the PR description for my branch." Diff summary:
+- New column `reports_enabled_at` (timestamp) on `accounts`
+- The dashboard reads the column instead of the `:advanced_reports` feature flag to decide whether to show the reports tab
+- A data migration fills `reports_enabled_at` for accounts that have the flag on today
 - Tests updated
-
 **Context (pre-answered):**
-- Trigger: the `:security_mission` feature flag became ambiguous — it was overloaded to mean both "org can buy missions" and "portal mission UI is live", so toggling it had two unrelated effects.
-- Goal: split the meaning by gating portal mission mode on an explicit timestamp column.
-- Risk known to author: orgs already live on the old flag must keep working — backfill covers them; rollout is read-new-write-new after deploy.
+- Ticket: ACME-412.
+- Why: the `:advanced_reports` flag meant two things, "this account may buy reports" and "the reports tab is visible". Turning it on for a sales trial also exposed the tab before the account was set up.
+- Goal: show the tab only from an explicit date per account.
+- What the author checked: the migration fills the column for every account that has the flag today (412 accounts, count matched before and after on a copy of production data); the full test suite passes. The flag stays in place for the billing meaning.
+**Trap:** a body that lists the column, the migration and the tests, buries the migration risk, and gives the reviewer no direction.
 
-**Trap:** generic description that buries the migration risk and gives no review direction.
+## Case 2: a one-line timeout fix (trivial input)
 
----
-
-## Case 2 — one-line timeout bugfix
-
-**Diff summary:**
-- `fetch_invoices/2` gains an explicit `timeout: 5_000` option on the HTTP call (was relying on the client default of `:infinity`)
-
+**Source:** transcript, rewritten
+**Input:** "Can you write up the PR for this?" Diff: the call that fetches invoices from the billing provider gains `timeout: 5_000`; before, it used the HTTP client's default of no timeout.
 **Context (pre-answered):**
-- Trigger: production billing requests were hanging indefinitely when the upstream API stalled; invoices then appeared "missing" to users because the request never returned or errored.
-- Goal: make stalls surface as fast failures instead of silent hangs.
-- Risk: 5s might be too aggressive for large accounts — author checked p99 latency is 1.2s, so 5s has headroom.
+- Ticket: BILL-88.
+- Why: when the billing provider stalls, the request hangs with no end and users see an empty invoices page with no error.
+- What the author checked: p99 latency of that call over 30 days is 1.2 s, so 5 s leaves headroom; a test with a stalled fake server now fails after 5 s with an error the page shows.
+**Trap:** treating a one-line diff as too small to explain, with no why and no risk; or inflating it into a long body.
 
-**Trap:** treating a one-line diff as trivial — skipping why/blast-radius because "it's just a timeout".
+## Case 3: a branch that mixes unrelated purposes
 
----
-
-## Case 3 — pure internal refactor, no behavior change
-
-**Diff summary:**
-- Extract `Billing.ScoreCalculator` out of a 400-line `Billing.Reports` module
-- No public API change, no behavior change, tests moved alongside
-
+**Source:** synthetic
+**Input:** "Open a PR for everything on this branch." Diff summary:
+- CSV export on the invoices page
+- A rewritten password-reset email
+- An upgrade of the background-job library across the repo
+- A renamed config key read by three services
 **Context (pre-answered):**
-- Trigger: `Reports` had become a god-module; the scoring logic was about to be reused by an upcoming export feature and couldn't be without extracting it.
-- Goal: isolate scoring so the export work can depend on it cleanly.
-- Risk: none functionally — pure move; the only risk is import churn.
+- The author batched a week of work on one branch; each item has its own ticket (ACME-501, ACME-502, ACME-503, ACME-504).
+- The author tested each item alone, never all four together.
+**Trap:** forcing four purposes into one body, short or long, instead of recommending a split.
 
-**Trap:** padding intent/why with filler when the honest answer is "no risk"; OR inflating a no-risk refactor into fake danger.
+## Case 4: an irreversible data deletion (high stakes)
 
----
-
-## Case 4 — destructive data backfill
-
-**Diff summary:**
-- Migration deletes `audit_findings` rows older than 18 months and adds a partial index
-- Adds a `purged_at` audit row per workspace
-
+**Source:** transcript, rewritten
+**Input:** "Write the PR description." Diff summary:
+- A migration deletes `audit_events` rows older than 18 months and adds a partial index on the rest
+- One `purged_at` record per workspace notes the purge
 **Context (pre-answered):**
-- Trigger: the table crossed 400M rows, queries degraded, and legal retention only requires 18 months.
-- Goal: reclaim query performance and align with the retention policy.
-- Risk: deletion is irreversible; author gated it behind a dry-run count logged first, runs in batches of 10k to avoid lock storms, and confirmed no feature reads findings older than 18 months.
+- Ticket: DATA-77.
+- Why: the table passed 400 million rows; the audit page now takes 9 s to load. The retention policy only requires 18 months.
+- What the author checked: a dry run logs the count first (310 million rows). Deletion runs in batches of 10,000 to avoid long locks. A code search found no feature that reads events older than 18 months. The nightly backup keeps 30 days.
+**Trap:** under-stating a dangerous change: no mention that the deletion cannot be undone, no safeguards, no targeted review ask; or pasting the whole verification into the PR body.
 
-**Trap:** under-certifying the blast radius on a genuinely dangerous change; no rollback/verification mention; no targeted review ask.
+## Case 5: a user-visible change in a front-end stack
 
----
-
-## Case 5 — context-poor change (forces honesty)
-
-**Diff summary:**
-- Bumps `req` HTTP client from 0.4.x to 0.5.x
-- Adjusts two call sites for the renamed `:redact` option
-
+**Source:** synthetic
+**Input:** "PR description please." Diff summary:
+- The React settings screen gains a "Dark mode" toggle saved in local storage
+- The Tailwind config adds dark palette tokens
+- No API change
 **Context (pre-answered):**
-- Trigger: 0.4.x has a published advisory (header leak in redirects); security asked for the bump.
-- Goal: close the advisory.
-- Risk: 0.5 renamed `:redact_headers` → `:redact`; author audited all call sites (only two) and ran the full suite.
-
-**Trap:** writing a changelog line ("bump req to 0.5") instead of an intent + why + the security reason; no review ask.
+- Ticket: UI-230.
+- Why: support received repeated requests from users who work at night.
+- Known gap: the billing and the onboarding screens have no dark tokens yet, so they stay light.
+- What the author checked: the toggle in Chrome and Firefox; the setting survives a reload.
+**Trap:** a body that lists components and config keys, and says nothing about what users see or which screens stay light.

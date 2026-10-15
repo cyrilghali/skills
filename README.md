@@ -6,17 +6,17 @@ Claude Code skills, hooks, and statusline. Drop into `~/.claude/` and go.
 
 ### Method skills
 
-Skills that shape how work is written, reviewed and delegated. French and English mixed, as they were written.
+Skills that shape how work is written, tested and reviewed. Each one is a self-contained folder with its own evals.
 
-| Skill | What it does |
-|-------|-------------|
-| [prose](skills/prose/) | The register for every text a human reads: a question heading that carries its stake, the answer first, one why, details in a table, no proof trail. Ships a gate hook that runs on every reply and document write. |
-| [intent-pr](skills/intent-pr/) | A one-sentence PR body carrying the intent; the certification of what was checked goes to the author, in session. |
-| [design-props](skills/design-props/) | Several credible architectures compared on the real code, with the pivotal fact verified, before a design decision. |
-| [doc-pedagogique](skills/doc-pedagogique/) | An explanatory document for a newcomer: a running example, honest verdicts, decisions framed as questions. |
-| [torture-test](skills/torture-test/) | An adversarial QA pass that attacks code and tests only where a named beneficiary gains. |
-| [mutation-test](skills/mutation-test/) | Mutation testing of a branch by parallel agents, one mutant at a time, survivors reported as the assertion that would kill them. |
-| [rewrite-commits](skills/rewrite-commits/) | Collapse a draft PR's iteration commits into one to three atomic commits. |
+| Skill | What it does and when to reach for it | Install |
+|-------|----------------------------------------|---------|
+| [prose](skills/prose/) | Rewrites text a person will read so the answer comes first and every term is defined; reach for it when a doc, ticket or reply feels wordy, unclear or AI-sounding. | `npx skills add cyrilghali/skills/prose` |
+| [newcomer-doc](skills/newcomer-doc/) | Writes a design doc or explainer that a reader new to the system can follow in one pass; reach for it when you must explain options or an architecture to people outside the code. | `npx skills add cyrilghali/skills/newcomer-doc` |
+| [design-props](skills/design-props/) | Produces several competing design proposals checked against the real system and compares them; reach for it before a design decision with more than one credible answer. | `npx skills add cyrilghali/skills/design-props` |
+| [intent-pr](skills/intent-pr/) | Writes a short pull request body about the gap the change fills and gives the author a risk check in the chat; reach for it when you open a PR and want the review to go faster. | `npx skills add cyrilghali/skills/intent-pr` |
+| [rewrite-commits](skills/rewrite-commits/) | Collapses a branch's noisy iteration commits into one to three atomic commits; reach for it before you ask for review. | `npx skills add cyrilghali/skills/rewrite-commits` |
+| [torture-test](skills/torture-test/) | Attacks code and its tests with hostile inputs, retries and interrupted state, then reports what broke and who would see it; reach for it before you ship risky logic. | `npx skills add cyrilghali/skills/torture-test` |
+| [mutation-test](skills/mutation-test/) | Plants one small fault at a time in the code a branch added and reports each fault the tests miss; reach for it when you need to know whether the tests would catch a regression. | `npx skills add cyrilghali/skills/mutation-test` |
 
 ### Plugins
 
@@ -53,7 +53,13 @@ Requires a `docs/style-guide.md` in your project. The skills reference it for ru
 
 ### Skills
 
-Copy a skill to `~/.claude/skills/`:
+Install one skill with the `skills` CLI:
+
+```sh
+npx skills add cyrilghali/skills/prose
+```
+
+Or copy its folder to `~/.claude/skills/`:
 
 ```sh
 cp -r skills/prose ~/.claude/skills/
