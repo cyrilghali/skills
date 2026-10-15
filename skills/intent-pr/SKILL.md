@@ -1,50 +1,65 @@
 ---
 name: intent-pr
-description: Write an intent-based PR — a one-sentence `## Why` body, with the full risk certification delivered to the author in session rather than in the PR. Use when asked for an "intent-based PR", "certify a PR", a PR that "directs the reviewer", or when a PR body should make review faster instead of dumping a diff summary.
-argument-hint: "[branch] [repo]"
+description: Writes an intent-based pull request description, a `## Why` of one to three short paragraphs on the product gap the PR fills, and gives the author a first-person risk certification in the reply instead of the PR. Recommends a split when a branch mixes purposes. Use when asked to "write the PR description", "draft the PR body", "open a PR with a proper description", "write an intent-based PR", "certify this PR", or a PR that "directs the reviewer" or makes review faster than a diff summary. Not for commit messages, release notes, reviewing someone else's PR, replying to review comments, or listing what a diff could break.
+metadata:
+  category: ship
 ---
 
 # Intent-based PR description
 
-A PR is the **"I intend to…"** moment of code (L. David Marquet, *Turn the Ship Around!*). The author who has the context announces intent and *certifies* the risks; the reviewer's job collapses from reconstructing the change to **validating or blocking the intent**. Approval becomes almost mechanical — not because work was hidden, but because the author already did the reviewer's thinking.
+A pull request is the "I intend to..." moment of code (L. David Marquet, *Turn the Ship Around!*). The author holds the context, states the intent and certifies the risks. The reviewer then validates or blocks the intent instead of rebuilding it from the diff.
 
-Certification and PR body are two different artefacts. The certification is long-form and goes to the author in session (voice and format: `CLAUDE.md`, "Certification voice"). The PR body is one sentence.
+The skill produces two outputs for two readers:
 
-## The body — one sentence under `## Why`
+| Output | Reader | Holds |
+|---|---|---|
+| PR body | the reviewers | the product gap and the intent, in a few short paragraphs |
+| Certification | the author, in the reply | what was checked, the risk each check covers, where to look hardest |
+
+The body stays short enough to read like a good chat answer to "what gap does this PR fill?".
+
+## Process
+
+1. **Read the diff and the linked ticket.** The ticket gives motivation and the link; the body is your own answer, never a paste of it. Done when you can say the PR's purpose in one sentence. When you need two sentences joined by "and also", the branch mixes purposes: recommend a split, one PR per purpose, each named in one line, and write no body.
+2. **Fill gaps by asking.** Ask the author one question at a time, motivation first, at most three, each with two to four likely answers drawn from the diff. Skip a question the conversation or ticket already answers. Done when you know why the change exists and what the author checked.
+3. **Write the Why** (format below). Done when it passes the decisive test.
+4. **Write the certification** in the reply (format below).
+5. **Add a section only when one applies.** A database query change or a production bug fix each gets one section; see [SECTIONS.md](SECTIONS.md). Any other section waits for the author to ask, and then climbs the cut ladder in the same file first.
+6. **Hand over.** When asked to open the PR, open it as a draft and pass the body with `--body-file`. In a repo that checks PR bodies, keep `## Why` as a visible heading. If a `prose` skill is installed, run the Why through it first.
+
+## The Why
+
+The body opens with `## Why`: one to three short plain paragraphs, no subheadings. Together they answer three questions:
+
+- **What happens today, and what is missing?** Link the ticket here.
+- **What does the PR add?** Describe the behavior a person meets, in words a product manager would use. Code names stay in the diff: no file, function, table, column or flag.
+- **Does anyone see a change yet?** Say what users see after merge, or which later PR makes it visible.
+
+Points can share a paragraph, and each point appears once. Each paragraph is a few sentences, never one crammed line. Numbers and checks that prove the change safe belong in the certification; the body keeps the decision they support.
 
 ```markdown
 ## Why
 
-Gate portal mission mode on `missions_enabled_at` instead of the `:security_mission` flag, so a workspace opts in explicitly (PLA-2535).
+A support ticket that waits on the customer stays open until an agent closes it by hand. Agents spend the first hour of each shift on that cleanup ([HELP-310](https://example.com/HELP-310)).
+
+This PR closes a ticket on its own after 14 days with no customer reply, and sends the customer a note that any reply reopens it. Tickets with an open refund are never closed this way.
+
+Nobody sees a change at merge: the rule ships switched off, and the next PR turns it on for one team.
 ```
 
-That is the whole body. It carries the intent as `[verb] [goal]` + ticket ref, and nothing the diff already shows. A full certified body was cut as far too verbose: the density belongs in the session reply, where the author reads it.
+A real change in behavior is named as one. "Cleanup" or "refactor" framing never hides it. A change that is honestly risk-free says so in one plain sentence; it gains no invented danger and no filler.
 
-Add a further section only when the author asks for one. When they do, it is one-sentence bullets and it climbs the cut ladder below first.
+The readers are the reviewers. Talk between the author and their tools ("my agent", "before handover") and questions already settled stay out of the body.
 
-**Repos avec un gate sur le corps de PR** : le gate exige un `## Why` **visible**, c'est la section d'intention, tout contenu « Objectif » fusionne dedans. Un `<!-- ## Why -->` en commentaire HTML contourne le gate : un gate contourné est un gate menti. Passe le corps en `--body-file`, après la passe `prose` sur la phrase.
+## The certification
 
-**Le lecteur est l'équipe.** La ligne s'adresse aux reviewers humains. Le processus agent↔auteur (« my implementation agent », « before handover », « my run ») reste en session ; une question déjà tranchée en pré-review disparaît du corps.
+The reply to the author, in the first person, as the one who vouches for the work:
 
-## Process
-
-1. **Read the diff and any linked Linear issue** (`INB-`, `PLA-`, `SON-`, …). Use the ticket for motivation and links; the description is your sentence, not its paste.
-2. **Gather context if missing** — `AskUserQuestion`, one question at a time, motivation first, stop at 2–3. Skip only if the conversation or ticket already answers it. A one-line diff still needs its why.
-3. **Write the sentence**, then the session certification: what you checked, folded with the risk it covers, closing on the 1–2 things you want scrutinised.
-4. **Run the decisive test** below. Open PRs as `--draft`.
+- One line per check: what I checked, folded with the risk it covers. "I ran the closing rule over last month's tickets and none with an open refund closed, so refunds stay safe."
+- The tests that ran and their result. When no test covers the changed behavior, say so.
+- What I did not check, plainly.
+- Last, the one or two places a reviewer should look hardest, and why.
 
 ## The decisive test
 
-*Could a reviewer approve from the sentence plus the diff, without reconstructing the intent?* If they would have to hunt for why the change exists, the sentence failed — rewrite it. Marquet's rule: "can you look at this?" is still leader-follower; the intent-based PR says "here's my intent — block if you see a hole."
-
-## The cut ladder — for any section beyond the sentence
-
-Bodies accrete over their life (review deltas, stack maps, status notes). Climb this before adding one; stop at the first rung that holds.
-
-1. **The diff already shows it?** Delete. The body states intent; it never narrates changes.
-2. **It doesn't change how the reviewer reads the diff?** Delete — status belongs in comments.
-3. **A link can replace the content?** Link (ticket, doc, other PR).
-4. **It's a re-review delta** ("since your last review")? Three lines max: what moved, why, where to re-look — the delta for the reviewer, not the work done.
-5. **It's shared boilerplate** (stack map, project banner)? Script-generated, one screen max, identical everywhere.
-
-Deletion over addition: a body a reviewer scrolls is a body that failed.
+Could a reviewer approve from the Why plus the diff, without rebuilding the intent? If they would hunt for why the change exists, rewrite the Why. "Can you look at this?" asks for permission; an intent-based PR says "here is my intent, block it if you see a hole."

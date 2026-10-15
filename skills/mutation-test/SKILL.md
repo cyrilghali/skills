@@ -1,108 +1,34 @@
 ---
 name: mutation-test
-description: Measure a branch's test robustness by mutation testing — parallel agents apply targeted mutants one at a time and report which ones the tests fail to kill. Use when the user says "mutation testing", "nos tests sont-ils solides", "are the tests strong enough", after opening a draft PR with risky lib/ logic (SQL, seams, jobs, calculs), or when torture-test delegates its mutation axis.
+description: Measures how well a branch's tests catch regressions by mutation testing. It plants one small fault at a time in the code the branch added (a flipped comparison, a dropped filter, a swapped value), reruns the tests, and reports every mutant the tests let survive with the assertion that would kill it. Works in any language with no mutation tool installed. Use when the user says "mutation test this branch", "are the tests strong enough", "test my tests", "mutation score", or before merging risky logic such as queries, money or boundaries; torture-test calls it for its mutation axis. Not for writing tests for new code, coverage numbers, debugging a failing test, installing a mutation tool in CI, or hostile-input and concurrency attacks (torture-test).
+metadata:
+  category: verify
 ---
 
-# Mutation testing d'une branche
+# Mutation-test a branch
 
-Mesure la robustesse des tests d'une branche/PR sans dépendance (pas de Muzak) :
-des agents appliquent des mutants ciblés au code de prod un par un, relancent les
-tests de la PR, et rapportent tués/survivants. Chaque survivant = un trou de test
-concret avec l'assertion à ajouter. Pour les attaques au-delà de la mutation
-(entrées hostiles, concurrence, ressources, état interrompu), voir la skill
-torture-test.
+A mutant is a small deliberate fault in production code. If a test fails, the mutant is killed and a test guards that line. If every test still passes, the mutant survived: that is a concrete test gap, and the report names the assertion that closes it. The method needs only an editor, the test command and git, so it works in any language.
 
-## Quand
+## Scope
 
-- Avant de merger un lot de PRs à logique risquée (SQL, seams, jobs, calculs).
-- Sur demande « nos tests sont-ils solides ? » / « mutation testing ».
-- Après un gros chantier multi-PRs : une passe par PR, en parallèle.
+- The target is the non-test files the branch changed, `git diff --name-only $(git merge-base <base> HEAD)..HEAD`, and within them only the lines the branch added or changed (`git diff -U0 <merge-base>..HEAD`). Code that existed before the branch, and uncommitted edits in the tree, are out of scope.
+- A diff that changes no behavior has nothing to mutate: say so and stop.
+- Several branches get one subagent each, launched in parallel, each in its own worktree or clone. Two agents never share a working tree. For one branch, do the work yourself.
 
-## Périmètre
+## Measure
 
-1 agent = 1 branche (ou 1 module si la branche est grosse). Cible = les fichiers
-`lib/` (ou `src/`) du diff de la branche ; tests = les fichiers de test du même diff :
-`git diff --name-only $(git merge-base origin/<base> HEAD)..HEAD`.
-Exécutants : `general-purpose`, `model: "sonnet"`, lancés en un seul bloc parallèle.
-Chaque agent travaille dans le worktree/fork de sa branche — jamais deux agents
-dans le même worktree.
+1. **Preflight.** Save the starting `git status --porcelain`. Copy each target file to a backup folder outside the repository, and restore only from these copies: git restores the committed version and would discard anything the user had not committed. Done when every target file has a backup.
+2. **Baseline.** Run the tests that cover the target in the foreground, with a long timeout. A red suite ends the run here and becomes the report, since a verdict measured against failing tests means nothing. Done when the suite is green and its result is noted.
+3. **Design mutants.** Write 8 to 15 mutants for a normal diff, fewer for a small one, riskiest logic first. Pick operators from [OPERATORS.md](OPERATORS.md). Prefer mutants that still compile or parse: a compile error proves nothing about the tests. Done when each mutant has an id, a `file:line` and a before and after.
+4. **Run one at a time.** Apply one mutant, run the suite without stopping at the first failure, and record KILLED with every failing test, or SURVIVED. Restore the file from its backup and check that `git status --porcelain` matches the starting status before the next mutant. A cache keyed on file modification time (Python bytecode, incremental builds) can run the previous code after a quick edit, so turn it off for these runs. Done when every mutant has a verdict and the tree matches the start.
+5. **Widen once per survivor.** Run the wider suite (the whole project, or the test folder next to the target) with the survivor applied, to tell "survives the branch's tests" from "survives every test". Restore afterwards.
+6. **Triage.** Sort survivors into real (it would let a production bug ship) and cosmetic (an equivalent mutant, or a change no caller can observe). When the mutated code looks more correct than the original, the survivor has found a production bug: report it as a finding, and never write a test that pins the questionable behavior.
+7. **Report** to the user in the format in [OPERATORS.md](OPERATORS.md#report). Done when the report ends with the final `git status --porcelain`, identical to the start.
 
-## Phase 1 — mesure (l'agent)
+Measuring never commits, pushes, or edits a file outside the target.
 
-Contrat à donner à chaque agent (adapter cible/chemins) :
+## Harden (only when the user asks)
 
-1. **Pré-vol** : worktree propre (`git status --porcelain` vide). S'il est sale :
-   backup par fichier (`cp` vers le scratchpad) et restauration par `cp`, JAMAIS
-   de revert git global (`checkout .`, `stash`, `reset` interdits).
-2. **Baseline** : lancer les tests de la PR (foreground, timeout long, jamais en
-   background). Rouge → STOP et rapporter, on ne mute pas sur une base rouge.
-3. **Concevoir 8–15 mutants ciblés** sur le code NOUVEAU seulement, priorisés sur
-   la logique la plus risquée. Opérateurs qui paient :
-   - flips de comparaison (`>=`↔`>`, `==`↔`!=`) et de bornes (off-by-one, signes) ;
-   - suppression d'une clause `where`/filtre/garde ; inversion d'une négation ;
-   - swap de valeurs du domaine (atoms d'event/actor, strings de metadata) ;
-   - SQL : colonnes de PARTITION BY, ASC↔DESC, NOT EXISTS↔EXISTS,
-     `IS NOT DISTINCT FROM`→`=`, médiane→moyenne, intervalles ;
-   - émission/écriture sautée, ou limitée au premier élément d'une liste.
-   Préférer les mutants QUI COMPILENT (les strings SQL sont idéales) — une erreur
-   de compilation n'est qu'un « killed by compiler », signal faible.
-4. **Un mutant à la fois** : Edit → tests de la PR → noter KILLED (quel test) ou
-   SURVIVED → revert (`git checkout -- <fichier>` ou `cp` du backup) → vérifier
-   worktree propre avant le suivant. Survivant → relancer une fois le répertoire
-   de tests voisin pour distinguer « survit à la PR » de « survit à tout ».
-5. **Rapport** : tableau `id | fichier:ligne | mutation | résultat`, puis par
-   survivant une ligne « trou révélé + assertion suggérée ». Terminer par le
-   `git status --porcelain` final (preuve de propreté).
-
-Interdits : commit, push, toucher d'autres fichiers que la cible.
-
-## Phase 2 — durcissement (optionnel, sur validation)
-
-Après consolidation, trier les survivants : réels (cacheraient un bug prod) vs
-cosmétiques (ordre intra-transaction, compteurs de log, aliasing de fixtures).
-Pour les réels, relancer un agent par branche avec ce contrat :
-
-1. Ajouter les tests tueurs suggérés — production intouchée ; un soupçon de bug
-   prod découvert en route se RAPPORTE, ne se corrige pas dans cette passe.
-2. **Kill-check obligatoire** par mutant : réappliquer le mutant → le nouveau
-   test échoue → revert → suite verte. Un test qui ne tue pas son mutant est refusé.
-3. Format/lint du repo, commit tests-seulement sur la branche de la PR, pas de push.
-
-## Livrable (privé, JAMAIS sur GitHub)
-
-Ne jamais poster le résultat en commentaire de PR ni nulle part de public
-Le livrable va au demandeur directement :
-
-1. **Le rapport dans la session** — le message final de consolidation EST le
-   livrable principal.
-2. **Une copie locale** dans `~/.claude/mutation-reports/<repo>-pr<N>.md`
-   (créer le dossier au besoin), pour relecture à froid via `rv`.
-
-Format identique dans les deux : concis, lisible à froid, jamais de slop :
-une phrase d'explication de la pratique, le score, puis UNIQUEMENT les
-survivants réels — chacun en « ce qui survit → l'assertion qui le tuerait »,
-localisé `fichier:ligne`. Pas de tableau, pas d'emoji, pas de section vide ;
-zéro survivant réel → deux lignes. Les cosmétiques écartés : un compte, sans
-détail.
-
-```markdown
-**Mutation testing** — j'ai altéré le code nouveau de cette PR en N points
-(filtres supprimés, comparaisons inversées, mappings permutés) pour vérifier
-qu'à chaque fois un test casse. Score : K/N tués.
-
-M survivants qui cacheraient un vrai bug :
-
-- `fichier.ex:LIGNE` — <mutation en une proposition> ne fait échouer aucun test.
-  Assertion à ajouter : <le test concret qui le tuerait>.
-
-Survivants cosmétiques ignorés : C.
-```
-
-## Consolidation (boucle principale)
-
-- Score par branche (tués/total) + score global.
-- Séparer survivants réels / cosmétiques ; pour chaque réel, dire quel bug prod
-  il cacherait.
-- Un survivant peut révéler un vrai bug prod (ex. off-by-one légitime) : le
-  remonter comme finding, jamais le « corriger » via un test qui entérine le
-  comportement douteux.
+1. **Write the killing tests** for the real survivors, in test files only. A production bug found on the way is reported, not fixed and not asserted.
+2. **Kill-check each new test.** Re-apply its mutant: the new test must fail. Restore, then run the full suite: it must pass. A test that does not kill its mutant is rewritten or dropped.
+3. **Commit tests only.** Run the repository's formatter and linter, commit the test files on the branch, and never push. Done when `git show --stat HEAD` lists test files only and the report shows each kill-check.

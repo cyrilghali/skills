@@ -1,104 +1,98 @@
 ---
 name: rewrite-commits
-description: Collapse a draft PR's noisy iteration commits into 1-3 atomic commits before review.
-disable-model-invocation: true
+description: Squashes and regroups the commits on a pull request branch into one to three atomic commits, each a logical unit, proves the final code is unchanged, and force-pushes with a lease; rewrites a whole gh stack bottom-up and moves a fix to the branch that owns it. Use when the user asks to squash, clean up, collapse, tidy, rewrite or regroup the commits of a branch or draft PR (wip, fixup or iteration noise), to make its history reviewable commit by commit, or to do that across a stack of PRs. Not for writing the PR description (intent-pr), splitting one branch into several PRs, rebasing onto the latest base, amending or rewording one commit, or reviewing someone else's commits.
+metadata:
+  category: ship
 ---
 
-# rewrite-commits
+# Rewrite commits
 
-Iteration with an LLM — and your own evolving decisions — produces branches with 5-15 small commits like "rename X", "tighten threshold", "drop Y", "trim tests", "restore Y". This skill collapses that noise into 1-3 atomic commits that map to logical units of change, so reviewers see the *result* of the thinking, not the thinking itself.
+Work with an agent leaves a branch with commits like "rename X", "drop Y", "restore Y". Reviewers need the result, not the path to it. This skill regroups the branch into one to three commits, each a logical unit, while the code at the tip stays byte for byte the same.
 
-## When to trigger
+Every command here runs without an editor, so an agent can drive it. Interactive commands (`git rebase -i`, `git add -p`) wait on a person and are replaced below by a soft reset, selective staging and file edits.
 
-- After heavy back-and-forth iteration on a draft PR, before flipping ready-for-review
-- When a draft PR's `git log` reads like a stream of consciousness instead of a feature
+## 1. Decide whether to rewrite
 
-## When NOT to trigger
-
-- The PR has reviews (force-push will lose review-thread anchors and surprise reviewers)
-- The branch is `main`, `staging`, `master`, or any shared protected branch
-- The branch is open as non-draft and has been visible to reviewers for a while
-- The user has explicitly asked to keep the commit-by-commit history
-
-## Pre-checks (run these first; refuse if any fails)
-
-1. **Branch ahead of base** — `git rev-list --count <pr-base>..HEAD` returns ≥ 2.
-2. **Branch is the user's own** — current branch isn't `main`/`staging`/`master`.
-3. **Working tree clean** — `git status --porcelain` returns empty.
-4. **PR is draft (or no reviews)** — `gh pr view --json isDraft,reviews` shows `isDraft: true` or `reviews: []`. If non-draft with no reviews, warn but allow.
-5. **Determine the PR base** — usually `<remote>/<base-ref>` from `gh pr view --json baseRefName`. For stacked PRs, this may be another feature branch.
-
-## Process
-
-### 1. List the noise
+Gather the facts first:
 
 ```bash
-git log --oneline <pr-base>..HEAD
+git status --porcelain
+git branch --show-current
+gh pr view --json isDraft,reviews,baseRefName,body
+gh stack view --json          # succeeds only on a branch of a gh stack
 ```
 
-Show the user how many commits are about to be collapsed.
+| Finding | Action |
+|---|---|
+| Uncommitted changes | Stop. Ask the user to commit or stash them first. |
+| The branch is the default branch or another shared branch | Stop. Other people build on it. |
+| One commit ahead of the base, or none | Stop. Say there is nothing to regroup and run nothing. |
+| The PR has any review, or is out of draft and others have read it | Stop. A force-push detaches reviewers' inline comments from their lines and makes them re-read everything. Offer a squash merge at merge time instead, or a rewrite once the review is closed. Go on only if the user insists after hearing this. |
+| `gh stack view --json` succeeds | Follow [STACKS.md](STACKS.md) for the whole stack instead of steps 2 to 5. |
 
-### 2. Group commits into atomic units
+Done when you have said go or stop, with the row that decided it.
 
-Most PRs collapse into 1-3 commits along these lines:
-- **Plumbing / data flow** — migrations, schema changes, threading values through job args
-- **Behavior** — the user-facing or system-facing effect (alerts, UI, API change)
-- **Tests** — only as a separate commit if pure test additions to existing code
+## 2. Find the fork point
 
-Walk the diff (`git diff <pr-base>...HEAD --stat`) and propose the commit structure to the user with subjects. Get approval before executing.
-
-### 3. Execute the rewrite
+The base is the PR's `baseRefName`, which can differ from the default branch; regroup only the commits after the fork point with that base.
 
 ```bash
-# 1. All current changes become staged against the PR base
-git reset --soft <pr-base>
+git fetch origin <baseRefName>
+FORK=$(git merge-base origin/<baseRefName> HEAD)
+git log --format='%h %an %s' "$FORK"..HEAD
+git diff --stat "$FORK" HEAD
+```
 
-# 2. Unstage everything so we can re-stage selectively
+Reset to the fork point, not to the base branch's tip. If the base moved since the branch started, a soft reset to its tip commits a silent revert of everything merged into it since. Rebasing onto the newer base is a separate job that changes the code under review; leave it out unless the user asks.
+
+Done when the commit list holds only the user's own commits.
+
+## 3. Plan the commits
+
+Read the diff and group it into one to three commits per branch, each with a subject line. Most branches split into plumbing (schema, migrations, data flow), then behavior (what users or callers see); tests get their own commit only when they cover existing code. Every changed file, and every hunk of a file split across commits, belongs to exactly one commit. Name each split file and which part goes where.
+
+Show the plan to the user with the side effects from step 5, then wait for approval. An approval the user already gave in the request counts; say you are using it.
+
+Done when the user has approved a plan in which every change has one owning commit.
+
+## 4. Rewrite
+
+```bash
+git branch -f rewrite-backup/<branch> HEAD     # the old tip, for the proof and for undo
+git reset --soft "$FORK"
 git restore --staged .
 ```
 
-For each planned commit:
+For each planned commit, in order:
 
 ```bash
-# 3a. Stage the files belonging to this commit
-git add <file1> <file2> ...
-
-# 3b. For partial-file commits (file split across two commits):
-#     Edit the file to its commit-N state via Edit tool,
-#     stage it, commit, then Edit forward to commit-(N+1) state for the next round.
-#     Never use `git add -p` (interactive flag, blocked).
-
-# 3c. Commit
+git add <files of this commit>
 git commit -m "<subject>" -m "<body>"
 ```
 
-### 4. Force-push
+For a file split across two commits: edit it down to the state the first commit should hold, stage it and commit. Then bring back the final version with `git checkout rewrite-backup/<branch> -- <path>` and commit it with the second unit.
+
+Prove the code did not change:
 
 ```bash
-git push --force-with-lease
+git diff --stat rewrite-backup/<branch> HEAD   # must print nothing
+git status --porcelain                         # must print nothing
 ```
 
-Use `--force-with-lease` (not `--force`) so a concurrent push from elsewhere isn't silently overwritten. The PR retains its number, description, and labels — only the commit list changes.
+Done when both commands print nothing. If either prints anything, fix the commits or undo with `git reset --hard rewrite-backup/<branch>`, and do not push.
 
-### 5. Report
+## 5. Push and report
 
-Show the user the new `git log --oneline <pr-base>..HEAD` so they can confirm the result.
+Before the push, tell the user what changes for others:
 
-## Constraints
+- Every commit hash on the branch changes. Quote any hash or commit count in the PR body or comments; it goes stale. Offer to fix the body with `gh pr edit --body-file`.
+- Anyone with the branch checked out has to reset to the new tip.
 
-- **Never use** `git rebase -i` or `git add -p` — interactive flags are blocked. Work via `reset --soft` + selective `git add` + Edit-based file shaping for partial-file commits.
-- **Never rewrite history on shared branches** (main, staging, master). The skill's pre-checks must enforce this.
-- **Always confirm the commit structure** with the user before force-pushing. Even in auto mode — the structure is a judgment call only the user can make.
-- **Use `--force-with-lease`**, never `--force`.
-- **Keep the PR description intact** — only the commits change. If the PR description references commit shas or counts, flag that to the user before force-pushing.
+```bash
+git push --force-with-lease origin <branch>
+git log --oneline "$FORK"..HEAD
+```
 
-## Why this exists
+The lease refuses the push if someone else pushed to the branch since your last fetch.
 
-Code review focuses on the diff and the messages explaining it. Iteration commits document the *author's* journey, not the *reviewer's* path through the change. A clean atomic history:
-
-- Lets reviewers read the PR commit-by-commit and trust each step
-- Bisecting a regression lands on a meaningful unit, not a "rename" or "tweak threshold"
-- The PR's git log becomes the changelog for its feature
-- The author's hesitations, false starts, and corrections stay private (where they belong)
-
-Iteration is fine. Shipping iteration is noise.
+Done when the push succeeded and the user has seen the new log. Delete `rewrite-backup/<branch>` once they confirm the result.
