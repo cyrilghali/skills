@@ -12,11 +12,11 @@ The beat order and voice rules follow Grant Sanderson's 3Blue1Brown videos.
 | General rule | The pattern, stated only after the viewer has seen it work once. |
 | Payoff | Answer the hook in one sentence, on the final picture. |
 
-Give the video one main character who wants something, and let that character carry every beat: each beat shows what they do, see or run into. The video opens on their story, not on a tour of the system. A beat where the main character is absent explains a part of the system, so rewrite it from their point of view or cut it.
+Speak to the viewer about the real thing. Open on the question the viewer has, and answer it in plain statements, one per beat. Take the example from things the viewer already knows (a real number, a real tool, a real customer) rather than an invented person or company: a made-up character is one more name to hold, and it drops out while the hard part runs.
 
 A longer video is a run of chapters of about two minutes, each with its own hook, build and payoff, in the same `beats.json`. Prefix each beat id with its chapter (`c2-ask`).
 
-Open each new chapter with one or two sentences that tie what the viewer just learned to what the chapter asks, and give a new subject inside a chapter a lead-in clause, so the viewer never lands on a topic cold. A closing question that sets up the next video says what is still open and why it matters to the people in the story before it asks. In a series, end on a preview beat after that question: "In the next episode, you'll find out:" followed by the next episode's chapter questions, each short enough to stand alone.
+Open each new chapter with one or two sentences that tie what the viewer just learned to what the chapter asks, and give a new subject inside a chapter a lead-in clause, so the viewer never lands on a topic cold. A closing question that sets up the next video says what is still open and why it matters to the viewer before it asks. In a series, end on a preview beat after that question: "In the next episode, you'll find out:" followed by the next episode's chapter questions, each short enough to stand alone.
 
 ## Voice
 
