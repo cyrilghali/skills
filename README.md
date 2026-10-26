@@ -22,7 +22,6 @@ Skills that shape how work is written, reviewed and delegated. French and Englis
 
 | Skill | What it does |
 |-------|-------------|
-| [explainer-script](skills/explainer-script/) | The narration of an explainer video, beat by beat: one idea, one concrete example, written for the ear, with every fact checked against a source anyone can open and re-checked by a blind second reader. |
 | [explainer-video](skills/explainer-video/) | A finished narration turned into a video drawn in pen and ink: plans what moves in each beat, animates it in Remotion, voices it, checks the layout and renders an MP4. |
 
 ### Plugins

@@ -1,6 +1,6 @@
 # explainer-video baseline
 
-Since the narration moved out of this skill, every case starts from a finished `beats.json` in `fixtures/`. The scores below were taken before that change, when each case started from the topic alone and the skill also wrote the narration; dimensions 1, 3, 7 and 9 have changed since. Re-run the cases against the current rubric before trusting these numbers as a baseline. Cases 8 to 10 (narration and claim checks) moved with that content.
+Since the narration moved out of this skill, every case starts from a finished `beats.json` in `fixtures/`. The scores below were taken before that change, when each case started from the topic alone and the skill also wrote the narration; dimensions 1, 3, 7 and 9 have changed since. Re-run the cases against the current rubric before trusting these numbers as a baseline. Cases 8 to 10 (narration and claim checks) were removed with that content.
 
 Each case run once by a fresh agent with no skill loaded, judged against `rubric.md` by a fresh strict judge.
 
