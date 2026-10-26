@@ -18,6 +18,12 @@ Skills that shape how work is written, reviewed and delegated. French and Englis
 | [mutation-test](skills/mutation-test/) | Mutation testing of a branch by parallel agents, one mutant at a time, survivors reported as the assertion that would kill them. |
 | [rewrite-commits](skills/rewrite-commits/) | Collapse a draft PR's iteration commits into one to three atomic commits. |
 
+### Making things
+
+| Skill | What it does |
+|-------|-------------|
+| [explainer-video](skills/explainer-video/) | A narrated explainer video drawn in pen and ink: writes the narration beat by beat, checks every fact it states against a source anyone can open, animates it in Remotion and renders an MP4. |
+
 ### Plugins
 
 **[docs](plugins/docs/)** — Documentation authoring workflow with 9 skills:
@@ -53,7 +59,14 @@ Requires a `docs/style-guide.md` in your project. The skills reference it for ru
 
 ### Skills
 
-Copy a skill to `~/.claude/skills/`:
+Install one skill and get its updates with the [skills CLI](https://github.com/vercel-labs/skills):
+
+```sh
+npx skills add cyrilghali/skills --skill explainer-video
+npx skills update        # later, to pull new versions
+```
+
+Or copy a skill to `~/.claude/skills/`:
 
 ```sh
 cp -r skills/prose ~/.claude/skills/
