@@ -9,7 +9,7 @@ metadata:
 
 Turn a finished narration into a video where the picture carries the idea and the voice says what to look at. Take the look from `template/src/DESIGN.md`: one world drawn in ink on paper, with colour only on the actor the voice is about.
 
-The input is a finished `beats.json`, already checked against its sources, one or two sentences of plain spoken text per beat; when none exists yet, write and check the narration first, then start at step 1.
+The input is a finished `beats.json`: one or two sentences of plain spoken text per beat.
 
 ```json
 [{"id": "intro", "text": "This small light is a planet."},
