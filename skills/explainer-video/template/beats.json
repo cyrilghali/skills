@@ -1,0 +1,5 @@
+[
+  {"id": "intro", "text": "This small ball is a planet."},
+  {"id": "orbit", "text": "Gravity bends its path into a circle around the sun."},
+  {"id": "year", "text": "One full turn takes three hundred and sixty five days."}
+]
