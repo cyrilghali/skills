@@ -1,0 +1,102 @@
+[
+ {
+  "id": "c1-hook",
+  "text": "Ana wants a book about bees. By Friday she will have it in her hands, and three weeks later it will be back on the shelf for someone else. How does one book make that trip?"
+ },
+ {
+  "id": "c1-search",
+  "text": "It starts at the catalogue. Ana types bees, and the catalogue shows one copy, on the second floor, under the number five ninety-five point seven."
+ },
+ {
+  "id": "c1-status",
+  "text": "Next to the number, one word matters most: available. Nobody has the book right now."
+ },
+ {
+  "id": "c1-shelf",
+  "text": "Ana climbs to the second floor. The shelves run in number order, so five ninety-five sits between five ninety and six hundred."
+ },
+ {
+  "id": "c1-gap",
+  "text": "She finds the spot. If the book were on the wrong shelf, the catalogue would still send her here, and she would find a gap."
+ },
+ {
+  "id": "c1-found",
+  "text": "But it is there, spine out, right where the number said."
+ },
+ {
+  "id": "c1-payoff",
+  "text": "So the first step of every loan is a promise: the number in the catalogue matches the place on the shelf."
+ },
+ {
+  "id": "c2-bridge",
+  "text": "Ana has the book in her hand. Now the library has to know that it left."
+ },
+ {
+  "id": "c2-desk",
+  "text": "At the front desk, a volunteer scans Ana's card, then the barcode inside the cover."
+ },
+ {
+  "id": "c2-link",
+  "text": "That scan ties the book to Ana. The catalogue now says on loan, and shows a due date three weeks away."
+ },
+ {
+  "id": "c2-hold",
+  "text": "While she has it, another reader, Tom, asks for the same book. He places a hold."
+ },
+ {
+  "id": "c2-queue",
+  "text": "Tom is now first in line. Ana can keep reading, but she can't renew the book, because someone is waiting."
+ },
+ {
+  "id": "c2-email",
+  "text": "Two days before the due date, the library emails Ana a reminder."
+ },
+ {
+  "id": "c2-payoff",
+  "text": "So a loan is a link between one book and one reader, with a clock on it, and a line of people behind it."
+ },
+ {
+  "id": "c3-bridge",
+  "text": "Three weeks later, Ana is done. The book has one more trip to make: back to where it belongs, or on to Tom."
+ },
+ {
+  "id": "c3-drop",
+  "text": "She slips it into the book drop by the front door. The drop never closes, and it is emptied three times a day."
+ },
+ {
+  "id": "c3-scan",
+  "text": "At the returns desk, a volunteer scans the barcode again. The link to Ana is cut, and her account is clear."
+ },
+ {
+  "id": "c3-check",
+  "text": "Before going anywhere, the book is checked for damage. A torn page sends it to the repair cart instead."
+ },
+ {
+  "id": "c3-tom",
+  "text": "This one is fine. And because Tom is waiting, it skips the shelves and goes to the holds shelf, with his name on a slip."
+ },
+ {
+  "id": "c3-wait",
+  "text": "Tom gets an email. The book waits for him for seven days."
+ },
+ {
+  "id": "c3-cart",
+  "text": "If Tom had not been waiting, the book would go onto a sorting cart for the second floor."
+ },
+ {
+  "id": "c3-reshelve",
+  "text": "A volunteer would carry it up within a day, read the shelf around the gap, and slide it back between five ninety and six hundred."
+ },
+ {
+  "id": "c3-rule",
+  "text": "Every trip ends the same way. The catalogue and the shelf have to agree again, or the next reader finds a gap."
+ },
+ {
+  "id": "c3-payoff",
+  "text": "That is the whole loop: find it by its number, link it to a reader, and bring it back to its exact place."
+ },
+ {
+  "id": "c3-next",
+  "text": "But what happens when a book never comes back? In the next episode, you'll find out: How long is a book overdue before it is lost? Who pays for it? And how does the catalogue learn it is gone?"
+ }
+]

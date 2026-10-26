@@ -1,0 +1,38 @@
+[
+ {
+  "id": "hook",
+  "text": "When you type your password into a website, it crosses dozens of computers you don't control. Why can't they read it?"
+ },
+ {
+  "id": "case",
+  "text": "Here is Maria at a café, logging in to her bank."
+ },
+ {
+  "id": "postcards",
+  "text": "Without protection, her password travels like a postcard. Anyone who handles it can read it."
+ },
+ {
+  "id": "lock",
+  "text": "With HTTPS, her browser and the bank first agree on a secret key. This first exchange is called the handshake."
+ },
+ {
+  "id": "badge",
+  "text": "During the handshake, the bank shows a certificate, a kind of ID badge signed by someone her browser already trusts."
+ },
+ {
+  "id": "box",
+  "text": "Now every message goes inside a locked box that only that key opens."
+ },
+ {
+  "id": "café",
+  "text": "The café's router still passes the box along. It just can't open it."
+ },
+ {
+  "id": "rule",
+  "text": "So the path can be anyone's. Only the two ends hold the key."
+ },
+ {
+  "id": "payoff",
+  "text": "That is why the little padlock means her password reaches the bank, and only the bank."
+ }
+]

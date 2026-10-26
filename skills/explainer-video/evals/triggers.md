@@ -25,3 +25,7 @@
 | 21 | make a video of the new billing flow and check every number in the narration against the code | yes | yes |
 | 22 | remake our episode 2 explainer video, keeping every fact of the old one | yes | yes |
 | 23 | fact-check this blog post for me | no | yes |
+| 24 | write the script for my explainer video on how a hash map works | no | no |
+| 25 | fact-check the narration of my explainer video before I render it | no | no |
+| 26 | draft the voiceover for a 3b1b style video on gradient descent, I'll animate it later | no | yes |
+| 27 | the labels overlap in my explainer video, fix the layout | yes | no |

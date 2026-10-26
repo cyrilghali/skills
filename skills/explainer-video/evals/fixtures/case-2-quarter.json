@@ -1,0 +1,14 @@
+[
+ {
+  "id": "pizza",
+  "text": "Here is a pizza cut into four equal slices."
+ },
+ {
+  "id": "take",
+  "text": "Take one slice. That is one out of four, or twenty-five percent."
+ },
+ {
+  "id": "grid",
+  "text": "Twenty-five out of every hundred squares is the same amount: one quarter."
+ }
+]
