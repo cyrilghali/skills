@@ -1,0 +1,34 @@
+[
+ {
+  "id": "hook",
+  "text": "When a job fails, three functions decide its future. Let's follow one failure through them."
+ },
+ {
+  "id": "fail",
+  "text": "The worker catches the error in Runner.Worker.perform, and hands the job to Retry.Scheduler.plan."
+ },
+ {
+  "id": "plan",
+  "text": "plan reads the attempt count from the job row and asks Retry.Backoff.compute for the delay."
+ },
+ {
+  "id": "compute",
+  "text": "compute returns two to the attempt, plus a random jitter capped at thirty seconds."
+ },
+ {
+  "id": "schedule",
+  "text": "plan writes scheduled_at as now plus that delay, and the job goes back to available."
+ },
+ {
+  "id": "limit",
+  "text": "When attempt reaches max_attempts, plan skips the delay and calls Retry.Scheduler.give_up."
+ },
+ {
+  "id": "give-up",
+  "text": "give_up sets the state to discarded and records the last error. Nothing picks it up after that."
+ },
+ {
+  "id": "payoff",
+  "text": "So: perform catches, plan decides, compute times, and give_up ends it."
+ }
+]

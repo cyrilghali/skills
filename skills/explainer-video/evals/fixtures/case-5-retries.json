@@ -1,0 +1,34 @@
+[
+ {
+  "id": "hook",
+  "text": "A job fails. Should it try again right away?"
+ },
+ {
+  "id": "fail",
+  "text": "Here is one job that sends an email, and the mail server is down."
+ },
+ {
+  "id": "wait",
+  "text": "After the first failure, it waits two seconds. After the second, four. Each time, the wait doubles: two to the power of the attempt."
+ },
+ {
+  "id": "crowd",
+  "text": "But a hundred jobs failed at the same moment. If they all wait the same time, they all hit the server together again."
+ },
+ {
+  "id": "jitter",
+  "text": "So each wait gets a small random extra, called jitter. The jobs spread out instead of arriving at once."
+ },
+ {
+  "id": "limit",
+  "text": "After twenty attempts, the runner stops trying."
+ },
+ {
+  "id": "discarded",
+  "text": "The job moves to a state called discarded. It stays there for an engineer to look at, and never runs again on its own."
+ },
+ {
+  "id": "payoff",
+  "text": "Wait longer each time, spread the crowd out, and know when to give up."
+ }
+]

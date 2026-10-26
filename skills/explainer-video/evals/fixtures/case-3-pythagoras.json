@@ -1,0 +1,34 @@
+[
+ {
+  "id": "hook",
+  "text": "Why does a squared plus b squared equal c squared, for every right triangle?"
+ },
+ {
+  "id": "square",
+  "text": "Start with a big square, with sides a plus b long."
+ },
+ {
+  "id": "first",
+  "text": "Place four copies of our triangle inside it, one in each corner."
+ },
+ {
+  "id": "tilted",
+  "text": "The space left in the middle is a tilted square. Its side is c, so its area is c squared."
+ },
+ {
+  "id": "slide",
+  "text": "Now slide the same four triangles into new places, without changing them."
+ },
+ {
+  "id": "two",
+  "text": "The space left is now two squares: one with side a, one with side b."
+ },
+ {
+  "id": "equal",
+  "text": "The big square and the four triangles never changed, so the empty space never changed either."
+ },
+ {
+  "id": "payoff",
+  "text": "So c squared is exactly a squared plus b squared."
+ }
+]

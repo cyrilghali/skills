@@ -1,0 +1,34 @@
+[
+ {
+  "id": "hook",
+  "text": "You have a sorted list of a million names. How many looks does it take to find one?"
+ },
+ {
+  "id": "case",
+  "text": "Here are sixteen numbers in order, and we are looking for forty-two."
+ },
+ {
+  "id": "middle",
+  "text": "Look at the middle one first. It says thirty, so forty-two must be to the right."
+ },
+ {
+  "id": "halve",
+  "text": "In one look, half the list is gone. These eight numbers can't hold it."
+ },
+ {
+  "id": "again",
+  "text": "Do it again on what is left. The middle says fifty, so now go left."
+ },
+ {
+  "id": "found",
+  "text": "Four numbers, then two, then one. Forty-two, found in four looks."
+ },
+ {
+  "id": "rule",
+  "text": "Every look cuts the list in half, so doubling the list adds just one more look."
+ },
+ {
+  "id": "payoff",
+  "text": "A million names? Twenty looks is enough."
+ }
+]
