@@ -1,4 +1,4 @@
-# series-planner trigger results
+# plan-series trigger results
 
 Each query ran three times in a fresh headless session (three turns, plan mode, no hooks). A run fired when the session called the skill or opened its folder. A query passes when most of its runs match its Should trigger column.
 

@@ -1,6 +1,6 @@
 # Hand-off formats
 
-What this skill reads and writes. The brief format is condensed from the series-planner skill's `FORMAT.md`; this copy keeps only the fields a script needs.
+What this skill reads and writes. The brief format is condensed from the plan-series skill's `FORMAT.md`; this copy keeps only the fields a script needs.
 
 ## In: the brief
 

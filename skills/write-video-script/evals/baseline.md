@@ -1,4 +1,4 @@
-# video-script baseline
+# write-video-script baseline
 
 Each case ran once on a fresh Sonnet subagent with no skill loaded. It had the case's Input as a plain request and a scratch folder holding only the fixture files, renamed to neutral names (`caseN/`, `brief.md`, `source.md`). A fresh Opus judge then scored each folder and the agent's final reply against `rubric.md`. Pass is 18 of 22 with no dimension at 0. Run on 27/10/2026, before SKILL.md existed.
 

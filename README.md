@@ -22,11 +22,11 @@ Skills that shape how work is written, reviewed and delegated. French and Englis
 
 | Skill | What it does |
 |-------|-------------|
-| [series-planner](skills/series-planner/) | A series of videos, lessons or pages planned from a goal, its audiences and a source: tiers from overview to deep dive, every fact placed in exactly one unit and none dropped for depth, and one brief per unit. |
-| [video-script](skills/video-script/) | One video's narration written beat by beat from a brief or a bare topic: what the voice says, the few words on screen in each beat, and a fact check that ties every claim to a source. |
-| [video-production](skills/video-production/) | A finished narration turned into a video: plans what moves in each beat, animates it in Remotion, voices it, checks the layout and renders an MP4. Its pen-and-ink look, voice and music are a default style you can swap. |
+| [plan-series](skills/plan-series/) | A series of videos, lessons or pages planned from a goal, its audiences and a source: tiers from overview to deep dive, every fact placed in exactly one unit and none dropped for depth, and one brief per unit. |
+| [write-video-script](skills/write-video-script/) | One video's narration written beat by beat from a brief or a bare topic: what the voice says, the few words on screen in each beat, and a fact check that ties every claim to a source. |
+| [make-video](skills/make-video/) | A finished narration turned into a video: plans what moves in each beat, animates it in Remotion, voices it, checks the layout and renders an MP4. Its pen-and-ink look, voice and music are a default style you can swap. |
 
-The three chain: series-planner writes one brief per video, video-script turns a brief into narration (`beats.json`), and video-production draws, voices and renders it. Each also works on its own.
+The three chain: plan-series writes one brief per video, write-video-script turns a brief into narration (`beats.json`), and make-video draws, voices and renders it. Each also works on its own.
 
 ### Plugins
 
@@ -66,11 +66,11 @@ Requires a `docs/style-guide.md` in your project. The skills reference it for ru
 Install one skill and get its updates with the [skills CLI](https://github.com/vercel-labs/skills):
 
 ```sh
-npx skills add cyrilghali/skills --skill video-production
+npx skills add cyrilghali/skills --skill make-video
 npx skills update        # later, to pull new versions
 ```
 
-`explainer-video` is now `video-production`, and the old name is gone from this repo, so updates stop reaching it. If you installed it under the old name, run `npx skills remove explainer-video`, then add `video-production` as above.
+The video skills were renamed after what they do: `explainer-video` (later `video-production`) is now `make-video`, `series-planner` is now `plan-series`, and `video-script` is now `write-video-script`. The old names are gone from this repo, so updates stop reaching them. If you installed one under an old name, run `npx skills remove <old name>`, then add the new name as above.
 
 Or copy a skill to `~/.claude/skills/`:
 

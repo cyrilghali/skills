@@ -1,5 +1,5 @@
 ---
-name: series-planner
+name: plan-series
 description: Plans a series of videos, lessons or doc pages from a source document - which units to make, for which audience, in what order. Sets the goal and how to tell it was reached, lists every checkable fact in the source with where it comes from, catches false or outdated ones, places each fact in exactly one unit, checks coverage with a script and writes one brief per unit. Use when the user asks to plan a video series, episodes, a course outline, lessons or a set of docs pages from notes, a handbook, a spec or a backlog, asks how many videos or lessons a source needs and what goes in each, or wants one source split for several audiences, broad first.
 metadata:
   category: plan

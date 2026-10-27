@@ -1,4 +1,4 @@
-# video-script trigger queries
+# write-video-script trigger queries
 
 | # | Query (as a user would type it) | Should trigger | Held out |
 |---|---|---|---|

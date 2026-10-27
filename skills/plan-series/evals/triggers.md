@@ -1,4 +1,4 @@
-# series-planner trigger queries
+# plan-series trigger queries
 
 Tune the description on the twelve open queries only. The eight held-out queries are never read while tuning.
 

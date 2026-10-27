@@ -1,4 +1,4 @@
-# video-script eval results
+# write-video-script eval results
 
 Pass is 18 of 22 with no dimension at 0 (`rubric.md`). Each case ran three times on fresh subagents that saw only the request and the fixture files: runs 1 and 2 on Sonnet, run 3 on Opus. A blind Opus judge scored the three runs of a case together, shuffled as A, B and C; a second Sonnet judge scored A alone. Cases 5 and 6 are held out: no skill change was made from their results. Run on 27/10/2026.
 

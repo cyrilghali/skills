@@ -1,4 +1,4 @@
-# series-planner baseline (no skill)
+# plan-series baseline (no skill)
 
 Each case ran once on Sonnet as a fresh general-purpose agent with no skill loaded. The agent got the case's Input reworded as a plain request, plus the fixture copied alone into a scratch folder. One fresh Opus judge scored each output against `rubric.md` with the case's fact key.
 
