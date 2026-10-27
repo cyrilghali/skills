@@ -8,7 +8,7 @@ Reads <folder>/plan.json (format in FORMAT.md). Fails (exit 1) and lists every p
   - a fact names a unit that does not exist;
   - a drop reason does not start with false:, outdated:, duplicate: or off-goal:, or gives depth as
     the reason (a fact too deep for one tier moves to a deeper tier; it is never dropped);
-  - a unit has no fact, no idea, or a tier that does not exist;
+  - a unit id is used twice, or a unit has no fact, no idea, or a tier that does not exist;
   - a unit in a standalone tier has prerequisites;
   - a prerequisite is unknown, comes later in the unit order, or sits in a later tier;
   - a tier has no unit, or names an audience that does not exist;
@@ -23,7 +23,7 @@ from pathlib import Path
 
 DROP_KINDS = ("false:", "outdated:", "duplicate:", "off-goal:")
 DEPTH = re.compile(
-    r"\b(too )?(deep|depth|advanced|detail(ed|s)?|technical|complex|niche|in the weeds|beginners?|newcomers?|level)\b",
+    r"\b(too )?(deep|depth|advanced|detail(ed|s)?|technical|complex|niche|in the weeds|beginners?|newcomers?)\b",
     re.I,
 )
 
@@ -38,6 +38,10 @@ def check(plan):
     tier_of = {t.get("id"): t for t in plan.get("tiers", [])}
     units = plan.get("units", [])
     order = {u.get("id"): i for i, u in enumerate(units)}
+    tier_of_unit = {u.get("id"): u.get("tier") for u in units}
+    for uid in {u.get("id") for u in units}:
+        if sum(u.get("id") == uid for u in units) > 1:
+            problems.append(f"unit {uid}: id used twice")
     facts_in = {u.get("id"): [] for u in units}
 
     for t in plan.get("tiers", []):
@@ -70,7 +74,7 @@ def check(plan):
             facts_in[unit].append(fid)
         elif not dropped.lower().startswith(DROP_KINDS):
             problems.append(f"fact {fid}: drop reason must start with one of {', '.join(DROP_KINDS)}")
-        elif DEPTH.search(dropped):
+        elif not dropped.lower().startswith("duplicate:") and DEPTH.search(dropped):
             problems.append(f"fact {fid}: dropped for depth ({dropped!r}); move it to a deeper tier instead")
 
     for u in units:
@@ -90,7 +94,7 @@ def check(plan):
                 problems.append(f"unit {uid}: prerequisite {p!r} does not exist")
             elif order[p] >= order[uid]:
                 problems.append(f"unit {uid}: prerequisite {p} comes later in the unit order")
-            elif tiers.index(next(x.get("tier") for x in units if x.get("id") == p)) > tiers.index(tier):
+            elif tier_of_unit[p] in tier_of and tiers.index(tier_of_unit[p]) > tiers.index(tier):
                 problems.append(f"unit {uid}: prerequisite {p} sits in a later tier")
     return problems, facts_in
 
@@ -110,7 +114,7 @@ def brief(plan, unit, facts_in):
     facts = {f["id"]: f for f in plan["facts"]}
     tier = next(t for t in plan["tiers"] if t["id"] == unit["tier"])
     tiers = [t["id"] for t in plan["tiers"]]
-    who = [a for a in plan["audiences"] if a["id"] in tier.get("audiences", [])]
+    who = [a for a in plan.get("audiences", []) if a["id"] in tier.get("audiences", [])]
     lines = [f"# Brief: {unit['id']}" + (f" — {unit['title']}" if unit.get("title") else ""), ""]
     lines.append(f"- **Series goal:** {plan.get('goal', '')}")
     lines.append(f"- **How the series knows it worked:** {plan.get('evidence', '')}")

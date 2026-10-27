@@ -36,4 +36,13 @@ printf "$good" ',{"id":"f3","text":"smoke calms the guard  bees","source":"guide
 
 printf "$good" '' | sed 's/"prerequisites":\["u1"\]/"prerequisites":[]/; s/"tier":"overview","idea"/"tier":"overview","prerequisites":["u2"],"idea"/' | plan
 [ "$(run)" = 1 ] && grep -q "stands alone" "$tmp/out" || fail "a standalone unit with a prerequisite must fail"
+printf "$good" '' | sed 's/"tier":"overview","idea"/"tier":"overveiw","idea"/' | plan
+[ "$(run)" = 1 ] && grep -q "tier 'overveiw' does not exist" "$tmp/out" && ! grep -q Traceback "$tmp/out" || fail "a misspelled tier on a prerequisite must be listed, not crash"
+
+printf "$good" '' | sed 's/"id":"u2"/"id":"u1"/; s/"unit":"u2"/"unit":"u1"/; s/"prerequisites":\["u1"\]/"prerequisites":[]/' | plan
+[ "$(run)" = 1 ] && grep -q "unit u1: id used twice" "$tmp/out" || fail "two units with one id must fail"
+
+printf "$good" ',{"id":"f3","text":"Smoke keeps the guard bees calm","source":"guide p.4","dropped":"duplicate: f1 says this in more detail"}' | plan
+[ "$(run)" = 0 ] || fail "a duplicate drop that mentions detail must pass"
+
 echo "plan check ok"
