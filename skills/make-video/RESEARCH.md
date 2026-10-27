@@ -17,7 +17,7 @@ Every number comes from one test video: a 16-second scene (15.73 s, 472 frames a
 
 ## What was slow, and by how much?
 
-`render.sh` runs these stages in order. Before the fix, Chrome also drew the paper finish (paper image, film grain and vignette) inside the render stage. Now it renders flat and ffmpeg lays the finish on afterwards.
+`render.sh` runs these stages in order. Before the fix (https://github.com/cyrilghali/skills/pull/18), Chrome also drew the paper finish (paper image, film grain and vignette) inside the render stage. Now it renders flat and ffmpeg lays the finish on afterwards.
 
 ```
 voice ──▶ sound ──▶ lint ──▶ type-check ──▶ texture bake ──▶ render (Chrome) ──▶ finish (ffmpeg) ──▶ checks
