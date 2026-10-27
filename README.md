@@ -22,6 +22,7 @@ Skills that shape how work is written, reviewed and delegated. French and Englis
 
 | Skill | What it does |
 |-------|-------------|
+| [series-planner](skills/series-planner/) | A series of videos, lessons or pages planned from a goal, its audiences and a source: tiers from overview to deep dive, every fact placed in exactly one unit and none dropped for depth, and one brief per unit. |
 | [explainer-video](skills/explainer-video/) | A finished narration turned into a video drawn in pen and ink: plans what moves in each beat, animates it in Remotion, voices it, checks the layout and renders an MP4. |
 
 ### Plugins
