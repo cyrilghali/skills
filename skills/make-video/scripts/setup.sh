@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Checks the tools and downloads, once: the free Kokoro voice (~340 MB), the faster-whisper model that times
-# its words (~480 MB), and the two fonts the render draws text with (~1 MB).
+# its words (~480 MB), and the two fonts the render draws text with (~10 MB).
 set -euo pipefail
 for t in node pnpm uv ffmpeg ffprobe; do command -v "$t" >/dev/null || { echo "missing: $t" >&2; exit 2; }; done
 dir=${KOKORO_DIR:-$HOME/.cache/kokoro}
