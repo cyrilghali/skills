@@ -1,8 +1,6 @@
-import { loadFont as loadHand } from "@remotion/google-fonts/Gaegu";
-import { loadFont as loadMono } from "@remotion/google-fonts/JetBrainsMono";
-
-export const hand = loadHand("normal", { weights: ["300", "400", "700"], subsets: ["latin"] }).fontFamily;
-export const mono = loadMono("normal", { weights: ["400", "500"], subsets: ["latin"] }).fontFamily;
+/** Font families; scripts/setup.sh downloads their files and the render loads only those. */
+export const hand = "Gaegu";
+export const mono = "JetBrains Mono";
 
 export const color = {
   paper: "#efe5cf",

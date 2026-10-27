@@ -1,67 +1,107 @@
-import { Audio } from "@remotion/media";
-import React, { useEffect } from "react";
-import { AbsoluteFill, interpolate, Sequence, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
-import { at, BEATS, DURATION, FPS, saying, word } from "./beats";
-import { Paper } from "./look";
+import React from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { at, BEATS, word } from "./beats";
+import { engine, uid } from "./frame";
 import { color, hand, mono } from "./theme";
 
-/** Warm paper; render it first. */
-export const Background: React.FC = () => <Paper />;
+export { Easing, interpolate, random, useCurrentFrame } from "./frame";
+
+const W = 1920;
+const H = 1080;
+
+/** The flat paper colour under the scene; render it first. The render lays the paper texture on afterwards. */
+export const Background: React.FC = () => <rect width={W} height={H} fill={color.paper} />;
 
 /** Plays each beat's narration clip at the beat's start. */
-export const Voiceover: React.FC = () => (
-  <>
-    {Object.values(BEATS).map((b) => (
-      <Sequence key={b.id} from={Math.round(b.start * FPS)}>
-        <Audio src={staticFile(b.file)} />
-      </Sequence>
-    ))}
-  </>
-);
+export const Voiceover: React.FC = () => {
+  for (const b of Object.values(BEATS)) engine.voice.push({ file: b.file, start: b.start, end: b.end });
+  return null;
+};
 
-const speaking = (t: number) =>
-  Math.max(0, ...Object.values(BEATS).map((b) => interpolate(t, [b.start - 0.3, b.start, b.end, b.end + 0.4], [0, 1, 1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })));
-
-/** The ambient music bed: fades in and out, and dips under the voice. */
-export const Music: React.FC<{ level?: number }> = ({ level = 0.22 }) => (
-  <Audio
-    src={staticFile("sound/music.wav")}
-    loop
-    loopVolumeCurveBehavior="extend"
-    volume={(f) => {
-      const t = f / FPS;
-      const edges = interpolate(f, [0, 2 * FPS, DURATION - 2 * FPS, DURATION], [0, 1, 1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-      return level * edges * (1 - 0.45 * speaking(t));
-    }}
-  />
-);
+/** The ambient music bed: fades in and out over 2 s, and dips under the voice. */
+export const Music: React.FC<{ level?: number }> = ({ level = 0.22 }) => {
+  engine.music = level;
+  return null;
+};
 
 /** A short sound on cue, `delay` seconds into beat `beat`: tick (a point lights), whoosh (the camera moves), swell (a reveal builds), chime (the answer). */
 export const Cue: React.FC<{ beat: string; delay?: number; sound: "tick" | "whoosh" | "swell" | "chime"; volume?: number }> = ({ beat, delay = 0, sound, volume = 0.5 }) => {
   if (!BEATS[beat]) throw new Error(`Unknown beat "${beat}"`);
-  return (
-    <Sequence from={Math.round((BEATS[beat].start + delay) * FPS)}>
-      <Audio src={staticFile(`sound/${sound}.wav`)} volume={volume} />
-    </Sequence>
-  );
+  engine.cues.push({ file: `sound/${sound}.wav`, start: BEATS[beat].start + delay, volume });
+  return null;
 };
 
-// Paper behind every label, feathered at the edge, so words stay readable on hatching or a crowd.
-const backing: React.CSSProperties = {
-  background: `${color.paper}eb`,
-  boxShadow: `0 0 10px 6px ${color.paper}eb`,
-  borderRadius: 12,
-  padding: "0 10px",
-};
+// Line boxes from the fonts' hhea metrics, as a browser lays out one line: Gaegu has ascent 0.76,
+// descent 0.24 and a 0.25 line gap split above and below; JetBrains Mono has ascent 1.02 and descent 0.3.
+const HAND = { line: 1.25, baseline: 0.885 };
+const MONO = { line: 1.32, baseline: 1.02 };
+const PAPER_ALPHA = 0xeb / 255;
 
-/** Text typed on as `p` goes 0 to 1; the untyped rest is laid out but transparent, so the words never shift. */
-const Typed: React.FC<{ text: string; p: number }> = ({ text, p }) => {
+/** The text typed on as `p` goes 0 to 1; the untyped rest is kept but transparent, so the line keeps its width. */
+const typed = (text: string, p: number) => {
   const n = Math.ceil(text.length * Math.min(1, Math.max(0, p)));
   return (
     <>
       {text.slice(0, n)}
-      <span style={{ opacity: 0 }}>{text.slice(n)}</span>
+      <tspan fillOpacity={0}>{text.slice(n)}</tspan>
     </>
+  );
+};
+
+/** A one-line <text> with its left edge at x0 and its width measured by the renderer. */
+const line = (props: React.SVGProps<SVGTextElement>, children: React.ReactNode) => {
+  const el = <text {...props}>{children}</text>;
+  return { el, width: engine.measure(renderToStaticMarkup(el)) };
+};
+
+/** Paper behind a label, feathered at the edge like a blurred shadow, so words stay readable on hatching or a crowd. */
+const Backing: React.FC<{ x0: number; y0: number; w: number; h: number }> = ({ x0, y0, w, h }) => {
+  const blur = uid("feather");
+  const outside = uid("outside");
+  const r = 12;
+  const box = `M ${x0 + r} ${y0} H ${x0 + w - r} A ${r} ${r} 0 0 1 ${x0 + w} ${y0 + r} V ${y0 + h - r} A ${r} ${r} 0 0 1 ${x0 + w - r} ${y0 + h} H ${x0 + r} A ${r} ${r} 0 0 1 ${x0} ${y0 + h - r} V ${y0 + r} A ${r} ${r} 0 0 1 ${x0 + r} ${y0} Z`;
+  return (
+    <>
+      <filter id={blur} x="-50%" y="-100%" width="200%" height="300%">
+        <feGaussianBlur stdDeviation={5} />
+      </filter>
+      <clipPath id={outside}>
+        <path clipRule="evenodd" d={`M -50 -50 H ${W + 50} V ${H + 50} H -50 Z ${box}`} />
+      </clipPath>
+      <g clipPath={`url(#${outside})`}>
+        <rect x={x0 - 6} y={y0 - 6} width={w + 12} height={h + 12} rx={r + 6} fill={color.paper} fillOpacity={PAPER_ALPHA} filter={`url(#${blur})`} />
+      </g>
+      <rect x={x0} y={y0} width={w} height={h} rx={r} fill={color.paper} fillOpacity={PAPER_ALPHA} />
+    </>
+  );
+};
+
+/** Hand-lettered text on its own paper backing; (x, y) is the left edge or the centre of the box, by `anchor`. */
+const Backed: React.FC<{ x: number; y: number; anchor: "left" | "middle"; p: number; opacity: number; text: string; size: number; c: string; weight: number }> = ({
+  x,
+  y,
+  anchor,
+  p,
+  opacity,
+  text,
+  size,
+  c,
+  weight,
+}) => {
+  if (p <= 0 || opacity <= 0) return null;
+  const font = { fontFamily: hand, fontSize: size, fontWeight: weight, letterSpacing: 0.5, fill: c };
+  const { width } = line(font, text);
+  const w = width + 20;
+  const h = size * HAND.line;
+  const x0 = anchor === "left" ? x : x - w / 2;
+  const y0 = y - h / 2;
+  return (
+    <g data-layout="text" data-backed opacity={opacity}>
+      <Backing x0={x0} y0={y0} w={w} h={h} />
+      <text x={x0 + 10} y={y0 + size * HAND.baseline} {...font}>
+        {typed(text, p)}
+      </text>
+    </g>
   );
 };
 
@@ -75,28 +115,7 @@ export const Label: React.FC<{ x: number; y: number; p: number; text: string; op
   size = 38,
   c = color.ink,
   weight = 400,
-}) => (
-  <div
-    data-layout="text"
-    data-backed
-    style={{
-      position: "absolute",
-      left: x,
-      top: y,
-      transform: "translate(-50%, -50%)",
-      opacity: p > 0 ? opacity : 0,
-      fontFamily: hand,
-      fontSize: size,
-      fontWeight: weight,
-      color: c,
-      whiteSpace: "nowrap",
-      letterSpacing: 0.5,
-      ...backing,
-    }}
-  >
-    <Typed text={text} p={p} />
-  </div>
-);
+}) => <Backed x={x} y={y} anchor="middle" p={p} opacity={opacity} text={text} size={size} c={c} weight={weight} />;
 
 /**
  * The beat's note, bottom left: typed on as the voice says `phrase` in beat `id`,
@@ -107,169 +126,26 @@ export const Note: React.FC<{ t: number; id: string; phrase: string; text: strin
   const next = until ?? ids[ids.indexOf(id) + 1];
   const p = at(t, id, word(id, phrase) - 0.1, Math.min(1.2, 0.05 * text.length));
   const out = next ? at(t, next, -0.3, 0.4) : 0;
-  return (
-    <div
-      data-layout="text"
-      data-backed
-      style={{ position: "absolute", left: 124, top: 968, transform: "translateY(-50%)", opacity: p > 0 ? 1 - out : 0, fontFamily: hand, fontSize: 46, color: color.ink, whiteSpace: "nowrap", letterSpacing: 0.5, ...backing }}
-    >
-      <Typed text={text} p={p} />
-    </div>
-  );
+  return <Backed x={124} y={968} anchor="left" p={p} opacity={1 - out} text={text} size={46} c={color.ink} weight={400} />;
 };
 
 /** A monospace chip centred on (x, y) for code names, `path:line` references and values. */
-export const Tag: React.FC<{ x: number; y: number; opacity: number; c?: string; children: React.ReactNode }> = ({ x, y, opacity, c = color.ink, children }) => (
-  <div
-    data-layout="text"
-    data-backed
-    style={{
-      position: "absolute",
-      left: x,
-      top: y,
-      transform: "translate(-50%, -50%)",
-      opacity,
-      fontFamily: mono,
-      fontSize: 28,
-      color: c,
-      padding: "6px 14px",
-      borderRadius: 8,
-      background: color.paper,
-      border: `1.5px solid ${color.inkSoft}`,
-      whiteSpace: "nowrap",
-    }}
-  >
-    {children}
-  </div>
-);
-
-type Box = { x0: number; y0: number; x1: number; y1: number };
-
-const effectiveOpacity = (el: Element): number => {
-  let o = 1;
-  for (let e: Element | null = el; e; e = e.parentElement) o *= Number(getComputedStyle(e).opacity);
-  return o;
-};
-
-const textBox = (el: Element): Box => {
-  const range = document.createRange();
-  range.selectNodeContents(el);
-  const r = range.getBoundingClientRect();
-  return { x0: r.left, y0: r.top, x1: r.right, y1: r.bottom };
-};
-
-// A browser box ignores clip paths, so hatching's long clipped strokes would swell an SVG group's box;
-// measure a group by its unclipped geometry instead.
-const drawnRect = (el: Element): DOMRect => {
-  if (!(el instanceof SVGGElement)) return el.getBoundingClientRect();
-  const parts = Array.from(el.querySelectorAll("path, circle, ellipse, rect, line, polyline, polygon, text")).filter(
-    (p) => {
-      const clipped = p.parentElement?.closest("[clip-path]");
-      return !p.closest("clipPath, defs") && !(clipped && el.contains(clipped));
-    },
+export const Tag: React.FC<{ x: number; y: number; opacity: number; c?: string; children: React.ReactNode }> = ({ x, y, opacity, c = color.ink, children }) => {
+  if (opacity <= 0) return null;
+  const size = 28;
+  const border = 1.5;
+  const font = { fontFamily: mono, fontSize: size, fill: c };
+  const { width } = line(font, children);
+  const w = width + 28 + 2 * border;
+  const h = size * MONO.line + 12 + 2 * border;
+  const x0 = x - w / 2;
+  const y0 = y - h / 2;
+  return (
+    <g data-layout="text" data-backed opacity={opacity}>
+      <rect x={x0 + border / 2} y={y0 + border / 2} width={w - border} height={h - border} rx={8 - border / 2} fill={color.paper} stroke={color.inkSoft} strokeWidth={border} />
+      <text x={x0 + border + 14} y={y0 + border + 6 + size * MONO.baseline} {...font}>
+        {children}
+      </text>
+    </g>
   );
-  if (parts.length === 0) return el.getBoundingClientRect();
-  const rs = parts.map((p) => p.getBoundingClientRect());
-  const x0 = Math.min(...rs.map((r) => r.left));
-  const y0 = Math.min(...rs.map((r) => r.top));
-  return new DOMRect(x0, y0, Math.max(...rs.map((r) => r.right)) - x0, Math.max(...rs.map((r) => r.bottom)) - y0);
-};
-
-const shapeBox = (el: Element): Box => {
-  const r = drawnRect(el);
-  const half = 3; // A straight line has a zero-height box; give it a stroke's thickness.
-  return {
-    x0: r.width < 2 * half ? r.left - half : r.left,
-    x1: r.width < 2 * half ? r.right + half : r.right,
-    y0: r.height < 2 * half ? r.top - half : r.top,
-    y1: r.height < 2 * half ? r.bottom + half : r.bottom,
-  };
-};
-
-// Sample the text box against an SVG shape's real fill: the share of points inside, or undefined for a non-SVG or flat shape.
-const fillShare = (s: Element, b: Box): number | undefined => {
-  if (!(s instanceof SVGGeometryElement)) return undefined;
-  const ctm = s.getScreenCTM();
-  const r = s.getBBox();
-  if (!ctm || r.width < 6 || r.height < 6) return undefined;
-  const toShape = ctm.inverse();
-  let hits = 0;
-  let total = 0;
-  for (let i = 0; i <= 12; i++)
-    for (let j = 0; j <= 4; j++) {
-      const p = new DOMPoint(b.x0 + ((b.x1 - b.x0) * i) / 12, b.y0 + ((b.y1 - b.y0) * j) / 4).matrixTransform(toShape);
-      total++;
-      if (s.isPointInFill(p) || s.isPointInStroke(p)) hits++;
-    }
-  return hits / total;
-};
-
-const overlaps = (a: Box, b: Box, eps = 2) => Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0) > eps && Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0) > eps;
-const inside = (a: Box, b: Box) => a.x0 >= b.x0 && a.y0 >= b.y0 && a.x1 <= b.x1 && a.y1 <= b.y1;
-const quote = (el: Element) => JSON.stringify((el.textContent ?? "").trim().slice(0, 30));
-
-/**
- * What the camera frame shows: text that crosses a shape's edge, overlaps other text or an icon,
- * or sits on texture without a paper backing, and anything cut by the frame edge.
- * Anything wholly outside the frame is off camera and skipped.
- */
-export const layoutProblems = (width: number, height: number): string[] => {
-  // Anything a viewer can still make out counts; only near-invisible elements are skipped.
-  const shown = (el: Element) => effectiveOpacity(el) > 0.02;
-  const frame: Box = { x0: 0, y0: 0, x1: width, y1: height };
-  const onCamera = (el: Element) => overlaps(shapeBox(el), frame, 0);
-  const marked = (kind: string) => Array.from(document.querySelectorAll(`[data-layout="${kind}"]`)).filter(shown);
-  const texts = marked("text").filter((el) => overlaps(textBox(el), frame, 0));
-  const shapes = marked("shape").filter(onCamera);
-  const icons = marked("icon").filter(onCamera);
-  const textures = marked("texture").filter(onCamera);
-  const off = (b: Box) => b.x0 < -2 || b.y0 < -2 || b.x1 > width + 2 || b.y1 > height + 2;
-  const name = (el: Element) => (el as HTMLElement).dataset.name ?? el.tagName.toLowerCase();
-  const problems: string[] = [];
-  for (const s of [...shapes, ...icons]) if (off(shapeBox(s))) problems.push(`shape "${name(s)}" leaves the frame`);
-  texts.forEach((t, i) => {
-    const tb = textBox(t);
-    if (off(tb)) problems.push(`${quote(t)} leaves the frame`);
-    for (const o of texts.slice(i + 1)) if (overlaps(tb, textBox(o))) problems.push(`${quote(t)} overlaps ${quote(o)}`);
-    for (const s of shapes) {
-      if (s.contains(t) || t.contains(s)) continue;
-      const sb = shapeBox(s);
-      if (!overlaps(tb, sb)) continue;
-      const share = fillShare(s, tb);
-      if (share === undefined ? !inside(tb, sb) && !inside(sb, tb) : share > 0 && share < 1) problems.push(`${quote(t)} crosses the edge of shape "${name(s)}"`);
-    }
-    for (const c of icons) if (overlaps(tb, shapeBox(c))) problems.push(`${quote(t)} overlaps icon "${name(c)}"`);
-    if (!(t as HTMLElement).dataset.backed)
-      for (const x of textures) {
-        if (!overlaps(tb, shapeBox(x))) continue;
-        const share = fillShare(x, tb);
-        if (share === undefined || share > 0) problems.push(`${quote(t)} sits on texture "${name(x)}" without a paper backing`);
-      }
-  });
-  return [...new Set(problems)];
-};
-
-const CHECK_FRAMES = new Map<number, number>([
-  ...Object.values(BEATS).map((b, i): [number, number] => [Math.round(b.end * FPS), i + 1]),
-  [DURATION - 1, Object.keys(BEATS).length],
-]);
-
-/**
- * At the end of each beat, logs BEAT: <seconds> and one LAYOUT: line per problem from
- * layoutProblems. Every 0.1 s, logs SHOWN: for each visible text with the words being spoken.
- * scripts/render.sh collects all three.
- */
-export const LayoutProbe: React.FC = () => {
-  const frame = useCurrentFrame();
-  const { width, height } = useVideoConfig();
-  useEffect(() => {
-    if (frame % Math.round(FPS / 10) === 0)
-      for (const el of Array.from(document.querySelectorAll('[data-layout="text"]')))
-        if (effectiveOpacity(el) > 0.5 && overlaps(textBox(el), { x0: 0, y0: 0, x1: width, y1: height }, 0)) console.log(`SHOWN: ${(frame / FPS).toFixed(1)}s ${quote(el)} as the voice says "${saying(frame / FPS)}"`);
-    const beat = CHECK_FRAMES.get(frame);
-    if (beat === undefined) return;
-    console.log(`BEAT: ${(frame / FPS).toFixed(2)}`);
-    for (const p of layoutProblems(width, height)) console.log(`LAYOUT: beat ${beat} (${(frame / FPS).toFixed(1)}s): ${p}`);
-  }, [frame, width, height]);
-  return null;
 };

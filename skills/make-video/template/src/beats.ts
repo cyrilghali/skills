@@ -1,4 +1,4 @@
-import { Easing, interpolate } from "remotion";
+import { Easing, interpolate } from "./frame";
 import timeline from "./timeline.json";
 import measured from "./words.json";
 

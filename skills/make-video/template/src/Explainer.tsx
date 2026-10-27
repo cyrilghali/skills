@@ -1,7 +1,6 @@
 import React from "react";
-import { useCurrentFrame } from "remotion";
 import { at, BEATS, FPS, move, word } from "./beats";
-import { Background, Cue, Label, Music, Note, Tag, Voiceover } from "./kit";
+import { Background, Cue, Label, Music, Note, Tag, useCurrentFrame, Voiceover } from "./kit";
 import { boilSeed, camera, Counter, dim, Finish, Guide, Hatch, InkDefs } from "./look";
 import { color } from "./theme";
 
