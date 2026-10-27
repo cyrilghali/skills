@@ -1,5 +1,7 @@
 # Drawn explainer
 
+This is the default style, `ink-on-paper`. To use another look, rewrite this file and the tokens in `theme.ts`; the timing, word cues and layout marks stay the same.
+
 Pen and coloured pencil on warm paper. One drawing holds the whole story, and the camera moves through it the way a hand-drawn documentary moves over a large illustrated map. Beauty comes from the drawing, not from depth or glow.
 
 ## Palette

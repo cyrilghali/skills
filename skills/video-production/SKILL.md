@@ -1,15 +1,15 @@
 ---
-name: explainer-video
-description: 'Turns a finished narration into an explainer video drawn in pen and ink on warm paper - hatching, hand-lettered labels, one drawn world the camera moves through. Plans what moves in each beat, animates it in Remotion (React rendered to video), voices it with ElevenLabs when a key works or a free local voice otherwise, keeps every animation in step with the word that names it, checks the layout automatically, and renders an MP4. Use when the user asks for an "explainer video", a "3b1b style video", to "make a video explaining X", to "animate this concept", for a "video explainer" of a topic, codebase or paper, for the next episode of an explainer video series, or to fix the look, layout, camera, timing or voice of one. Also use when an existing render is too slow or too costly: "make the render faster", "render cost", "render farm", "split the render across machines", "render in parallel", "lower the render scale".'
+name: video-production
+description: 'Turns a finished narration into an explainer video: draws it, animates it, voices it and renders it. Ships a default style you can swap (pen and ink on warm paper, one drawn world the camera moves through). Plans what moves in each beat, animates it in Remotion (React rendered to video), voices it with ElevenLabs when a key works or a free local voice otherwise, keeps every animation in step with the word that names it, checks the layout automatically, and renders an MP4. Use when the user asks for an "explainer video", a "3b1b style video", to "make a video explaining X", to "animate this concept", for a "video explainer" of a topic, codebase or paper, for the next episode of an explainer video series, or to fix the look, layout, camera, timing or voice of one. Also use when an existing render is too slow or too costly: "make the render faster", "render cost", "render farm", "split the render across machines", "render in parallel", "lower the render scale".'
 metadata:
   category: write
 ---
 
-# Making an explainer video
+# Producing an explainer video
 
-Turn a finished narration into a video where the picture carries the idea and the voice says what to look at. Take the look from `template/src/DESIGN.md`: one world drawn in ink on paper, with colour only on the actor the voice is about.
+Turn a finished narration into a video where the picture carries the idea and the voice says what to look at. The look, voice and music come from the default style: `template/src/DESIGN.md` draws one world in ink on paper, with colour only on the actor the voice is about. To use another look or voice, follow `REFERENCE.md`, "Swap the default style".
 
-The input is a finished `beats.json`: one or two sentences of plain spoken text per beat.
+The input is a finished `beats.json`: one or two sentences of plain spoken text per beat. Writing it is the step before this skill; a video-script skill does it from a brief, when one is installed.
 
 ```json
 [{"id": "intro", "text": "This small light is a planet."},
@@ -33,7 +33,7 @@ The render voices each beat, lays the beats end to end with a pause that grows a
 
 ## Plan the picture and build the scene
 
-3. **Plan what moves.** In `plan.md`, make a table with one row per beat of `beats.json` and three columns: the beat id, the words shown on screen (only words the narration says), and the object already on screen that moves, splits, zooms or lights up. Let a new object enter only in the beat whose narration names it, so the eye and the ear meet on the same thing. When the topic is the viewer's own code, give each object the module, function or `path:line` label it stands for. When a beat gives the picture nothing to change, name that beat to the user rather than adding a beat or rewording it. Done when every row has one changing object and every new object's name is in its beat's narration.
+3. **Plan what moves.** In `plan.md`, make a table with one row per beat of `beats.json` and three columns: the beat id, the words shown on screen (only words the narration says; take them from the script's table when a `script.md` came with the narration), and the object already on screen that moves, splits, zooms or lights up. Let a new object enter only in the beat whose narration names it, so the eye and the ear meet on the same thing. When the topic is the viewer's own code, give each object the module, function or `path:line` label it stands for. When a beat gives the picture nothing to change, name that beat to the user rather than adding a beat or rewording it. Done when every row has one changing object and every new object's name is in its beat's narration.
 4. **Write `src/Explainer.tsx`.** Replace the example scene. Build it as `REFERENCE.md` describes: one component, one world in world coordinates under one camera, and every object a function of `t`. Use the kit for paper, voice, music, labels and notes, and the look primitives for ink, hatching, lit actors, the guide and the camera. Cue each key move to the word that names it with `word()`. Put a `Cue` on each key moment, `<Finish />` last, and a `data-layout` mark on every element. Done when every beat in the table moves its object.
 
 ## Render a preview and fix what the checks find
@@ -42,7 +42,7 @@ The render voices each beat, lays the beats end to end with a pause that grows a
 
    | Line | What it reports | What to do |
    |---|---|---|
-   | `STYLE:` | A break of the design rules | Fix it, every time |
+   | `STYLE:` | A break of the default style's rules | Fix it, every time; under a swapped style, fix the lines its own `DESIGN.md` still holds |
    | `LAYOUT:` | In the camera frame: text that crosses a shape's edge, overlaps other text or an icon, or sits on texture without paper behind it; anything the frame edge cuts | Fix it, or confirm on a full-resolution frame that it is a false alarm; never hide a visible object from the check |
    | `SHOWN:` | When each text first appears, and what the voice is saying then | Fix text that appears before the voice nears its words; cue it with `word()` |
 

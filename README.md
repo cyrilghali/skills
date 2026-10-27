@@ -24,7 +24,9 @@ Skills that shape how work is written, reviewed and delegated. French and Englis
 |-------|-------------|
 | [series-planner](skills/series-planner/) | A series of videos, lessons or pages planned from a goal, its audiences and a source: tiers from overview to deep dive, every fact placed in exactly one unit and none dropped for depth, and one brief per unit. |
 | [video-script](skills/video-script/) | One video's narration written beat by beat from a brief or a bare topic: what the voice says, the few words on screen in each beat, and a fact check that ties every claim to a source. |
-| [explainer-video](skills/explainer-video/) | A finished narration turned into a video drawn in pen and ink: plans what moves in each beat, animates it in Remotion, voices it, checks the layout and renders an MP4. |
+| [video-production](skills/video-production/) | A finished narration turned into a video: plans what moves in each beat, animates it in Remotion, voices it, checks the layout and renders an MP4. Its pen-and-ink look, voice and music are a default style you can swap. |
+
+The three chain: series-planner writes one brief per video, video-script turns a brief into narration (`beats.json`), and video-production draws, voices and renders it. Each also works on its own.
 
 ### Plugins
 
@@ -64,9 +66,11 @@ Requires a `docs/style-guide.md` in your project. The skills reference it for ru
 Install one skill and get its updates with the [skills CLI](https://github.com/vercel-labs/skills):
 
 ```sh
-npx skills add cyrilghali/skills --skill explainer-video
+npx skills add cyrilghali/skills --skill video-production
 npx skills update        # later, to pull new versions
 ```
+
+`explainer-video` is now `video-production`, and the old name is gone from this repo, so updates stop reaching it. If you installed it under the old name, run `npx skills remove explainer-video`, then add `video-production` as above.
 
 Or copy a skill to `~/.claude/skills/`:
 
