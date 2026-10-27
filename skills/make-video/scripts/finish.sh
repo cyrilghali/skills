@@ -12,8 +12,9 @@ cache="${EXPLAINER_CACHE:-$HOME/.cache/make-video}/$(cat src/look.tsx src/theme.
 textures() { for f in paper grain-0 grain-1 grain-2 grain-3 grain-4 grain-5; do [ -s "$1/$f.png" ] || return 1; done; }
 if ! textures public/tex; then
   if ! textures "$cache"; then
-    node "$here/render.mjs" "$project" textures "$cache.tmp.$$" >&2 && mkdir -p "$cache" && mv "$cache.tmp.$$"/*.png "$cache/" && rmdir "$cache.tmp.$$" ||
-      { echo "baking the paper texture failed" >&2; exit 1; }
+    if ! { node "$here/render.mjs" "$project" textures "$cache.tmp.$$" >&2 && mkdir -p "$cache" && mv "$cache.tmp.$$"/*.png "$cache/" && rmdir "$cache.tmp.$$"; }; then
+      echo "baking the paper texture failed" >&2; exit 1
+    fi
   fi
   mkdir -p public/tex && cp "$cache"/*.png public/tex/
 fi
@@ -22,7 +23,8 @@ width=$(awk -v s="$scale" 'BEGIN { printf "%d", 1920 * s + 0.5 }')
 height=$(awk -v s="$scale" 'BEGIN { printf "%d", 1080 * s + 0.5 }')
 fin="$cache/finish-${width}x${height}@$fps"
 if [ ! -d "$fin" ]; then
-  uv run -q --python 3.12 --with numpy --with pillow python "$here/finish-tex.py" "$project" "$fps" "$width" "$height" "$fin.tmp.$$" >/dev/null && mv "$fin.tmp.$$" "$fin" ||
-    { echo "baking the finish frames failed" >&2; exit 1; }
+  if ! { uv run -q --python 3.12 --with numpy --with pillow python "$here/finish-tex.py" "$project" "$fps" "$width" "$height" "$fin.tmp.$$" >/dev/null && mv "$fin.tmp.$$" "$fin"; }; then
+    echo "baking the finish frames failed" >&2; exit 1
+  fi
 fi
 echo "$fin"
