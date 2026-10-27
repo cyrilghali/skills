@@ -1,6 +1,19 @@
-# Explainer video reference
+# Video production reference
 
-The look comes from `template/src/DESIGN.md`, which sets pen hatching and ink on warm paper, one drawn world the camera moves through. The engine is Remotion: each frame is a web page rendered by headless Chrome, so any CSS, SVG or web font is available. The pacing follows Grant Sanderson's 3Blue1Brown videos.
+The engine is Remotion: each frame is a web page rendered by headless Chrome, so any CSS, SVG or web font is available.
+
+## Swap the default style
+
+The skill ships one default style, named `ink-on-paper`. It is a taste, not a rule: every part below can change without touching the render pipeline, the word cues or the layout check.
+
+| Part | Default | Where it lives | To swap it |
+|---|---|---|---|
+| Look | Pen hatching and ink on warm paper, one drawn world the camera moves through | `template/src/DESIGN.md`, the palette and fonts in `theme.ts`, the drawing primitives in `look.tsx` | Write a new `DESIGN.md` with its own palette, type and detail list, change the tokens in `theme.ts`, and draw with your own primitives |
+| Style check | The `STYLE:` lines enforce the default look: paper, ink filter, grain, a moving camera | `scripts/lint.py` | Under another look, a `STYLE:` line about paper, ink or grain does not apply; the lines about time (`useState`, `word()`) still do |
+| Voice | Kokoro `af_heart` locally; ElevenLabs George when a key works | Environment variables in "Settings" below | Set `KOKORO_VOICE`, or `ELEVENLABS_VOICE_ID` and `ELEVENLABS_MODEL` |
+| Music | A generated low pad, ducked under the voice | `public/sound/music.wav` in the project | Replace the file with your own score, at least as long as the video |
+| Pacing | Pauses after questions and before chapters, after Grant Sanderson's 3Blue1Brown videos | `src/beats.ts` | Change the pause values there |
+
 
 ## Chapters and series
 
@@ -97,7 +110,7 @@ The render prints a `LAYOUT:` line for each problem it sees in the camera frame 
 
 Anything wholly outside the frame is off camera and not reported; anything the frame cuts is. Text wholly inside a shape (a number in its box) is fine. A flag on a diagonal or round shape drawn as an HTML box can be a false alarm; confirm it on a full-resolution frame.
 
-## Visual rules
+## Visual rules of the default style
 
 - Light at most two actors at once; the rest is ink on paper.
 - Plan positions so the shot's subject fills the frame and about 100 px stays clear at every edge.
