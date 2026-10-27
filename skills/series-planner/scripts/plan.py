@@ -12,7 +12,10 @@ Reads <folder>/plan.json (format in FORMAT.md). Fails (exit 1) and lists every p
   - a unit in a standalone tier has prerequisites;
   - a prerequisite is unknown, comes later in the unit order, or sits in a later tier;
   - a tier has no unit, or names an audience that does not exist;
-  - the plan has no goal, or no evidence (what the audience does that shows the goal is reached).
+  - the plan has no goal, no evidence (what the audience does that shows the goal is reached), or no
+    audiences.
+A missing or unreadable plan.json, or one whose lists hold something other than objects with an id,
+fails with one line instead.
 When the plan passes, writes <folder>/briefs/<unit id>.md, one per unit, and prints a coverage line.
 """
 
@@ -28,11 +31,42 @@ DEPTH = re.compile(
 )
 
 
+def read(path):
+    try:
+        return Path(path).read_text()
+    except OSError as err:
+        raise SystemExit(f"FAIL: cannot read {path}: {err.strerror}")
+
+
+def load_json(path, shape):
+    try:
+        data = json.loads(read(path))
+    except json.JSONDecodeError as err:
+        raise SystemExit(f"FAIL: {path} is not valid JSON: {err}")
+    if shape is list and not (isinstance(data, list) and all(isinstance(x, dict) for x in data)):
+        raise SystemExit(f"FAIL: {path} must be a JSON list of objects")
+    if shape is dict and not isinstance(data, dict):
+        raise SystemExit(f"FAIL: {path} must be a JSON object")
+    return data
+
+
+def check_shape(plan):
+    for key in ("audiences", "tiers", "units", "facts"):
+        value = plan.get(key, [])
+        if not (isinstance(value, list) and all(isinstance(x, dict) for x in value)):
+            raise SystemExit(f"FAIL: plan.json {key!r} must be a list of objects")
+        for item in value:
+            if not str(item.get("id", "")).strip():
+                raise SystemExit(f"FAIL: plan.json: an item in {key!r} has no id")
+
+
 def check(plan):
     problems = []
     for key in ("goal", "evidence"):
         if not str(plan.get(key, "")).strip():
             problems.append(f"plan: no {key}; set it before choosing units")
+    if not plan.get("audiences"):
+        problems.append("plan: no audiences; list who the series is for and what each already knows")
     audiences = {a.get("id") for a in plan.get("audiences", [])}
     tiers = [t.get("id") for t in plan.get("tiers", [])]
     tier_of = {t.get("id"): t for t in plan.get("tiers", [])}
@@ -142,7 +176,8 @@ def main(argv):
         print(__doc__)
         return 2
     folder = Path(argv[0])
-    plan = json.loads((folder / "plan.json").read_text())
+    plan = load_json(folder / "plan.json", dict)
+    check_shape(plan)
     problems, facts_in = check(plan)
     if problems:
         print("FAIL:")

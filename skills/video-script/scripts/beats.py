@@ -19,6 +19,25 @@ from pathlib import Path
 STOP = {"the", "and", "for", "with", "from", "its", "per", "via", "not", "are", "was", "you", "your", "our", "but"}
 
 
+def read(path):
+    try:
+        return Path(path).read_text()
+    except OSError as err:
+        raise SystemExit(f"FAIL: cannot read {path}: {err.strerror}")
+
+
+def load_json(path, shape):
+    try:
+        data = json.loads(read(path))
+    except json.JSONDecodeError as err:
+        raise SystemExit(f"FAIL: {path} is not valid JSON: {err}")
+    if shape is list and not (isinstance(data, list) and all(isinstance(x, dict) for x in data)):
+        raise SystemExit(f"FAIL: {path} must be a JSON list of objects")
+    if shape is dict and not isinstance(data, dict):
+        raise SystemExit(f"FAIL: {path} must be a JSON object")
+    return data
+
+
 def cells(line):
     return [c.strip() for c in line.strip().strip("|").split("|")]
 
@@ -62,7 +81,7 @@ def main(argv):
         print(__doc__)
         return 2
     folder = Path(argv[0])
-    rows = table((folder / "script.md").read_text())
+    rows = table(read(folder / "script.md"))
     if not rows:
         print("FAIL: script.md has no beat table with a narration column and a words-on-screen column")
         return 1
@@ -78,7 +97,7 @@ def main(argv):
             problems.append(f"beat {beat}: on screen but not said: {', '.join(unsaid)}")
     beats_path = folder / "beats.json"
     if beats_path.exists():
-        beats = json.loads(beats_path.read_text())
+        beats = load_json(beats_path, list)
         if [(b.get("id"), b.get("text")) for b in beats] != [(r[0], r[1]) for r in rows]:
             problems.append("beats.json differs from the script.md table; copy the narration column again, in order")
     if problems:
