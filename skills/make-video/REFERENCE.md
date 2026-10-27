@@ -1,6 +1,6 @@
 # Video production reference
 
-The engine is Remotion: each frame is a web page rendered by headless Chrome, so any CSS, SVG or web font is available.
+The scene is React that draws SVG. Each frame, `scripts/render.mjs` renders the scene to one SVG document and [resvg](https://github.com/linebender/resvg) turns it into pixels, with no browser. So the scene is SVG only: no HTML elements, no CSS layout, and only the fonts `scripts/setup.sh` downloads.
 
 ## Swap the default style
 
@@ -26,7 +26,7 @@ When an episode ends on a beat that lists the next episode's questions, show the
 `src/Explainer.tsx` is one component for the whole video. It reads the time `t` in seconds and computes every object's position, size, colour and opacity from it. The world is one SVG group in world coordinates; the camera moves over it. Objects are always rendered; beats change their properties. This keeps one object on screen while it moves, splits or zooms, instead of cutting between slides.
 
 ```tsx
-<svg width={1920} height={1080} style={{ position: "absolute" }}>
+<svg width={1920} height={1080}>
   <InkDefs seed={boilSeed(frame)} />
   <g filter="url(#ink)">
     <g transform={cam.view}>{/* the world, drawn once */}</g>
@@ -42,7 +42,8 @@ When an episode ends on a beat that lists the next episode's questions, show the
 | `word("beatId", "phrase")` | Seconds into the beat when the voice says the phrase; pass it as `delay`. Measured word times when the render has them (see the `voice:` line), estimated from the text otherwise |
 | `mix(p, a, b)`, `chain(start, [[p1, v1], ...])` | A value between two states; a value moved through several in order |
 | `BEATS.id.start`, `.end`, `.seconds` | Beat timing, for an animation that should last the whole sentence |
-| `<Background />`, `<Voiceover />`, `<Music />` | The paper, the narration and the music bed; they go first |
+| `useCurrentFrame()`, `random(seed)`, `interpolate` (`src/kit.tsx`) | The frame being drawn; a repeatable random number for jitter; a value mapped between ranges |
+| `<Background />`, `<Voiceover />`, `<Music />` | The paper colour, the narration and the music bed; they go first |
 | `<Cue beat delay sound>` | A tick, whoosh, swell or chime at a moment |
 | `<Label x y p text>` | A lowercase hand-lettered label on its own paper backing, typed on as `p` goes 0 to 1 |
 | `<Note t id phrase text>` | The beat's note, bottom left, typed on as the voice says `phrase`, gone at the next beat |
@@ -57,13 +58,13 @@ When an episode ends on a beat that lists the next episode's questions, show the
 | `dim(lit)` | Opacity for an actor: full when lit, a soft pencil grey at rest |
 | `personPath(h)`, `filePath(w, h)`, `housePath(w)` | Path data for a small person, a sheet with a folded corner, a house |
 | `<Guide x y r tint lit look blink ping>` | The small ink character that stands in for the narrator |
-| `<Counter value p>` | A number that counts up as `p` goes from 0 to 1 |
+| `<Counter value p>` | A number that counts up as `p` goes from 0 to 1; put it inside a `Tag` or a `<text>` |
 | `<g transform={pose(p, from, to)}>` | Moves a shape drawn around (0, 0) between two poses `{x, y, rot}` as one rigid piece |
-| `<Finish />` | Grain and the warm vignette, rendered last |
+| `<Finish />` | Marks where the paper texture, grain and warm vignette go; the render multiplies them over the frame |
 
-Draw world objects in world coordinates inside `cam.view`; place labels in screen pixels with `cam.screen`, so their type stays the same size while the camera zooms. To move a piece, draw it once around (0, 0) and wrap it in `pose()`; moving its corners one by one bends it out of shape halfway. To morph one shape into another, `pnpm add @remotion/paths` at the same version as `remotion` and draw `interpolatePath(p, fromPath, toPath)`.
+Draw world objects in world coordinates inside `cam.view`; place labels in screen pixels with `cam.screen`, so their type stays the same size while the camera zooms. To move a piece, draw it once around (0, 0) and wrap it in `pose()`; moving its corners one by one bends it out of shape halfway. To morph one shape into another, write both paths with the same commands in the same order and `mix` their numbers.
 
-The render bakes the paper and six grain frames into `public/tex/` once (about 40 MB); delete that folder after changing `PaperTexture` or `GrainTexture`.
+The render bakes the paper and six grain frames into `public/tex/` once (about 35 MB, under 2 s); delete that folder after changing `PaperTexture` or `GrainTexture`.
 
 ## Reference videos
 
@@ -108,7 +109,7 @@ The render prints a `LAYOUT:` line for each problem it sees in the camera frame 
 | `data-layout="icon"` with `data-name` | Every small pictogram | Any text touches it, or the frame edge cuts it |
 | `data-layout="texture"` with `data-name` | Hatching (`Hatch` marks itself), a crowd or any dense pattern | Text without a paper backing sits on it |
 
-Anything wholly outside the frame is off camera and not reported; anything the frame cuts is. Text wholly inside a shape (a number in its box) is fine. A flag on a diagonal or round shape drawn as an HTML box can be a false alarm; confirm it on a full-resolution frame.
+Anything wholly outside the frame is off camera and not reported; anything the frame cuts is. Text wholly inside a shape (a number in its box) is fine. A single `path`, `rect` or `circle` is judged by its fill and stroke, so a label inside a round shape is fine; a group is judged by its box, so a flag on a round group can be a false alarm. Confirm it on a `scripts/still.sh` frame.
 
 ## Visual rules of the default style
 
@@ -123,25 +124,25 @@ Anything wholly outside the frame is off camera and not reported; anything the f
 
 The measurements behind the render pipeline are in RESEARCH.md.
 
-- For 720p, pass `--scale=0.6666666666666666`; a rounded `0.6667` gives a 720.036 px height, which Remotion refuses. It takes about a third less time per frame than 1080p.
-- Every render is flat and gets the paper afterwards: `render.sh` passes `--props` with `{"flat":true}` (look.tsx then drops the paper texture, vignette and grain), bakes those layers once per size with `scripts/finish-tex.py` into the cache, and multiplies them back in ffmpeg in planar RGB (`format=gbrp`, `blend=all_mode=multiply:shortest=1`). In the browser those full-frame multiply blends cost more than everything else drawn: a 472-frame half-scale preview took 40 to 53 s with them and 15 s without, and the ffmpeg pass takes 3 s. The result matches the in-browser render at 40 dB PSNR for a half-scale preview and 36 dB at 1080p (two in-browser renders of the same scene differ at 54 dB); inked areas pick up a faint paper texture. On a farm, run the pass on each chunk as it lands and phase the grain loop on the chunk's first frame; `blend` without `shortest=1` never ends when the grain input loops.
+- Every frame is drawn flat and gets the paper afterwards: `scripts/finish.sh` bakes the paper texture, vignette and grain once per size with `scripts/finish-tex.py` into the cache, and the render multiplies them over the frames in ffmpeg in planar RGB (`format=gbrp`, `blend=all_mode=multiply:shortest=1`). Inked areas pick up a faint paper texture. On a farm, run the pass on each chunk as it lands and phase the grain loop on the chunk's first frame; `blend` without `shortest=1` never ends when the grain input loops.
+- The ink wobble is not filtered per frame: its noise depends only on the boil seed, so the render builds one pixel map per seed and moves each frame's pixels by it. Labels are drawn after, as they sit outside the `ink` group. Equal frames (a hold cycles through the 12 seeds) are drawn once, and every attribute number is rounded to three decimals so the tail of an easing settles into equal frames.
 - For a long series, render at 24 fps: set `"fps": 24` in `src/timeline.json` (re-voicing keeps it). Every move is timed in seconds, so nothing shifts, and there are a fifth fewer frames to draw.
-- Rendering the audio through Remotion costs as much as rendering frames. For a long video, log the sound list (each clip, cue and its start) from a one-frame composition and mix it with numpy in seconds.
-- Profile before splitting a slow render across machines. Time a 90-frame sample with each heavy layer turned off in turn. Run the baseline before and after the variants on the same host state, and treat any gap smaller than the baseline's own drift as noise. Label each row for what the command did: deleting a layer is not a gain, so time the pass that adds the removed layer back (for example in ffmpeg) before quoting a net multiplier. Guessing the per-frame cost was wrong four times (the ink filter took 37%, and the baked paper and grain images cost 62 to 72% through their full-frame multiply blends, which is why the paper now goes on in ffmpeg). A blank scene of the same length renders in 12 s at 2 tabs and 5 s at 6, so Remotion's own cost per frame is about 25 ms and the scene is what you tune. More tabs did not speed up the real scene (4 tabs saved 4 s of 50; 6 and 8 were slower). Build the farm only if the sample shows the cost is not one layer you can remove or bake.
-- To split frames across machines, weight each chunk by the machine's measured frames per second and take the frame count from the composition's own duration, never from a second copy of the pause rule. Join the chunks with ffmpeg's concat and `-shortest`, since AAC pads the audio by about 36 ms.
+- The sound is mixed apart from the frames: the render writes the sound list (each clip, cue and its start) to `out/audio.json` from frame 0, and `scripts/mix.py` mixes it with numpy in about a second.
+- Profile before splitting a slow render across machines. Time a 90-frame sample with each heavy layer turned off in turn. Run the baseline before and after the variants on the same host state, and treat any gap smaller than the baseline's own drift as noise. Label each row for what the command did: deleting a layer is not a gain, so time the pass that adds the removed layer back before quoting a net multiplier. Guessing the per-frame cost was wrong four times under the old browser renderer. Build the farm only if the sample shows the cost is not one layer you can remove or bake.
+- To split frames across machines, weight each chunk by the machine's measured frames per second and take the frame count from `DURATION` in `src/beats.ts`, never from a second copy of the pause rule. Join the chunks with ffmpeg's concat and `-shortest`, since AAC pads the audio by about 36 ms.
 - While the user waits for the first result, put every machine on one episode, in story order. Spreading episodes across machines made the first episode take about 3 hours; with all machines on one episode it took about 50 minutes.
 - Name each remote work folder by a unique project id (for example the episode slug), never by the local folder name: every episode's project folder is called `video`, so two episodes sent to one machine collide. Before an unattended run on several machines, test two real projects at once.
 - Wrap a long-running shell script's body in `{ ... exit; }`: bash reads a script as it runs, so editing it mid-run corrupts the running copy.
 - When the episode order changes, rename the episode folders to match, so every reply uses one number per episode (a folder named e08 that holds episode 7 caused three corrections).
-- Before proposing a GPU speedup for rendering, confirm Chrome inside the render image really uses the card: sample GPU use during a short render, or read Chrome's GPU status. In the stock image Chrome stayed on software rendering (seven runs showed `gpu_util_max=0`), so GL flags and shaders do not speed it up.
 - When others will edit the video, give it a folder that works without your setup: instructions for their agent, the narration and a timed transcript, the drawings, the assets, and this skill. Prove the folder on a machine without the skill or your setup (a clean container, or a second computer): render one short clip there before calling it self-sufficient, because a test on your own machine finds nothing missing.
 
-## Remotion notes
+## resvg notes
 
-- Write math with Unicode and `<sub>`/`<sup>` (`log<sub>2</sub>(n)`, `a² + b²`). For a full formula, `pnpm add katex` and render it to HTML.
-- Load another Google Font with `@remotion/google-fonts/<Name>` in `src/theme.ts`.
-- Every animation is a pure function of `t`: no `useState`, no CSS transitions, no `setTimeout`.
-- `pnpm run studio` opens a live preview in the browser, if the user asks to watch while you work.
+- Draw everything as SVG. Text is a `<text>` element with `fontFamily`, `fontSize` and `fill`; it does not wrap, so keep each line short. HTML elements and CSS (`div`, `style` layout, `box-shadow`) draw nothing; the render prints a `LAYOUT:` line naming any HTML element it finds.
+- Write math with Unicode (`a² + b²`, `log₂ n`), and a raised or lowered part with `<tspan baselineShift="super">` or `"sub"` and a smaller `fontSize`.
+- Fonts come from the files in the cache's `fonts/` folder, which `scripts/setup.sh` fills. For another font, add its TTF there and put its family name in `src/theme.ts`.
+- Every animation is a pure function of `t`: no `useState`, no `setTimeout`.
+- `scripts/still.sh <folder> <frame> <png>` renders one finished frame in a few seconds; use it to watch a moment while you work.
 
 ## Settings
 
@@ -153,7 +154,7 @@ The measurements behind the render pipeline are in RESEARCH.md.
 | `KOKORO_VOICE` | Kokoro voice, such as `af_heart` or `bm_george` | `af_heart` |
 | `KOKORO_DIR` | Folder holding the Kokoro model files | `.cache/kokoro` in the home folder |
 | `WHISPER_MODEL` | faster-whisper model that times Kokoro's words | `small.en` |
-| `EXPLAINER_CONCURRENCY` | Browser tabs the render uses at once; each tab is a headless Chrome | `2`, so one render leaves the machine usable |
-| `EXPLAINER_CACHE` | Folder holding the baked paper, grain and finish frames, keyed on `look.tsx` and `theme.ts`, so a new project with the same look skips the bake (about 21 s) | `.cache/make-video` in the home folder |
+| `EXPLAINER_WORKERS` | Threads that draw frames at once | One per CPU |
+| `EXPLAINER_CACHE` | Folder holding the fonts and the baked paper, grain and finish frames; the bake is keyed on `look.tsx` and `theme.ts`, so a new project with the same look skips it | `.cache/make-video` in the home folder |
 
 Kokoro speaks English only in this setup. For another language, use ElevenLabs with the multilingual model.

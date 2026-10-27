@@ -24,7 +24,7 @@ Skills that shape how work is written, reviewed and delegated. French and Englis
 |-------|-------------|
 | [plan-series](skills/plan-series/) | A series of videos, lessons or pages planned from a goal, its audiences and a source: tiers from overview to deep dive, every fact placed in exactly one unit and none dropped for depth, and one brief per unit. |
 | [write-video-script](skills/write-video-script/) | One video's narration written beat by beat from a brief or a bare topic: what the voice says, the few words on screen in each beat, and a fact check that ties every claim to a source. |
-| [make-video](skills/make-video/) | A finished narration turned into a video: plans what moves in each beat, animates it in Remotion, voices it, checks the layout and renders an MP4. Its pen-and-ink look, voice and music are a default style you can swap. |
+| [make-video](skills/make-video/) | A finished narration turned into a video: plans what moves in each beat, animates it as React drawn to SVG, voices it, checks the layout and renders an MP4. Its pen-and-ink look, voice and music are a default style you can swap. |
 
 The three chain: plan-series writes one brief per video, write-video-script turns a brief into narration (`beats.json`), and make-video draws, voices and renders it. Each also works on its own.
 

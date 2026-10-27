@@ -1,6 +1,6 @@
 ---
 name: make-video
-description: 'Turns a finished narration into an explainer video: draws it, animates it, voices it and renders it. Ships a default style you can swap (pen and ink on warm paper, one drawn world the camera moves through). Plans what moves in each beat, animates it in Remotion (React rendered to video), voices it with ElevenLabs when a key works or a free local voice otherwise, keeps every animation in step with the word that names it, checks the layout automatically, and renders an MP4. Use when the user asks for an "explainer video", a "3b1b style video", to "make a video explaining X", to "animate this concept", for a "video explainer" of a topic, codebase or paper, for the next episode of an explainer video series, or to fix the look, layout, camera, timing or voice of one. Also use when an existing render is too slow or too costly: "make the render faster", "render cost", "render farm", "split the render across machines", "render in parallel", "lower the render scale".'
+description: 'Turns a finished narration into an explainer video: draws it, animates it, voices it and renders it. Ships a default style you can swap (pen and ink on warm paper, one drawn world the camera moves through). Plans what moves in each beat, animates it as SVG drawn by React, voices it with ElevenLabs when a key works or a free local voice otherwise, keeps every animation in step with the word that names it, checks the layout automatically, and renders an MP4. Use when the user asks for an "explainer video", a "3b1b style video", to "make a video explaining X", to "animate this concept", for a "video explainer" of a topic, codebase or paper, for the next episode of an explainer video series, or to fix the look, layout, camera, timing or voice of one. Also use when an existing render is too slow or too costly: "make the render faster", "render cost", "render farm", "split the render across machines", "render in parallel", "lower the render scale".'
 metadata:
   category: write
 ---
@@ -19,7 +19,7 @@ The input is a finished `beats.json`: one or two sentences of plain spoken text 
 `src/Explainer.tsx` draws every object as a function of time and moves it on cue:
 
 ```tsx
-const t = useCurrentFrame() / FPS;
+const t = useCurrentFrame() / FPS;                          // from ./kit
 const lit = at(t, "intro", word("intro", "planet"), 0.8);   // 0 → 1 as the voice says "planet"
 <g data-layout="shape" data-name="planet"><Hatch id="planet" d={ball} box={box} stroke={color.blue} opacity={dim(lit)} /></g>
 ```
@@ -48,8 +48,8 @@ The render voices each beat, lays the beats end to end with a pause that grows a
 
    Then run `scripts/frames.sh <mp4>` and read the PNG it prints: one tile per beat, taken as the beat ends. Fix and re-render until no line is left unexplained, every beat's tile shows the change its row in `plan.md` names (including any camera move), every label is large enough to read, and the length falls inside the target. Done when one render passes all four checks.
 
-   For a long video, skip the repeat preview renders. After the first preview, check each fix on stills: run `pnpm exec remotion still Explainer <png> --frame=<n>` for the beat's end frame (the `LayoutProbe` in `src/kit.tsx` prints that beat's `LAYOUT:` lines for the frame it renders), and read the stills as a contact sheet. Keep the full render for the final.
-6. **Make a detail pass.** Take one frame from the middle of each beat's motion with `ffmpeg -ss <seconds> -i <mp4> -frames:v 1` and check it against the detail list in `src/DESIGN.md`. Fix what fails and re-check on stills for a long video, or re-render once for a short one. Done when every item on the list holds on every frame you took.
+   For a long video, skip the repeat preview renders. After the first preview, check each fix on stills: run `scripts/still.sh <folder> <frame> <png>` for the beat's end frame (it takes a few seconds and prints that frame's `LAYOUT:` lines), and read the stills as a contact sheet. Keep the full render for the final.
+6. **Make a detail pass.** Take one frame from the middle of each beat's motion with `scripts/still.sh` (frame = seconds × fps) and check it against the detail list in `src/DESIGN.md`. Fix what fails and re-check on stills for a long video, or re-render once for a short one. Done when every item on the list holds on every frame you took.
 
 ## Render the final and report it
 
