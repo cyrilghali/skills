@@ -20,9 +20,10 @@ cd "$project"
 pnpm exec tsc --noEmit >&2
 # Bake the paper and six grain frames once; live full-frame noise filters would slow every frame.
 # The bake depends only on look.tsx and theme.ts, so it is shared between projects through a cache.
-cache="${EXPLAINER_CACHE:-$HOME/.cache/make-video}/$(cat src/look.tsx src/theme.ts | shasum | cut -c1-16)"
-if [ ! -s public/tex/paper.png ] || [ ! -s public/tex/grain-5.png ]; then
-  if [ -s "$cache/grain-5.png" ]; then
+cache="${EXPLAINER_CACHE:-$HOME/.cache/make-video}/$(cat src/look.tsx src/theme.ts "$here/finish-tex.py" | shasum | cut -c1-16)"
+textures() { for f in paper grain-0 grain-1 grain-2 grain-3 grain-4 grain-5; do [ -s "$1/$f.png" ] || return 1; done; }
+if ! textures public/tex; then
+  if textures "$cache"; then
     mkdir -p public/tex && cp "$cache"/*.png public/tex/
   else
     mkdir -p public/tex
@@ -31,15 +32,16 @@ if [ ! -s public/tex/paper.png ] || [ ! -s public/tex/grain-5.png ]; then
       pnpm exec remotion still build PaperTex public/tex/paper.png --image-format=png &&
       for i in 0 1 2 3 4 5; do pnpm exec remotion still build GrainTex "public/tex/grain-$i.png" --frame="$i" --image-format=png || exit 1; done ) >"$tlog" 2>&1 ||
       { tail -20 "$tlog" >&2; echo "baking the paper texture failed" >&2; exit 1; }
+    rm -rf build
     mkdir -p "$cache" && cp public/tex/*.png "$cache/"
   fi
 fi
 # The paper, vignette and grain are multiplied in by ffmpeg after a flat render: in the browser those
-# full-frame blends cost more than everything else drawn (measured 2.5 to 3x per frame).
-fps=$(python3 -c 'import json; print(json.load(open("src/timeline.json")).get("fps", 30))')
+# full-frame blends cost more than everything else drawn (measured about 3x per frame).
+fps=$(grep -o '"fps": *[0-9]*' src/timeline.json | grep -o '[0-9]*$' || echo 30)
 fin="$cache/finish-${width}x${height}@$fps"
-if [ ! -s "$fin/f000.png" ]; then
-  uv run -q --python 3.12 --with numpy --with pillow python "$here/finish-tex.py" "$project" "$fps" "$width" "$height" "$fin" >/dev/null ||
+if [ ! -d "$fin" ]; then
+  uv run -q --python 3.12 --with numpy --with pillow python "$here/finish-tex.py" "$project" "$fps" "$width" "$height" "$fin.tmp.$$" >/dev/null && mv "$fin.tmp.$$" "$fin" ||
     { echo "baking the finish frames failed" >&2; exit 1; }
 fi
 out="$project/out/$quality.mp4"

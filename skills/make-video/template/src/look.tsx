@@ -6,7 +6,7 @@ import { color, HUES } from "./theme";
 const W = 1920;
 const H = 1080;
 
-/** A split farm render passes --props {"flat":true}: paper texture, vignette and grain are then laid on in ffmpeg. */
+/** scripts/render.sh passes --props {"flat":true}: paper texture, vignette and grain are then laid on in ffmpeg. */
 const flat = getInputProps().flat === true;
 
 /** A seed that changes `hz` times a second, so ink lines boil like a hand-drawn film. */
