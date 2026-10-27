@@ -33,9 +33,11 @@ DEPTH = re.compile(
 
 def read(path):
     try:
-        return Path(path).read_text()
+        return Path(path).read_text(encoding="utf-8")
     except OSError as err:
         raise SystemExit(f"FAIL: cannot read {path}: {err.strerror}")
+    except UnicodeDecodeError:
+        raise SystemExit(f"FAIL: {path} is not UTF-8 text; save it as UTF-8")
 
 
 def load_json(path, shape):
@@ -49,6 +51,14 @@ def load_json(path, shape):
         raise SystemExit(f"FAIL: {path} must be a JSON object")
     return data
 
+FIELDS = {
+    "audiences": {"who": str, "knows": str},
+    "tiers": {"audiences": list, "standalone": bool},
+    "units": {"tier": str, "idea": str, "title": str, "length": str, "prerequisites": list},
+    "facts": {"text": str, "source": str, "unit": str, "dropped": str},
+}
+NAMES = {str: "text", list: "a list", bool: "true or false"}
+
 
 def check_shape(plan):
     for key in ("audiences", "tiers", "units", "facts"):
@@ -56,8 +66,14 @@ def check_shape(plan):
         if not (isinstance(value, list) and all(isinstance(x, dict) for x in value)):
             raise SystemExit(f"FAIL: plan.json {key!r} must be a list of objects")
         for item in value:
-            if not str(item.get("id", "")).strip():
+            if not isinstance(item.get("id"), str) or not item["id"].strip():
                 raise SystemExit(f"FAIL: plan.json: an item in {key!r} has no id")
+            for field, kind in FIELDS[key].items():
+                if field in item and not isinstance(item[field], kind):
+                    raise SystemExit(f"FAIL: plan.json: {key} {item['id']}: {field!r} must be {NAMES[kind]}")
+            for field in ("audiences", "prerequisites"):
+                if not all(isinstance(x, str) for x in item.get(field, [])):
+                    raise SystemExit(f"FAIL: plan.json: {key} {item['id']}: {field!r} must list ids as text")
 
 
 def check(plan):

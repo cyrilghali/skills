@@ -21,9 +21,11 @@ STOP = {"the", "and", "for", "with", "from", "its", "per", "via", "not", "are", 
 
 def read(path):
     try:
-        return Path(path).read_text()
+        return Path(path).read_text(encoding="utf-8")
     except OSError as err:
         raise SystemExit(f"FAIL: cannot read {path}: {err.strerror}")
+    except UnicodeDecodeError:
+        raise SystemExit(f"FAIL: {path} is not UTF-8 text; save it as UTF-8")
 
 
 def load_json(path, shape):
