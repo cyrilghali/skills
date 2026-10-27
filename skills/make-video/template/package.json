@@ -1,19 +1,16 @@
 {
   "name": "explainer",
   "private": true,
-  "scripts": {
-    "studio": "remotion studio"
-  },
   "dependencies": {
-    "@remotion/cli": "4.0.532",
-    "@remotion/google-fonts": "4.0.532",
-    "@remotion/media": "4.0.532",
+    "@resvg/resvg-js": "2.6.2",
+    "@xmldom/xmldom": "0.9.8",
+    "esbuild": "0.25.10",
     "react": "19.2.3",
-    "react-dom": "19.2.3",
-    "remotion": "4.0.532"
+    "react-dom": "19.2.3"
   },
   "devDependencies": {
     "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.3",
     "typescript": "5.9.3"
   }
 }

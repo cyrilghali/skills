@@ -1,86 +1,64 @@
 import React from "react";
-import { AbsoluteFill, getInputProps, Img, random, staticFile, useCurrentFrame } from "remotion";
 import { FPS, mix } from "./beats";
+import { random } from "./frame";
 import { color, HUES } from "./theme";
 
 const W = 1920;
 const H = 1080;
 
-/** scripts/render.sh passes --props {"flat":true}: paper texture, vignette and grain are then laid on in ffmpeg. */
-const flat = getInputProps().flat === true;
-
 /** A seed that changes `hz` times a second, so ink lines boil like a hand-drawn film. */
 export const boilSeed = (frame: number, hz = 6) => Math.floor((frame / FPS) * hz) % 12;
 
-/** Warm paper, fixed to the frame like a sheet. scripts/render.sh bakes it once from PaperTexture. */
-export const Paper: React.FC = () => (
-  <AbsoluteFill style={{ background: color.paper }}>
-    {flat ? null : <Img src={staticFile("tex/paper.png")} style={{ width: W, height: H }} />}
-  </AbsoluteFill>
-);
-
-/** Base tone, slow mottling, fibres and fine tooth: the PaperTex composition. */
+/** Base tone, slow mottling, fibres and fine tooth. scripts/render.sh bakes it once into public/tex/paper.png. */
 export const PaperTexture: React.FC = () => (
-  <AbsoluteFill style={{ background: color.paper }}>
-    <svg width={W} height={H} style={{ position: "absolute" }}>
-      <filter id="paper-mottle" x={0} y={0} width={W} height={H} filterUnits="userSpaceOnUse">
-        <feTurbulence type="fractalNoise" baseFrequency="0.0022 0.0035" numOctaves={4} seed={3} />
-        <feColorMatrix type="matrix" values="0 0 0 0 0.78  0 0 0 0 0.69  0 0 0 0 0.52  0 0 0 1.1 -0.38" />
-      </filter>
-      <rect width={W} height={H} filter="url(#paper-mottle)" opacity={0.55} />
-      <filter id="paper-tooth" x={0} y={0} width={W} height={H} filterUnits="userSpaceOnUse">
-        <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves={2} seed={9} />
-        <feColorMatrix type="matrix" values="0 0 0 0 0.35  0 0 0 0 0.28  0 0 0 0 0.2  0 0 0 0.9 -0.32" />
-      </filter>
-      <rect width={W} height={H} filter="url(#paper-tooth)" opacity={0.5} />
-      {Array.from({ length: 260 }, (_, i) => {
-        const x = random(`fx${i}`) * W;
-        const y = random(`fy${i}`) * H;
-        const a = random(`fa${i}`) * Math.PI;
-        const l = 6 + random(`fl${i}`) * 22;
-        const bend = (random(`fb${i}`) - 0.5) * 8;
-        return (
-          <path
-            key={i}
-            d={`M ${x} ${y} q ${(Math.cos(a) * l) / 2 + bend} ${(Math.sin(a) * l) / 2 - bend} ${Math.cos(a) * l} ${Math.sin(a) * l}`}
-            stroke={color.paperShade}
-            strokeWidth={0.8}
-            fill="none"
-            opacity={0.35}
-          />
-        );
-      })}
-    </svg>
-  </AbsoluteFill>
+  <svg width={W} height={H}>
+    <rect width={W} height={H} fill={color.paper} />
+    <filter id="paper-mottle" x={0} y={0} width={W} height={H} filterUnits="userSpaceOnUse">
+      <feTurbulence type="fractalNoise" baseFrequency="0.0022 0.0035" numOctaves={4} seed={3} />
+      <feColorMatrix type="matrix" values="0 0 0 0 0.78  0 0 0 0 0.69  0 0 0 0 0.52  0 0 0 1.1 -0.38" />
+    </filter>
+    <rect width={W} height={H} filter="url(#paper-mottle)" opacity={0.55} />
+    <filter id="paper-tooth" x={0} y={0} width={W} height={H} filterUnits="userSpaceOnUse">
+      <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves={2} seed={9} />
+      <feColorMatrix type="matrix" values="0 0 0 0 0.35  0 0 0 0 0.28  0 0 0 0 0.2  0 0 0 0.9 -0.32" />
+    </filter>
+    <rect width={W} height={H} filter="url(#paper-tooth)" opacity={0.5} />
+    {Array.from({ length: 260 }, (_, i) => {
+      const x = random(`fx${i}`) * W;
+      const y = random(`fy${i}`) * H;
+      const a = random(`fa${i}`) * Math.PI;
+      const l = 6 + random(`fl${i}`) * 22;
+      const bend = (random(`fb${i}`) - 0.5) * 8;
+      return (
+        <path
+          key={i}
+          d={`M ${x} ${y} q ${(Math.cos(a) * l) / 2 + bend} ${(Math.sin(a) * l) / 2 - bend} ${Math.cos(a) * l} ${Math.sin(a) * l}`}
+          stroke={color.paperShade}
+          strokeWidth={0.8}
+          fill="none"
+          opacity={0.35}
+        />
+      );
+    })}
+  </svg>
 );
 
-/** Warm edge darkening and moving grain over everything; render it last. */
-export const Finish: React.FC = () => {
-  const seed = boilSeed(useCurrentFrame(), 12) % 6;
-  if (flat) return null;
-  return (
-    <AbsoluteFill style={{ pointerEvents: "none" }}>
-      <AbsoluteFill style={{ background: `radial-gradient(ellipse 80% 75% at 50% 48%, transparent 58%, ${color.paperShade} 135%)`, mixBlendMode: "multiply", opacity: 0.8 }} />
-      <Img src={staticFile(`tex/grain-${seed}.png`)} style={{ position: "absolute", width: W, height: H, mixBlendMode: "multiply", opacity: 0.22 }} />
-    </AbsoluteFill>
-  );
-};
+/**
+ * Warm edge darkening and moving grain over everything; render it last. It draws nothing here:
+ * scripts/render.sh multiplies the paper, the vignette and the grain over every frame in ffmpeg.
+ */
+export const Finish: React.FC = () => null;
 
-/** One transparent grain frame per composition frame: the GrainTex composition. */
-export const GrainTexture: React.FC = () => {
-  const seed = useCurrentFrame();
-  return (
-    <AbsoluteFill>
-      <svg width={W} height={H} style={{ position: "absolute" }}>
-        <filter id="grain" x={0} y={0} width={W} height={H} filterUnits="userSpaceOnUse">
-          <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves={1} seed={seed} />
-          <feColorMatrix type="matrix" values="0 0 0 0 0.3  0 0 0 0 0.25  0 0 0 0 0.2  0 0 0 0.8 -0.25" />
-        </filter>
-        <rect width={W} height={H} filter="url(#grain)" />
-      </svg>
-    </AbsoluteFill>
-  );
-};
+/** One transparent grain frame per seed; scripts/render.sh bakes six of them into public/tex/. */
+export const GrainTexture: React.FC<{ seed: number }> = ({ seed }) => (
+  <svg width={W} height={H}>
+    <filter id="grain" x={0} y={0} width={W} height={H} filterUnits="userSpaceOnUse">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves={1} seed={seed} />
+      <feColorMatrix type="matrix" values="0 0 0 0 0.3  0 0 0 0 0.25  0 0 0 0 0.2  0 0 0 0.8 -0.25" />
+    </filter>
+    <rect width={W} height={H} filter="url(#grain)" />
+  </svg>
+);
 
 /**
  * The ink wobble filter, a hatch pattern per hue, crowd fills and an open arrowhead.
@@ -113,6 +91,31 @@ export const InkDefs: React.FC<{ seed: number }> = ({ seed }) => (
   </defs>
 );
 
+/** Cuts a segment to the box [x0, y0, x1, y1] (Liang-Barsky); null when it misses the box. */
+const clipToBox =
+  ([bx0, by0, bx1, by1]: number[]) =>
+  (x1: number, y1: number, x2: number, y2: number): number[] | null => {
+    let t0 = 0;
+    let t1 = 1;
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    for (const [p, q] of [[-dx, x1 - bx0], [dx, bx1 - x1], [-dy, y1 - by0], [dy, by1 - y1]]) {
+      if (p === 0) {
+        if (q < 0) return null;
+        continue;
+      }
+      const r = q / p;
+      if (p < 0) {
+        if (r > t1) return null;
+        t0 = Math.max(t0, r);
+      } else {
+        if (r < t0) return null;
+        t1 = Math.min(t1, r);
+      }
+    }
+    return [x1 + t0 * dx, y1 + t0 * dy, x1 + t1 * dx, y1 + t1 * dy];
+  };
+
 /**
  * Pen hatching inside the closed path `d`: parallel strokes with a little jitter in spacing,
  * length and angle. `box` is [x, y, w, h] around the path; `cross` adds a second, darker pass;
@@ -134,6 +137,8 @@ export const Hatch: React.FC<{
   const cx = x + w / 2;
   const cy = y + h / 2;
   const r = Math.hypot(w, h) / 2 + 4;
+  // A stroke cut to the box draws the same picture inside the clip, and keeps each layer resvg allocates small.
+  const trim = clipToBox([x - 3, y - 3, x + w + 3, y + h + 3]);
   const lines = (a: number, tag: string) => {
     const ux = Math.cos((a * Math.PI) / 180);
     const uy = Math.sin((a * Math.PI) / 180);
@@ -145,13 +150,15 @@ export const Hatch: React.FC<{
       const tilt = (random(`${id}${tag}t${i}`) - 0.5) * 0.05;
       const px = cx - uy * off;
       const py = cy + ux * off;
+      const seg = trim(px + ux * a0, py + uy * a0 + a0 * tilt, px + ux * a1, py + uy * a1 + a1 * tilt);
+      if (!seg) return null;
       return (
         <line
           key={`${tag}${i}`}
-          x1={px + ux * a0}
-          y1={py + uy * a0 + a0 * tilt}
-          x2={px + ux * a1}
-          y2={py + uy * a1 + a1 * tilt}
+          x1={seg[0]}
+          y1={seg[1]}
+          x2={seg[2]}
+          y2={seg[3]}
           stroke={stroke}
           strokeWidth={width * (0.75 + random(`${id}${tag}w${i}`) * 0.5)}
           strokeLinecap="round"
@@ -242,9 +249,9 @@ export const Guide: React.FC<{ x: number; y: number; r: number; tint: string; li
   );
 };
 
-/** A number that counts toward `value`; `p` (0 to 1) is how far it has counted. */
+/** A number that counts toward `value`; `p` (0 to 1) is how far it has counted. Put it inside a <Tag> or a <text>. */
 export const Counter: React.FC<{ value: number; p: number; decimals?: number }> = ({ value, p, decimals = 0 }) => (
-  <span style={{ fontVariantNumeric: "tabular-nums" }}>{(value * p).toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}</span>
+  <>{(value * p).toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}</>
 );
 
 export type Pose = { x: number; y: number; rot: number };
