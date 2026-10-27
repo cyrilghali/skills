@@ -21,3 +21,14 @@ Same cases, one run each by a fresh agent following the skill, judged by a fresh
 | 7, five-minute library episode | 16/20 (+4) | PASS | 2, 3, 5, 6 at 1 (only chapter 1 opens on a hook; four sentences name things never drawn) |
 
 Both runs got the drawn look, the Kokoro fallback with measured word times, and a clean layout check on the final.
+
+## With the skill, from a finished narration (current rubric)
+
+One run per case by a fresh agent following the skill, from the `fixtures/` narration, judged by a fresh strict judge on the final MP4.
+
+| Case | Total | Verdict | Lowest dimension |
+|---|---|---|---|
+| 1, binary search | 19/20 | PASS | 3 at 1: the "left" counter label types on about 10 s before the voice says "left" |
+| 2, a quarter for a ten-year-old | 19/20 | PASS | 6 at 1: the pizza rim stays whole when the slice slides out, so it cuts across the lifted slice |
+
+Each run spent 85 to 94% of its wall time inside `render.sh` (14 of 17 minutes and 17 of 22 minutes), rendering the whole video three or four times.
