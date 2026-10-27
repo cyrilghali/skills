@@ -27,4 +27,8 @@ table '| pull | The moon pulls the sea. | | sea bulges |'
 table '| pull | The moon pulls the sea. | Moon | sea bulges |'
 echo '[{"id":"pull","text":"The moon pulls seas."}]' >"$tmp/beats.json"
 [ "$(run)" = 1 ] && grep -q "differs" "$tmp/out" || fail "beats.json drifting from the table must fail"
+echo '{"pull":"The moon pulls the sea."}' >"$tmp/beats.json"
+[ "$(run)" = 1 ] && grep -q "list of objects" "$tmp/out" && ! grep -q Traceback "$tmp/out" || fail "beats.json that is not a list must fail with one line"
+rm "$tmp/script.md" "$tmp/beats.json"
+[ "$(run)" = 1 ] && grep -q "cannot read" "$tmp/out" && ! grep -q Traceback "$tmp/out" || fail "a missing script.md must fail with one line"
 echo "beats check ok"

@@ -52,10 +52,29 @@ TOKENS = [
 SYMBOLS = re.compile(r"[\d^_*#`\[\]{}<>|/\\%=+]")
 
 
+def read(path):
+    try:
+        return Path(path).read_text()
+    except OSError as err:
+        raise SystemExit(f"FAIL: cannot read {path}: {err.strerror}")
+
+
+def load_json(path, shape):
+    try:
+        data = json.loads(read(path))
+    except json.JSONDecodeError as err:
+        raise SystemExit(f"FAIL: {path} is not valid JSON: {err}")
+    if shape is list and not (isinstance(data, list) and all(isinstance(x, dict) for x in data)):
+        raise SystemExit(f"FAIL: {path} must be a JSON list of objects")
+    if shape is dict and not isinstance(data, dict):
+        raise SystemExit(f"FAIL: {path} must be a JSON object")
+    return data
+
+
 def load_beats(path):
     try:
-        beats = json.loads(path.read_text())
-    except (OSError, json.JSONDecodeError) as err:
+        beats = json.loads(read(path))
+    except json.JSONDecodeError as err:
         return None, [f"{path}: cannot read as JSON ({err})"]
     if not isinstance(beats, list):
         return None, [f"{path}: must be a JSON list of {{\"id\", \"text\"}} objects, not a {type(beats).__name__}"]
@@ -75,7 +94,7 @@ def load_beats(path):
 
 def brief_fact_ids(path):
     ids, inside = [], False
-    for line in Path(path).read_text().splitlines():
+    for line in read(path).splitlines():
         if line.startswith("#"):
             inside = line.lstrip("#").strip().lower().startswith("facts this unit must say")
             continue
@@ -122,7 +141,7 @@ def main(argv):
             if found:
                 print(f"  beat {beat}: {', '.join(found)}")
         return 1
-    claims = json.loads(claims_path.read_text())
+    claims = load_json(claims_path, list)
 
     if "--blind" in flags:
         blind = [{k: e.get(k) for k in ("beat", "claim", "source")} for e in claims]
@@ -134,7 +153,7 @@ def main(argv):
     if "--final" in flags:
         second_path = project / "second-read.json"
         if second_path.exists():
-            second_reads = {(r.get("beat"), r.get("claim")): r.get("verdict") for r in json.loads(second_path.read_text())}
+            second_reads = {(r.get("beat"), r.get("claim")): r.get("verdict") for r in load_json(second_path, list)}
         else:
             problems.append(f"{second_path} does not exist; the second reader writes it from claims.py --blind")
 
@@ -171,7 +190,10 @@ def main(argv):
 
     if brief is not None:
         named = {str(e.get("fact", "")).strip() for e in claims}
-        for fact_id in brief_fact_ids(brief):
+        fact_ids = brief_fact_ids(brief)
+        if not fact_ids:
+            problems.append(f"{brief}: no rows under a '## Facts this unit must say' heading, so no brief fact can be checked")
+        for fact_id in fact_ids:
             if fact_id not in named:
                 problems.append(f"brief fact {fact_id}: no claims entry names it in its fact field; say it in the narration and add the entry")
 

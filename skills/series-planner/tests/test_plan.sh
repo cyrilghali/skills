@@ -45,4 +45,13 @@ printf "$good" '' | sed 's/"id":"u2"/"id":"u1"/; s/"unit":"u2"/"unit":"u1"/; s/"
 printf "$good" ',{"id":"f3","text":"Smoke keeps the guard bees calm","source":"guide p.4","dropped":"duplicate: f1 says this in more detail"}' | plan
 [ "$(run)" = 0 ] || fail "a duplicate drop that mentions detail must pass"
 
+echo '{bad' >"$tmp/p/plan.json"
+[ "$(run)" = 1 ] && grep -q "not valid JSON" "$tmp/out" && ! grep -q Traceback "$tmp/out" || fail "invalid JSON must fail with one line"
+
+echo '{"goal":"g","evidence":"e","units":[{"tier":"overview"}]}' >"$tmp/p/plan.json"
+[ "$(run)" = 1 ] && grep -q "has no id" "$tmp/out" && ! grep -q Traceback "$tmp/out" || fail "a unit with no id must fail with one line"
+
+printf "$good" '' | python3 -c 'import json,sys; p=json.load(sys.stdin); p.pop("audiences"); [t.pop("audiences") for t in p["tiers"]]; print(json.dumps(p))' | plan
+[ "$(run)" = 1 ] && grep -q "no audiences" "$tmp/out" || fail "a plan with no audiences must fail"
+
 echo "plan check ok"
