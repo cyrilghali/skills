@@ -1,7 +1,8 @@
 """Usage: finish-tex.py <project-dir> <fps> <width> <height> <out-dir>
 Bakes what look.tsx's Paper and Finish lay over a flat render into one multiply frame per grain step:
 paper.png divided by the flat paper colour, times the vignette, times the grain. Writes one PNG per frame
-of a loop of fps/2 frames (the grain changes 12 times a second and cycles through six frames)."""
+of a one-second loop (the grain changes 12 times a second and cycles through six frames, so any fps repeats
+exactly after one second)."""
 import re, sys
 from pathlib import Path
 import numpy as np
@@ -26,6 +27,6 @@ for s in range(6):
     ga = 0.22 * g[..., 3:]
     f = np.clip(base * (1 - ga * (1 - g[..., :3])), 0, 1)
     grains.append(Image.fromarray((f * 255 + 0.5).astype(np.uint8)).resize((w, h), Image.LANCZOS))
-for j in range(fps // 2):
+for j in range(fps):
     grains[(j * 12 // fps) % 6].save(out / f"f{j:03d}.png")
 print(out)

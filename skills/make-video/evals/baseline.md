@@ -31,4 +31,4 @@ One run per case by a fresh agent following the skill, from the `fixtures/` narr
 | 1, binary search | 19/20 | PASS | 3 at 1: the "left" counter label types on about 10 s before the voice says "left" |
 | 2, a quarter for a ten-year-old | 19/20 | PASS | 6 at 1: the pizza rim stays whole when the slice slides out, so it cuts across the lifted slice |
 
-Each run spent 85 to 94% of its wall time inside `render.sh` (14 of 17 minutes and 17 of 22 minutes), rendering the whole video three or four times.
+Each run spent about 80% of its wall time inside `render.sh` (14.2 of 16.8 minutes and 17.1 of 22.0 minutes), rendering the whole video three or four times.
