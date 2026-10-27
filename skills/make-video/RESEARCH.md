@@ -1,6 +1,6 @@
 # Why does the make-video renderer look the way it does?
 
-Read this before you change `scripts/render.sh` or the renderer. It records how the render was measured, which fixes held up, and why the renderer is moving from [Remotion](https://www.remotion.dev) to [resvg](https://github.com/linebender/resvg). The move is decided but not shipped: `render.sh` still renders with Remotion, and the resvg numbers come from a prototype that rebuilt one scene by hand.
+Read this before you change `scripts/render.sh` or the renderer. It records how the render was measured, which fixes held up, and why the renderer moved from [Remotion](https://www.remotion.dev) to [resvg](https://github.com/linebender/resvg). The move has shipped. `render.sh` now renders the React scene to one SVG per frame and draws it with resvg on worker threads, with no browser. The comparison with Manim used a prototype that rebuilt one scene by hand; the shipped port's own numbers are under "What does the shipped port measure?".
 
 Every number comes from one test video: a 16-second scene (15.73 s, 472 frames at 30 fps) in which a pizza splits into quarters and then becomes a 10 by 10 grid. Two sizes appear throughout:
 
@@ -107,19 +107,21 @@ The fix itself changed the look. Filled shapes now pick up the paper weave and s
 
 What each keeps and loses against Remotion:
 
+Manim is the prototype; resvg is the shipped port unless a cell says prototype.
+
 | | Remotion | Manim | resvg |
 |---|---|---|---|
-| Scene code | React and CSS | Python | SVG strings from one function |
+| Scene code | React and CSS | Python | The same React components, drawing SVG only; the prototype used SVG strings from one function |
 | Text | CSS boxes | Ported, with a bolder label backing | Boxes from font metrics; strokes look lighter and thinner than Chrome's |
-| Layout check | Boxes plus a point-in-fill test (does a label sit on a filled shape?) | Boxes only | Boxes only; flags the planted cases, misses a label inside a shape |
-| Shown-text probe (which words are on screen at each beat) | Yes | Not built | Not built |
+| Layout check | Boxes plus a point-in-fill test (does a label sit on a filled shape?) | Boxes only | Boxes plus a fill test: each shape is drawn alone and its alpha sampled under the label. Passes the layout test's planted cases |
+| Shown-text probe (which words are on screen at each beat) | Yes | Not built | Built |
 | Beat timings | Yes | Ported | Ported |
 | Ink and hatching | SVG `feTurbulence` and `feDisplacementMap` | Per-vertex wobble in Python, a different noise | Same filter, seeds and hatching as Remotion |
-| Audio | Mixed in the render | Copied from the reference track; the mix is not built | Copied from the reference track; the mix is not built |
-| Kit rebuilt | | 413 lines | 371 lines |
-| Same pixels on two runs | not measured | not measured | not measured |
+| Audio | Mixed in the render | Copied from the reference track; the mix is not built | Mixed apart in `scripts/mix.py` from the sound list the render writes |
+| Kit rebuilt | | 413 lines | 371 lines (prototype) |
+| Same pixels on two runs | not measured | not measured | Yes: two preview runs gave the same digest of every frame's pixels and byte-identical files, twice |
 
-On frame 240, resvg's cached ink differs from resvg's own filter in 68,810 of 8,294,400 bytes (mean 0.31 levels), mainly on anti-aliased edges.
+On frame 240, the prototype's cached ink differed from resvg's own filter in 68,810 of 8,294,400 bytes (mean 0.31 levels), mainly on anti-aliased edges. The shipped cache differs in 58,008 bytes (mean 0.009 levels), and no pixel by more than 8 levels.
 
 ## Why resvg?
 
@@ -130,17 +132,36 @@ The rule for the choice is output quality and speed only. The cost of a port doe
 
 Projected in a straight line from these runs, a 90-second video with two previews and a final takes about 13 minutes in Remotion after the fix, 3.3 minutes in Manim and 2.9 minutes in resvg. Each tool's startup sits in the scaled part, so long videos come out a few percent high.
 
-The port must rebuild:
+The port rebuilt:
 
-- The point-in-fill check: render each shape alone and sample its alpha under each label box. resvg exposes the pixels; this is not built yet.
-- Label boxes from font metrics. The prototype already does this. The kit's three text components (`Label`, `Note`, `Tag`) all use `whiteSpace: "nowrap"`, so no text wrapping is lost.
+- The point-in-fill check. Each shape is drawn alone, and its alpha is sampled on a 13 by 5 grid under the label box.
+- Label boxes from font metrics. resvg measures each line of text once and the render caches the width. The kit's three text components (`Label`, `Note`, `Tag`) never wrapped, so no wrapping was lost.
 - The shown-text probe and the audio mix.
+- The timing helpers scenes import (`useCurrentFrame`, `interpolate`, `Easing.bezier`, `random`), with the same values, so a scene ports by changing one import line.
 
-The port gives up Remotion Studio, the live preview in a browser, and anything driven by the DOM or CSS in a future scene, such as a formula rendered to HTML with KaTeX.
+The port gave up Remotion Studio, the live preview in a browser, and anything drawn with HTML or CSS, such as a formula rendered with KaTeX. One of the two test scenes drew its cell numbers as HTML boxes; after the port they draw nothing, and the render prints a `LAYOUT:` line naming the element.
+
+## What does the shipped port measure?
+
+Same scene, same machine, same day. The machine was busier than for the earlier rows: an ffmpeg left over from a test used about six cores through every run, and other agents shared the machine.
+
+| Measure | Preview | Final | 1-minute load |
+|---|---|---|---|
+| `render.sh`, warm, whole run | 17.2 and 18.0 s; 31.5 s on the first run | 41.2 and 41.5 s | 19 to 28 at the start |
+| Render step alone: draw, probes, finish, encode | 11.4 to 12.2 s, four runs | 34.1 and 37.3 s | 27 to 38 |
+| Texture bake (paper and six grain frames) | 1.5 s, against 16.4 s in Chrome | | not recorded |
+| One finished 1080p frame (`scripts/still.sh`) | | 2.6 to 3.9 s | up to 52 |
+| PSNR against an older Remotion final | | 26.4 dB | |
+
+Of 472 frames, 241 are drawn; the other 231 repeat an earlier frame and reuse its pixels. Per preview frame, React's markup takes about 5 ms, rounding attribute numbers 3.6 ms, resvg's scene 44 ms and the label layer 25 ms. A frame that gets the shown-text probe adds about 29 ms of probe and 15 ms of XML parsing. In one run, scanning every frame took about 3.5 s of the 12 s preview step.
+
+The older Remotion final is the one the eval runs used. It was rendered before the flat-render fix was committed; which pipeline drew it was not checked. Against it, the prototype's two-frame check also gave 26 to 27 dB, so the port scores where the prototype did. Drawn with the textures Chrome baked, the port scores 26.8 dB, so the texture bake is not where the gap comes from. The resvg paper alone scores 32.7 dB against Chrome's.
+
+resvg 2.6 aborts the whole process when a group that needs its own layer (opacity or a filter) has nothing inside a nested `<svg>`'s box. The 2.7 alpha has the same bug and only turns the abort into an error. Scenes wrap everything in a nested `<svg>` the size of the frame, so the render turns that one into a plain group. The preview before and after that change scores 45 dB PSNR, too little to see, and the score against Remotion stayed at 26.4 dB.
 
 ## How do I re-measure on my machine?
 
-The benchmark script is not shipped, and the Manim and resvg prototypes are not either. You can reproduce the Remotion rows with the shipped scripts.
+The benchmark script is not shipped, and the Manim and resvg prototypes are not either. The Remotion rows need the commit before the port. The commands below reproduce the shipped port's rows.
 
 1. Time both modes twice each and note the load:
 
@@ -149,19 +170,18 @@ The benchmark script is not shipped, and the Manim and resvg prototypes are not 
    time scripts/render.sh <project> final;   uptime
    ```
 
-   On the machine above, at load about 15, a warm run of a 16-second video took 36 s for the preview and 81 s for the final. On a quiet machine the two runs should agree within a few seconds; on the shared machine, two runs of the old script differed by 57 s.
-2. Point `EXPLAINER_CACHE` at an empty folder and delete `<project>/public/tex`, then run the preview again. The bake adds about 21 s.
-3. To split the render, run its command by hand from the project folder and read the log's `Rendering frames done in` and `Stitching done in` lines:
+   On the machine above, at load 19 to 28, a warm run of a 16-second video took 17 to 18 s for the preview and 41 s for the final. On a quiet machine the two runs should agree within a few seconds.
+2. Point `EXPLAINER_CACHE` at an empty folder (with the `fonts` folder copied in) and delete `<project>/public/tex`, then run the preview again. The paper and grain bake adds about 1.5 s; the finish frames are baked once more per size.
+3. To time the render step alone, run it by hand from the skill folder:
 
    ```
-   pnpm exec remotion render Explainer out/flat.mp4 --scale=0.5 --props='{"flat":true}' --crf=16 --x264-preset=veryfast --concurrency=2 --log=verbose 2>&1 | grep -E 'Rendering frames|Stitching'
+   time node scripts/render.mjs <project> video 0.5 "$(scripts/finish.sh <project> 0.5)" /tmp/t.mp4 | grep '^frames'
    ```
 
-   Expect drawing near 15 s at preview on a comparable machine.
-4. For the floor, render the same command on a copy of the project whose scene draws nothing. Expect about 25 ms a frame at 2 tabs.
-5. For one layer's cost, copy the project once per layer and remove that layer. Run the full scene before, between and after the variants. A change smaller than the full-scene spread is noise.
+   It prints `frames: 472 (241 drawn), sha1 …`. Expect near 12 s at preview on a comparable machine, and the same digest on every run.
+4. For one layer's cost, copy the project once per layer and remove that layer. Run the full scene before, between and after the variants. A change smaller than the full-scene spread is noise.
 
-A result that contradicts this paper: a flat preview that does not draw in well under half the time of the old finished one, or a floor far above 25 ms a frame at 2 tabs.
+A result that contradicts this paper: a preview render step far above 12 s on a quiet machine, or two runs that print different digests.
 
 Noise on the machine these numbers came from:
 
@@ -170,6 +190,8 @@ Noise on the machine these numbers came from:
 | Remotion preview drawing, three full runs | 40 to 53 s | 11 to 19 |
 | Old script, same preview, two runs | 73 s and 130 s | 18 and 27 |
 | resvg tuned, three runs each | 1 to 2.6 s | not recorded |
+| resvg port, preview render step, four runs | 11.4 to 12.2 s | 27 to 38 |
+| resvg port, `render.sh` final, two runs | 41.2 and 41.5 s | 19 to 28 |
 | Manim tuned, two runs each | 16.3 and 16.4 s; 7.7 and 7.6 s | 4 to 12 |
 
 ## What is still open?
@@ -178,6 +200,9 @@ Noise on the machine these numbers came from:
 - The `veryfast` encode of the flat render saved about 6 s of encoding in one run each. That is inside the noise, so it is not ranked.
 - The drawing-only "before" figure (53 s) is the slowest of three full-scene runs; the others took 42 and 40 s.
 - The cold preview after the fix took 78 s against 36 s warm. It also voiced the clips afresh, and its split between bake and voice was not measured.
-- Rendering the React scene files to SVG was never timed.
-- No pipeline was checked for identical pixels across two runs.
-- REFERENCE.md's 24 fps advice, GPU note and audio-mixing note were not measured here.
+- ~~Rendering the React scene files to SVG was never timed.~~ About 5 ms a frame; see "What does the shipped port measure?".
+- ~~No pipeline was checked for identical pixels across two runs.~~ The resvg port gives identical pixels.
+- The port's final took 41 s against the prototype's 23 to 25 s, and its preview 17 to 18 s against 9 to 10 s. The port's runs had load 19 to 38 and the prototype's load was not recorded, so how much is load and how much is the port was not measured. Time both on a quiet machine before tuning.
+- A nested `<svg>` other than the full-frame one can still hit the resvg 2.6 abort. No scene has one yet.
+- The 90-second projection was not re-run with the shipped port.
+- REFERENCE.md's 24 fps advice was not measured here.
