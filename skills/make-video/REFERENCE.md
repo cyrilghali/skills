@@ -121,6 +121,8 @@ Anything wholly outside the frame is off camera and not reported; anything the f
 
 ## Long videos and many episodes
 
+The measurements behind the render pipeline are in RESEARCH.md.
+
 - For 720p, pass `--scale=0.6666666666666666`; a rounded `0.6667` gives a 720.036 px height, which Remotion refuses. It takes about a third less time per frame than 1080p.
 - Every render is flat and gets the paper afterwards: `render.sh` passes `--props` with `{"flat":true}` (look.tsx then drops the paper texture, vignette and grain), bakes those layers once per size with `scripts/finish-tex.py` into the cache, and multiplies them back in ffmpeg in planar RGB (`format=gbrp`, `blend=all_mode=multiply:shortest=1`). In the browser those full-frame multiply blends cost more than everything else drawn: a 472-frame half-scale preview took 40 to 53 s with them and 15 s without, and the ffmpeg pass takes 3 s. The result matches the in-browser render at 40 dB PSNR for a half-scale preview and 36 dB at 1080p (two in-browser renders of the same scene differ at 54 dB); inked areas pick up a faint paper texture. On a farm, run the pass on each chunk as it lands and phase the grain loop on the chunk's first frame; `blend` without `shortest=1` never ends when the grain input loops.
 - For a long series, render at 24 fps: set `"fps": 24` in `src/timeline.json` (re-voicing keeps it). Every move is timed in seconds, so nothing shifts, and there are a fifth fewer frames to draw.
