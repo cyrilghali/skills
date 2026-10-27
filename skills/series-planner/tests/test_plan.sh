@@ -54,4 +54,13 @@ echo '{"goal":"g","evidence":"e","units":[{"tier":"overview"}]}' >"$tmp/p/plan.j
 printf "$good" '' | python3 -c 'import json,sys; p=json.load(sys.stdin); p.pop("audiences"); [t.pop("audiences") for t in p["tiers"]]; print(json.dumps(p))' | plan
 [ "$(run)" = 1 ] && grep -q "no audiences" "$tmp/out" || fail "a plan with no audiences must fail"
 
+printf "$good" '' | sed 's/"id":"f2"/"id":null/' | plan
+[ "$(run)" = 1 ] && grep -q "has no id" "$tmp/out" || fail "a null fact id must fail"
+
+printf "$good" '' | sed 's/"unit":"u2"/"unit":["u1","u2"]/' | plan
+[ "$(run)" = 1 ] && grep -q "'unit' must be text" "$tmp/out" && ! grep -q Traceback "$tmp/out" || fail "a fact placed in a list of units must fail with one line"
+
+printf '{"goal":"caf\351"}' >"$tmp/p/plan.json"
+[ "$(run)" = 1 ] && grep -q "not UTF-8" "$tmp/out" || fail "a latin-1 plan.json must fail with one line"
+
 echo "plan check ok"

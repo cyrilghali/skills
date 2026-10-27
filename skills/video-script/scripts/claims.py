@@ -16,7 +16,7 @@ Fails (exit 1) and lists each offending beat and token when:
   - an entry names a beat id that beats.json does not hold.
 --brief  also reads the table under "## Facts this unit must say" in the given file (a brief, or
          script.md when there is no brief) and fails for each fact id that no claims entry names
-         in its `fact` field.
+         in its `fact` field, or when that table has no rows.
 --stamp  writes the current beat text into `text_at_check` of every entry that has none. Run it
          after judging a claim and before fixing the narration.
 --blind  prints claims.json with only beat, claim and source: the file to hand the second reader,
@@ -54,9 +54,11 @@ SYMBOLS = re.compile(r"[\d^_*#`\[\]{}<>|/\\%=+]")
 
 def read(path):
     try:
-        return Path(path).read_text()
+        return Path(path).read_text(encoding="utf-8")
     except OSError as err:
         raise SystemExit(f"FAIL: cannot read {path}: {err.strerror}")
+    except UnicodeDecodeError:
+        raise SystemExit(f"FAIL: {path} is not UTF-8 text; save it as UTF-8")
 
 
 def load_json(path, shape):
@@ -83,6 +85,9 @@ def load_beats(path):
         if not isinstance(beat, dict) or set(beat) != {"id", "text"}:
             keys = sorted(beat) if isinstance(beat, dict) else type(beat).__name__
             problems.append(f"beats.json item {i}: must hold only id and text, found {keys}")
+            continue
+        if not isinstance(beat["id"], str) or not isinstance(beat["text"], str):
+            problems.append(f"beats.json item {i}: id and text must both be text")
             continue
         if beat["id"] in seen:
             problems.append(f"beats.json item {i}: duplicate id {beat['id']!r}")
@@ -142,6 +147,10 @@ def main(argv):
                 print(f"  beat {beat}: {', '.join(found)}")
         return 1
     claims = load_json(claims_path, list)
+    for i, entry in enumerate(claims, 1):
+        bad = [k for k, v in entry.items() if v is not None and not isinstance(v, str)]
+        if bad:
+            raise SystemExit(f"FAIL: {claims_path} entry {i}: {', '.join(bad)} must be text")
 
     if "--blind" in flags:
         blind = [{k: e.get(k) for k in ("beat", "claim", "source")} for e in claims]
@@ -153,7 +162,10 @@ def main(argv):
     if "--final" in flags:
         second_path = project / "second-read.json"
         if second_path.exists():
-            second_reads = {(r.get("beat"), r.get("claim")): r.get("verdict") for r in load_json(second_path, list)}
+            reads = load_json(second_path, list)
+            if any(not isinstance(r.get(k), (str, type(None))) for r in reads for k in ("beat", "claim", "verdict")):
+                raise SystemExit(f"FAIL: {second_path}: beat, claim and verdict must be text")
+            second_reads = {(r.get("beat"), r.get("claim")): r.get("verdict") for r in reads}
         else:
             problems.append(f"{second_path} does not exist; the second reader writes it from claims.py --blind")
 
