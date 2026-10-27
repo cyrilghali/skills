@@ -18,7 +18,7 @@ export const uid = (prefix: string) => `${prefix}-${engine.ids++}`;
 
 type Extrapolate = "clamp" | "extend" | "identity";
 
-/** Maps `input` from `inRange` to `outRange`, piece by piece, as Remotion's interpolate() does. */
+/** Maps `input` from `inRange` to `outRange`, piece by piece; past the ends it extends, clamps or returns the input. */
 export const interpolate = (
   input: number,
   inRange: readonly number[],
@@ -50,7 +50,8 @@ const mulberry32 = (a: number) => {
   return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 };
 
-/** Remotion's random(): the same seed gives the same number in [0, 1), so hatching keeps its jitter between renders. */
+/** The same seed gives the same number in [0, 1), so hatching keeps its jitter between renders. Scenes were tuned
+ * against these exact values, so the hash and generator must not change. */
 export const random = (seed: string | number) => {
   if (typeof seed === "number") return mulberry32(seed * 10000000000);
   let h = 0;
@@ -59,7 +60,7 @@ export const random = (seed: string | number) => {
 };
 
 // Cubic bezier easing from React Native's Animated (MIT License, Copyright (c) Meta Platforms, Inc. and
-// affiliates), as Remotion ships it, so eased moves land on the same values.
+// affiliates).
 const A = (a1: number, a2: number) => 1 - 3 * a2 + 3 * a1;
 const B = (a1: number, a2: number) => 3 * a2 - 6 * a1;
 const C = (a1: number) => 3 * a1;

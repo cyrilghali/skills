@@ -31,7 +31,19 @@ const options = (s, svg) => ({ font: svg.includes("<text") ? font : { loadSystem
 // Attribute numbers keep three decimals: a thousandth of a pixel never shows, and the tail of an easing then
 // settles into frames equal to the next, which are drawn once. Text is left as written.
 const round = (attr) => attr.replace(/\d+\.\d{4,}/g, (m) => String(Number(Number(m).toFixed(3))));
-const doc = (markup) => `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${markup.replace(/="[^"]*"/g, round)}</svg>`;
+// resvg 2.6 panics when a group that needs its own layer (opacity, filter) has nothing inside a nested <svg>'s
+// viewport. A nested <svg> the size of the frame clips to the canvas anyway, so it becomes a plain <g>.
+const frameSvg = new RegExp(`^<svg width="${W}" height="${H}"(?: style="[^"]*")?>$`);
+const unnest = (markup) => {
+  const open = [];
+  return markup.replace(/<svg\b[^>]*?(\/?)>|<\/svg>/g, (tag, selfClosing) => {
+    if (tag === "</svg>") return open.pop() ? "</g>" : tag;
+    if (selfClosing) return tag;
+    open.push(frameSvg.test(tag));
+    return open.at(-1) ? "<g>" : tag;
+  });
+};
+const doc = (markup) => `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${unnest(markup).replace(/="[^"]*"/g, round)}</svg>`;
 
 const widths = new Map();
 const measure = (text) => {
@@ -77,13 +89,17 @@ const indexFor = (ink, s, w, h) => {
   return indexes.get(key);
 };
 
+// resvg draws SVG only, so an HTML element in the scene would silently disappear.
+const htmlTag = /<(div|span|p|img|h[1-6]|ul|ol|li|table|button|section|pre|code|br|b|i|em|strong|foreignObject)\b/g;
+const htmlLines = (svg) => [...new Set([...svg.matchAll(htmlTag)].map((m) => m[1]))].map((t) => `LAYOUT: <${t}> draws nothing: the render draws SVG only, so draw it with <text>, <rect> or a kit component`);
+
 const probeFrames = (scene) => {
   const ends = new Map([...Object.values(scene.BEATS).map((b, i) => [Math.round(b.end * scene.FPS), i + 1]), [scene.DURATION - 1, Object.keys(scene.BEATS).length]]);
   const every = Math.round(scene.FPS / 10);
   const check = layoutCheck({ Resvg, DOMParser, XMLSerializer, font, width: W, height: H });
   return (n, svg) => {
     const t = n / scene.FPS;
-    const lines = [];
+    const lines = htmlLines(svg);
     if (n % every === 0) for (const q of check.shown(svg)) lines.push(`SHOWN: ${t.toFixed(1)}s ${q} as the voice says "${scene.saying(t)}"`);
     const beat = ends.get(n);
     if (beat !== undefined) {
@@ -176,6 +192,7 @@ export const grain = (seed) => draw(createElement(GrainTexture, { seed }));`,
     ff.stdin.end(raster(svg, s));
     await once(ff, "close");
     const check = layoutCheck({ Resvg, DOMParser, XMLSerializer, font, width: W, height: H });
+    for (const l of htmlLines(svg)) console.log(l);
     for (const p of check.problems(svg)) console.log(`LAYOUT: frame ${n} (${(n / fps).toFixed(1)}s): ${p}`);
   } else if (mode === "video") {
     const [s, finish, out] = [Number(process.argv[4]), process.argv[5], process.argv[6]];
