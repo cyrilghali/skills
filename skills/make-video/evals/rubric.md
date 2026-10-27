@@ -1,4 +1,4 @@
-# video-production scoring rubric
+# make-video scoring rubric
 
 Each dimension is 0-2. Read beats.json against the case's fixture, src/Explainer.tsx and src/DESIGN.md, plan.md as supporting evidence only, run `ffprobe` on the final MP4, and read the contact sheet (`scripts/frames.sh <mp4>`, one tile per beat); extract any crowded frame at full resolution.
 Return per-dimension scores, a total, pass/fail (pass = total >= 16 of 20 AND no dimension at 0), one concrete fix per dimension under 2.

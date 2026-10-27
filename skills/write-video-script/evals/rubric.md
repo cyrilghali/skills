@@ -1,4 +1,4 @@
-# video-script scoring rubric
+# write-video-script scoring rubric
 
 Read the case entry, the fixture files, every file in the output folder and `reply.md` (the agent's final reply). Judge the narration in `beats.json` first; when it is missing, judge the narration wherever the output holds it and score dimension 11 at 0.
 

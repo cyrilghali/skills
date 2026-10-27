@@ -1,5 +1,5 @@
 ---
-name: video-production
+name: make-video
 description: 'Turns a finished narration into an explainer video: draws it, animates it, voices it and renders it. Ships a default style you can swap (pen and ink on warm paper, one drawn world the camera moves through). Plans what moves in each beat, animates it in Remotion (React rendered to video), voices it with ElevenLabs when a key works or a free local voice otherwise, keeps every animation in step with the word that names it, checks the layout automatically, and renders an MP4. Use when the user asks for an "explainer video", a "3b1b style video", to "make a video explaining X", to "animate this concept", for a "video explainer" of a topic, codebase or paper, for the next episode of an explainer video series, or to fix the look, layout, camera, timing or voice of one. Also use when an existing render is too slow or too costly: "make the render faster", "render cost", "render farm", "split the render across machines", "render in parallel", "lower the render scale".'
 metadata:
   category: write
@@ -9,7 +9,7 @@ metadata:
 
 Turn a finished narration into a video where the picture carries the idea and the voice says what to look at. The look, voice and music come from the default style: `template/src/DESIGN.md` draws one world in ink on paper, with colour only on the actor the voice is about. To use another look or voice, follow `REFERENCE.md`, "Swap the default style".
 
-The input is a finished `beats.json`: one or two sentences of plain spoken text per beat. Writing it is the step before this skill; a video-script skill does it from a brief, when one is installed.
+The input is a finished `beats.json`: one or two sentences of plain spoken text per beat. Writing it is the step before this skill; a write-video-script skill does it from a brief, when one is installed.
 
 ```json
 [{"id": "intro", "text": "This small light is a planet."},

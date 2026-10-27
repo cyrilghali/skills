@@ -1,5 +1,5 @@
 ---
-name: video-script
+name: write-video-script
 description: 'Writes what one narrated video says, beat by beat, from a brief or a bare topic: the narration, the few words shown on screen in each beat, and a fact check that ties every claim to a source. Writes script.md, beats.json (id and text only) and claims.json. Use when the user asks to write the script, narration or voiceover for an explainer or teaching video, to turn a brief or notes into beats, to fact-check a video narration against its source before recording, or to shorten or remake an episode without losing a fact.'
 metadata:
   category: write

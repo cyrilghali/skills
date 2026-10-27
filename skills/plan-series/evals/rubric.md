@@ -1,4 +1,4 @@
-# series-planner scoring rubric
+# plan-series scoring rubric
 
 Score the plan's outcomes, not its file names or format. A prose plan, a table or a `plan.json` with briefs can each score full marks.
 

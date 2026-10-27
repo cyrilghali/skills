@@ -1,4 +1,4 @@
-# video-production eval cases
+# make-video eval cases
 
 Each case gives a generation agent everything it needs without asking questions.
 The agent applies `SKILL.md` in its own empty folder, starting from the case's finished `beats.json` in `fixtures/`, and returns the report from step 7.

@@ -1,4 +1,4 @@
-# series-planner eval cases
+# plan-series eval cases
 
 Each case gives a generation agent everything it needs without asking questions. The agent applies `SKILL.md` and returns only the plan and its briefs. A judge scores it against `rubric.md`, with the case's fact key from `fixtures/` in hand.
 

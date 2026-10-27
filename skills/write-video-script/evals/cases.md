@@ -1,4 +1,4 @@
-# video-script eval cases
+# write-video-script eval cases
 
 Each case gives a generation agent everything it needs without asking questions.
 The agent works in its own empty folder holding only the case's fixture files, applies `SKILL.md` (or no skill, for the baseline), and writes its output there. Its final reply is saved beside the output as `reply.md`.

@@ -1,4 +1,4 @@
-# video-production trigger queries
+# make-video trigger queries
 
 | # | Query (as a user would type it) | Should trigger | Held out |
 |---|---|---|---|
