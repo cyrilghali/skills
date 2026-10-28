@@ -2,8 +2,9 @@
 //        node render.mjs <project> video <scale> <finish-dir> <out.mp4>
 //        node render.mjs <project> still <frame> <scale> <finish-dir> <out.png>
 // Renders src/Explainer.tsx to SVG with React, rasterizes each frame with resvg on worker threads, and streams the
-// frames in order into one ffmpeg that multiplies the baked paper, vignette and grain over them. Prints BEAT:,
-// LAYOUT: and SHOWN: lines for render.sh; `video` also writes out/audio.json for scripts/mix.py.
+// frames in order into one ffmpeg that multiplies the baked paper, vignette and grain over them. Prints each
+// LAYOUT: and SHOWN: line once to stderr; `video` also writes out/audio.json for scripts/mix.py and
+// <out>.beats.txt (each beat's end time, one per line) for scripts/frames.sh.
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { once } from "node:events";
@@ -53,19 +54,11 @@ const doc = (markup) => `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" he
 
 const widths = new Map();
 const cull = farCull({ Resvg, font, width: W, height: H });
-const frameDoc = (scene, n) => cull(doc(scene.frame(n)));
-
 const measure = (text) => {
   if (!widths.has(text)) widths.set(text, new Resvg(doc(text.replace("<text", '<text x="0" y="500"')), { font }).getBBox()?.width ?? 0);
   return widths.get(text);
 };
-
-/** Imports the bundled scene and hands it the text measure. */
-const load = async (file) => {
-  const scene = await import(pathToFileURL(file).href);
-  scene.engine.measure = measure;
-  return scene;
-};
+const frameDoc = (scene, n) => cull(doc(scene.frame(n, measure)));
 
 // Ink displacement indexes, one per noise (one per boil seed), shared by every worker.
 const indexes = new Map();
@@ -102,8 +95,11 @@ const indexFor = (ink, s, w, h) => {
 const htmlTag = /<(div|span|p|img|h[1-6]|ul|ol|li|table|button|section|pre|code|br|b|i|em|strong|sub|sup|foreignObject)\b/g;
 const htmlLines = (svg) => [...new Set([...svg.matchAll(htmlTag)].map((m) => m[1]))].map((t) => `LAYOUT: <${t}> draws nothing: the render draws SVG only, so draw it with <text>, <rect> or a kit component`);
 
+/** The frame each beat ends on, and the last frame, as frame number -> beat number. */
+const endFrames = (scene) => new Map([...Object.values(scene.BEATS).map((b, i) => [Math.round(b.end * scene.FPS), i + 1]), [scene.DURATION - 1, Object.keys(scene.BEATS).length]]);
+
 const probeFrames = (scene) => {
-  const ends = new Map([...Object.values(scene.BEATS).map((b, i) => [Math.round(b.end * scene.FPS), i + 1]), [scene.DURATION - 1, Object.keys(scene.BEATS).length]]);
+  const ends = endFrames(scene);
   const every = Math.round(scene.FPS / 10);
   const check = layoutCheck({ Resvg, DOMParser, XMLSerializer, font, width: W, height: H });
   return (n, svg) => {
@@ -112,7 +108,6 @@ const probeFrames = (scene) => {
     if (n % every === 0) for (const q of check.shown(svg)) lines.push(`SHOWN: ${t.toFixed(1)}s ${q} as the voice says "${scene.saying(t)}"`);
     const beat = ends.get(n);
     if (beat !== undefined) {
-      lines.push(`BEAT: ${t.toFixed(2)}`);
       for (const p of check.problems(svg)) lines.push(`LAYOUT: beat ${beat} (${t.toFixed(1)}s): ${p}`);
     }
     return lines;
@@ -120,7 +115,7 @@ const probeFrames = (scene) => {
 };
 
 if (!isMainThread) {
-  const scene = await load(bundle);
+  const scene = await import(pathToFileURL(bundle).href);
   const probe = probeFrames(scene);
   parentPort.on("message", (m) => {
     if (m.scan) {
@@ -154,15 +149,14 @@ if (!isMainThread) {
       contents: `import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Explainer } from "./src/Explainer";
-import { engine } from "./src/frame";
+import { FrameContext } from "./src/frame";
 import { GrainTexture, PaperTexture } from "./src/look";
+export { sound } from "./src/Explainer";
 export { BEATS, DURATION, FPS, saying } from "./src/beats";
 export { hand, mono } from "./src/theme";
-export { engine };
-const draw = (el) => { engine.ids = 0; engine.voice = []; engine.cues = []; engine.music = undefined; return renderToStaticMarkup(el); };
-export const frame = (n) => { engine.frame = n; return draw(createElement(Explainer)); };
-export const paper = () => draw(createElement(PaperTexture));
-export const grain = (seed) => draw(createElement(GrainTexture, { seed }));`,
+export const frame = (n, measure) => renderToStaticMarkup(createElement(FrameContext.Provider, { value: { n, measure } }, createElement(Explainer)));
+export const paper = () => renderToStaticMarkup(createElement(PaperTexture));
+export const grain = (seed) => renderToStaticMarkup(createElement(GrainTexture, { seed }));`,
     },
     bundle: true,
     format: "esm",
@@ -173,7 +167,7 @@ export const grain = (seed) => draw(createElement(GrainTexture, { seed }));`,
     outfile: bundlePath,
     logLevel: "error",
   });
-  const scene = await load(bundlePath);
+  const scene = await import(pathToFileURL(bundlePath).href);
   const fps = scene.FPS;
   // resvg quietly draws a missing family in another font, so each family the theme names needs a file named after it.
   for (const family of [scene.hand, scene.mono])
@@ -217,15 +211,21 @@ export const grain = (seed) => draw(createElement(GrainTexture, { seed }));`,
     ff.stdin.end(raster(svg, s));
     await once(ff, "close");
     const check = layoutCheck({ Resvg, DOMParser, XMLSerializer, font, width: W, height: H });
-    for (const l of htmlLines(svg)) console.log(l);
-    for (const p of check.problems(svg)) console.log(`LAYOUT: frame ${n} (${(n / fps).toFixed(1)}s): ${p}`);
+    for (const l of htmlLines(svg)) console.error(l);
+    for (const p of check.problems(svg)) console.error(`LAYOUT: frame ${n} (${(n / fps).toFixed(1)}s): ${p}`);
   } else if (mode === "video") {
     const [s, finish, out] = [Number(process.argv[4]), process.argv[5], process.argv[6]];
     const total = scene.DURATION;
 
-    scene.frame(0);
-    const { voice, cues, music } = scene.engine;
+    const voice = Object.values(scene.BEATS).map((b) => ({ file: b.file, start: b.start, end: b.end }));
+    const { music, cues: wanted = [] } = scene.sound ?? {};
+    const cues = wanted.map(({ beat, delay = 0, sound, volume = 0.5 }) => {
+      if (!scene.BEATS[beat]) throw new Error(`Unknown beat "${beat}"`);
+      return { file: `sound/${sound}.wav`, start: scene.BEATS[beat].start + delay, volume };
+    });
     writeFileSync(join(project, "out", "audio.json"), JSON.stringify({ duration: total / fps, fps, voice, cues, music }, null, 1) + "\n");
+    const beatTimes = [...endFrames(scene).keys()].sort((a, b) => a - b).map((n) => (n / fps).toFixed(2));
+    writeFileSync(out.replace(/\.mp4$/, ".beats.txt"), beatTimes.join("\n") + "\n");
 
     const workers = Array.from(
       { length: Number(process.env.EXPLAINER_WORKERS) || availableParallelism() },
@@ -254,7 +254,14 @@ export const grain = (seed) => draw(createElement(GrainTexture, { seed }));`,
     const scans = new Array(total);
     const chunks = Array.from({ length: Math.ceil(total / 16) }, (_, i) => [i * 16, Math.min(total, i * 16 + 16)]);
     await pool(chunks, async (w, c) => (await ask(w, { scan: c })).forEach((r, i) => (scans[c[0] + i] = r)));
-    for (const r of scans) for (const l of r.lines) console.log(l);
+    // A LAYOUT: line prints once; a SHOWN: line once per text, ignoring digits so a running counter counts once.
+    const printed = new Set();
+    const lines = scans.flatMap((r) => r.lines);
+    for (const l of [...lines.filter((l) => l.startsWith("LAYOUT:")), ...lines.filter((l) => l.startsWith("SHOWN:"))]) {
+      const key = l.startsWith("SHOWN:") ? "SHOWN:" + l.split('"')[1].replace(/[0-9.]/g, "") : l;
+      if (!printed.has(key)) console.error(l);
+      printed.add(key);
+    }
     const first = new Map();
     const lastUse = new Map();
     scans.forEach((r, n) => {

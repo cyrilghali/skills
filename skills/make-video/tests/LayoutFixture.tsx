@@ -1,14 +1,15 @@
 import React from "react";
-import { Label, Voiceover } from "./kit";
+import { Label, type Sound } from "./kit";
 import { Hatch } from "./look";
 import { color, hand } from "./theme";
 
 const box = (x: number, y: number, w: number, h: number) => ({ x, y, width: w, height: h, fill: "none", stroke: color.ink, strokeWidth: 2 });
 const crowd = "M 1300 300 L 1700 300 L 1700 520 L 1300 520 Z";
 
+export const sound: Sound = { cues: [] };
+
 export const Explainer: React.FC = () => (
   <>
-    <Voiceover />
     <svg width={1920} height={1080}>
       <rect data-layout="shape" data-name="box" {...box(200, 200, 400, 300)} />
       <rect data-layout="shape" data-name="runaway" {...box(1800, 600, 300, 100)} />

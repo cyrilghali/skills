@@ -14,9 +14,7 @@ REQUIRED = [
     ("<Background", "no <Background />, so the frame has no paper"),
     ("<Finish", "no <Finish /> last, so the frame has no grain or vignette"),
     ("url(#ink)", "no filter=\"url(#ink)\" on the drawing, so its lines are machine-straight"),
-    ("<Voiceover", "no <Voiceover />, so the narration is silent"),
-    ("<Music", "no <Music />, so there is no music bed"),
-    ("<Cue", "no <Cue />, so nothing on screen makes a sound"),
+    ("export const sound", "no sound export, so the video is silent"),
     ("camera(", "camera() is never used, so the camera never moves"),
     ("word(", "no move is cued with word(), so motion runs ahead of or behind the voice"),
 ]
@@ -50,6 +48,11 @@ def lint(project):
     for needle, why in REQUIRED:
         if needle not in text:
             problems.append(why)
+    if "export const sound" in text:
+        if not re.search(r"\bcues:\s*\[\s*[^\]\s]", text):
+            problems.append("no cues, so nothing on screen makes a sound")
+        if "music:" not in text:
+            problems.append("no music, so there is no music bed")
     return problems
 
 

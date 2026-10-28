@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Usage: frames.sh <video.mp4>  ->  prints one contact-sheet PNG, one tile per narrated beat,
 # taken as the beat ends (when the most is on screen). Tiles read left to right.
-# Without the .beats.txt file render.sh writes beside the video, takes one tile every 3 seconds.
+# Without the .beats.txt file render.mjs writes beside the video, takes one tile every 3 seconds.
 set -euo pipefail
 video=${1:?usage: frames.sh <video.mp4>}
 beats="${video%.mp4}.beats.txt"

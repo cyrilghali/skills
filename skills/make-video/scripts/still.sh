@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Usage: still.sh <project-dir> <frame> <out.png>  ->  renders one full-size frame, paper and grain included,
-# and prints that frame's LAYOUT: lines. Uses the voice timing of the last render.sh run.
+# and prints that frame's LAYOUT: lines to stderr. Uses the voice timing of the last render.sh run.
 set -euo pipefail
 project=$(cd "${1:?usage: still.sh <project-dir> <frame> <out.png>}" && pwd)
 frame=${2:?usage: still.sh <project-dir> <frame> <out.png>}
