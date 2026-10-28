@@ -180,6 +180,15 @@ export const grain = (seed) => draw(createElement(GrainTexture, { seed }));`,
     if (!fontFiles.some((f) => f.startsWith(family.replaceAll(" ", ""))))
       fail(`no fonts in ${fontDir} for "${family}"; run scripts/setup.sh, or add a .ttf whose name starts with ${family.replaceAll(" ", "")}`);
 
+  // An ffmpeg that gets no frame never ends (blend waits for its first pair while the grain loops), so a render
+  // that dies takes its encoders with it.
+  const encoders = new Set();
+  const stopEncoders = () => encoders.forEach((ff) => ff.kill("SIGKILL"));
+  process.on("exit", stopEncoders);
+  for (const [signal, code] of [["SIGINT", 130], ["SIGTERM", 143]]) process.on(signal, () => process.exit(code));
+  process.on("uncaughtException", (e) => fail(e.stack ?? String(e)));
+  process.on("unhandledRejection", (e) => fail(e?.stack ?? String(e)));
+
   /** Pipes raw RGBA frames through the finish multiply (`paper`, an ffmpeg input) into `out`. */
   const encoder = (s, paper, out, extra) => {
     const [w, h] = [Math.round(W * s), Math.round(H * s)];
@@ -191,6 +200,8 @@ export const grain = (seed) => draw(createElement(GrainTexture, { seed }));`,
       { stdio: ["pipe", "inherit", "inherit"] },
     );
     ff.stdin.on("error", () => {});
+    encoders.add(ff);
+    ff.on("close", () => encoders.delete(ff));
     return ff;
   };
 
@@ -258,7 +269,7 @@ export const grain = (seed) => draw(createElement(GrainTexture, { seed }));`,
     await Promise.all(workers.map((w) => ask(w, { indexes: built })));
 
     // Pass 3: unique frames rendered in parallel and written in order, each kept until its last repeat.
-    const ff = encoder(s, ["-stream_loop", "-1", "-framerate", String(fps), "-i", join(finish, "f%03d.png")], out, ["-c:v", "libx264", "-crf", "18", "-pix_fmt", "yuv420p", "-an"]);
+    const ff = encoder(s, ["-stream_loop", String(Math.ceil(total / fps)), "-framerate", String(fps), "-i", join(finish, "f%03d.png")], out, ["-c:v", "libx264", "-crf", "18", "-pix_fmt", "yuv420p", "-an"]);
     const digest = createHash("sha1");
     const ready = new Map();
     let emitted = 0;
