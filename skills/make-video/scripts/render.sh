@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Usage: render.sh <project-dir> [preview|final|720p]  ->  prints the MP4 path.
 # Voices beats.json, makes the sounds, lints the style, type-checks, bakes the paper, renders and mixes the sound.
-# Prints voice:, STYLE:, LAYOUT: and SHOWN: lines to stderr and writes out/<quality>.beats.txt beside the video. Draws frames on one worker per CPU unless EXPLAINER_WORKERS says otherwise.
+# Prints voice:, STYLE:, LAYOUT: and SHOWN: lines to stderr and writes out/beats.txt beside the video. Draws frames on one worker per CPU unless EXPLAINER_WORKERS says otherwise.
 set -euo pipefail
 project=$(cd "${1:?usage: render.sh <project-dir> [preview|final|720p]}" && pwd)
 quality=${2:-preview}
@@ -21,9 +21,11 @@ cd "$project"
 pnpm exec tsc --noEmit >&2
 fin=$("$here/finish.sh" "$project" "$scale")
 out="$project/out/$quality.mp4"
-node "$here/render.mjs" "$project" video "$scale" "$fin" "$out" >/dev/null
+# The frames and the mux land in temp files, so a failed step leaves the last good video in place.
+trap 'rm -f "$out.frames.mp4" "$out.tmp.mp4"' EXIT
+node "$here/render.mjs" "$project" video "$scale" "$fin" "$out.frames.mp4" >/dev/null
 uv run -q --python 3.12 --with numpy --with soundfile --with soxr python "$here/mix.py" "$project" >/dev/null
-ffmpeg -v error -y -i "$out" -i "$project/out/mix.wav" -map 0:v -map 1:a -c:v copy -c:a aac -ac 2 "$out.tmp.mp4" ||
+ffmpeg -v error -y -i "$out.frames.mp4" -i "$project/out/mix.wav" -map 0:v -map 1:a -c:v copy -c:a aac -ac 2 "$out.tmp.mp4" ||
   { echo "adding the sound failed" >&2; exit 1; }
 mv "$out.tmp.mp4" "$out"
 echo "$out"
