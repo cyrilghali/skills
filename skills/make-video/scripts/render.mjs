@@ -254,10 +254,12 @@ export const grain = (seed) => renderToStaticMarkup(createElement(GrainTexture, 
     const scans = new Array(total);
     const chunks = Array.from({ length: Math.ceil(total / 16) }, (_, i) => [i * 16, Math.min(total, i * 16 + 16)]);
     await pool(chunks, async (w, c) => (await ask(w, { scan: c })).forEach((r, i) => (scans[c[0] + i] = r)));
-    // The words of a shown text, as a narration would say them: numerals have no letters, so they match nothing. The
-    // layout probe cuts a text at 30 characters, so that cut's last word may be partial.
+    // The words of a shown text, as a narration would say them: numerals have no letters, so they match nothing, and
+    // beside a number a short token is a unit ("3 ms"), said in full. The layout probe cuts a text at 30 characters, so
+    // that cut's last word may be partial.
     const spokenWords = (text) => {
-      const words = text.toLowerCase().split(/\s+/).map((w) => w.replace(/[^\p{L}']/gu, "")).filter((w) => /\p{L}/u.test(w));
+      const short = /\d/.test(text) ? 4 : 1;
+      const words = text.toLowerCase().split(/\s+/).map((w) => w.replace(/[^\p{L}']/gu, "")).filter((w) => w.replace(/'/g, "").length >= short);
       return text.length >= 30 ? words.slice(0, -1) : words;
     };
     // More than this many seconds between a text appearing and the voice saying it reads as the wrong cue.

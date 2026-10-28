@@ -111,7 +111,7 @@ The render prints a `LAYOUT:` line for each problem it sees in the camera frame 
 
 The floating rule counts shapes and icons drawn at more than 20% opacity; a texture is not something to label, and the beat's `Note` is exempt because it sits alone bottom left. A raw `<text>` without a backing is not checked for it.
 
-The `SHOWN:` line also compares each text with the narration, word by word: it ends with a verdict when the voice never says the text, or says it more than 2 s after the text appears. A text with no letters in it (`25%`, `1 / 4`) gets no verdict.
+The `SHOWN:` line also compares each text with the narration, word by word: it ends with a verdict when the voice never says the text, or says it more than 2 s after the text appears. A text with no letters in it (`25%`, `1 / 4`) gets no verdict, and beside a number only words of four letters or more count, so `3 ms` passes and `looks 0` does not.
 
 Anything wholly outside the frame is off camera and not reported; anything the frame cuts is. Text wholly inside a shape (a number in its box) is fine. A single `path`, `rect` or `circle` is judged by its fill and stroke, so a label inside a round shape is fine; a group is judged by its box, so a flag on a round group can be a false alarm. Confirm it on a `scripts/still.sh` frame.
 
