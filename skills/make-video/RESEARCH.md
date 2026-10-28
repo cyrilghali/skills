@@ -159,6 +159,8 @@ The older Remotion final is the one the eval runs used. It was rendered before t
 
 resvg 2.6 aborts the whole process when a group that needs its own layer (opacity or a filter) has nothing inside a nested `<svg>`'s box. The 2.7 alpha has the same bug and only turns the abort into an error. Scenes wrap everything in a nested `<svg>` the size of the frame, so the render turns that one into a plain group. The preview before and after that change scores 45 dB PSNR, too little to see, and the score against Remotion stayed at 26.4 dB.
 
+The same panic hits any element with its own layer (opacity below 1, a filter, a clip or a mask) that lies wholly outside the box from -2 to +3 canvases: a half-transparent rect at x = 3850 aborts, one at 3800 does not. A filter whose region is set in user space, like the ink filter, is exempt. The camera's world puts shapes there all the time: moving the test scene's grid to x = 4400 aborted frame 0. So the render measures each such element with resvg and drops it when it lies more than a canvas away, where it draws nothing. Measured boxes are cached by markup. Elements at opacity 0 are dropped without measuring. The cull costs about 21 ms a frame on one thread at load 100, and paired preview runs with and without it took 31.6 and 31.5 s against 32.0 and 33.0 s, with the same pixel digest. The moved grid now renders, and its frame 285 scores 28.1 dB against the old pipeline's.
+
 ## How do I re-measure on my machine?
 
 The benchmark script is not shipped, and the Manim and resvg prototypes are not either. The Remotion rows need the commit before the port. The commands below reproduce the shipped port's rows.
@@ -206,3 +208,5 @@ Noise on the machine these numbers came from:
 - A nested `<svg>` other than the full-frame one can still hit the resvg 2.6 abort. No scene has one yet.
 - The 90-second projection was not re-run with the shipped port.
 - REFERENCE.md's 24 fps advice was not measured here.
+- A drawn frame stays in memory until its last repeat. A frame repeated at both ends of a long video is held for the whole run, about 8 MB each at 1080p; this was not measured on a long video.
+- On the far-grid final, ffmpeg once logged "Truncating packet of size 8294400 to 65536" under load 110 to 135. The file still has all 472 frames. A repeat run with a byte counter in the pipe sent exactly 472 full frames (3,914,956,800 bytes) and logged nothing; the cause was not found.
