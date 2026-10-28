@@ -13,6 +13,7 @@ import { availableParallelism, homedir } from "node:os";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { isMainThread, parentPort, Worker, workerData } from "node:worker_threads";
+import { farCull } from "./cull.mjs";
 import { buildIndex, displace, noiseSvg, overlay, splitInk } from "./disp.mjs";
 import { layoutCheck } from "./layout.mjs";
 
@@ -24,8 +25,13 @@ const { Resvg, renderAsync } = req("@resvg/resvg-js");
 const { DOMParser, XMLSerializer } = req("@xmldom/xmldom");
 
 const fontDir = join(process.env.EXPLAINER_CACHE || join(homedir(), ".cache/make-video"), "fonts");
-if (!existsSync(fontDir)) throw new Error(`no fonts in ${fontDir}; run scripts/setup.sh`);
-const font = { loadSystemFonts: false, fontFiles: readdirSync(fontDir).filter((f) => f.endsWith(".ttf")).map((f) => join(fontDir, f)) };
+const fontFiles = existsSync(fontDir) ? readdirSync(fontDir).filter((f) => f.endsWith(".ttf")) : [];
+const fail = (message) => {
+  console.error(message);
+  process.exit(1);
+};
+if (!fontFiles.length) fail(`no fonts in ${fontDir}; run scripts/setup.sh`);
+const font = { loadSystemFonts: false, fontFiles: fontFiles.map((f) => join(fontDir, f)) };
 // Loading the font files costs about 6 ms, so a document without text skips them.
 const options = (s, svg) => ({ font: svg.includes("<text") ? font : { loadSystemFonts: false }, fitTo: s === 1 ? { mode: "original" } : { mode: "width", value: Math.round(W * s) } });
 // Attribute numbers keep three decimals: a thousandth of a pixel never shows, and the tail of an easing then
@@ -46,6 +52,9 @@ const unnest = (markup) => {
 const doc = (markup) => `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${unnest(markup).replace(/="[^"]*"/g, round)}</svg>`;
 
 const widths = new Map();
+const cull = farCull({ Resvg, font, width: W, height: H });
+const frameDoc = (scene, n) => cull(doc(scene.frame(n)));
+
 const measure = (text) => {
   if (!widths.has(text)) widths.set(text, new Resvg(doc(text.replace("<text", '<text x="0" y="500"')), { font }).getBBox()?.width ?? 0);
   return widths.get(text);
@@ -90,7 +99,7 @@ const indexFor = (ink, s, w, h) => {
 };
 
 // resvg draws SVG only, so an HTML element in the scene would silently disappear.
-const htmlTag = /<(div|span|p|img|h[1-6]|ul|ol|li|table|button|section|pre|code|br|b|i|em|strong|foreignObject)\b/g;
+const htmlTag = /<(div|span|p|img|h[1-6]|ul|ol|li|table|button|section|pre|code|br|b|i|em|strong|sub|sup|foreignObject)\b/g;
 const htmlLines = (svg) => [...new Set([...svg.matchAll(htmlTag)].map((m) => m[1]))].map((t) => `LAYOUT: <${t}> draws nothing: the render draws SVG only, so draw it with <text>, <rect> or a kit component`);
 
 const probeFrames = (scene) => {
@@ -117,7 +126,7 @@ if (!isMainThread) {
     if (m.scan) {
       const out = [];
       for (let n = m.scan[0]; n < m.scan[1]; n++) {
-        const svg = doc(scene.frame(n));
+        const svg = frameDoc(scene, n);
         const ink = splitInk(svg);
         out.push({ hash: createHash("sha1").update(svg).digest("hex"), noise: ink && { turbulence: ink.turbulence, scale: ink.scale }, lines: probe(n, svg) });
       }
@@ -128,7 +137,7 @@ if (!isMainThread) {
     } else if (m.noise) {
       parentPort.postMessage([m.noise.turbulence + m.noise.scale, indexFor(m.noise, scale, Math.round(W * scale), Math.round(H * scale)).buffer]);
     } else {
-      const px = raster(doc(scene.frame(m.frame)), scale);
+      const px = raster(frameDoc(scene, m.frame), scale);
       const ab = px.buffer.slice(px.byteOffset, px.byteOffset + px.length);
       parentPort.postMessage(ab, [ab]);
     }
@@ -148,6 +157,7 @@ import { Explainer } from "./src/Explainer";
 import { engine } from "./src/frame";
 import { GrainTexture, PaperTexture } from "./src/look";
 export { BEATS, DURATION, FPS, saying } from "./src/beats";
+export { hand, mono } from "./src/theme";
 export { engine };
 const draw = (el) => { engine.ids = 0; engine.voice = []; engine.cues = []; engine.music = undefined; return renderToStaticMarkup(el); };
 export const frame = (n) => { engine.frame = n; return draw(createElement(Explainer)); };
@@ -165,6 +175,10 @@ export const grain = (seed) => draw(createElement(GrainTexture, { seed }));`,
   });
   const scene = await load(bundlePath);
   const fps = scene.FPS;
+  // resvg quietly draws a missing family in another font, so each family the theme names needs a file named after it.
+  for (const family of [scene.hand, scene.mono])
+    if (!fontFiles.some((f) => f.startsWith(family.replaceAll(" ", ""))))
+      fail(`no fonts in ${fontDir} for "${family}"; run scripts/setup.sh, or add a .ttf whose name starts with ${family.replaceAll(" ", "")}`);
 
   /** Pipes raw RGBA frames through the finish multiply (`paper`, an ffmpeg input) into `out`. */
   const encoder = (s, paper, out, extra) => {
@@ -187,7 +201,7 @@ export const grain = (seed) => draw(createElement(GrainTexture, { seed }));`,
     await Promise.all(jobs.map(async ([svg, name]) => writeFileSync(join(dir, name), (await renderAsync(doc(svg), options(1, svg))).asPng())));
   } else if (mode === "still") {
     const [n, s, finish, out] = [Number(process.argv[4]), Number(process.argv[5]), process.argv[6], process.argv[7]];
-    const svg = doc(scene.frame(n));
+    const svg = frameDoc(scene, n);
     const ff = encoder(s, ["-i", join(finish, `f${String(n % fps).padStart(3, "0")}.png`)], out, ["-frames:v", "1"]);
     ff.stdin.end(raster(svg, s));
     await once(ff, "close");

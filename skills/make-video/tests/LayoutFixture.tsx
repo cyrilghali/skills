@@ -15,6 +15,9 @@ export const Explainer: React.FC = () => (
       <rect data-layout="shape" data-name="offcamera" {...box(2100, 600, 200, 100)} />
       <line data-layout="shape" data-name="rule" x1={1200} y1={800} x2={1600} y2={800} stroke={color.ink} strokeWidth={2} />
       <rect data-layout="icon" data-name="bell" {...box(700, 680, 60, 60)} />
+      <g opacity={0.5} data-layout="shape" data-name="far">
+        <rect {...box(4400, 300, 200, 100)} />
+      </g>
       <Hatch id="crowd" d={crowd} box={[1300, 300, 400, 220]} stroke={color.ink} />
       <text data-layout="text" x={1460} y={394} fontFamily={hand} fontSize={38} fill={color.ink}>
         raw
