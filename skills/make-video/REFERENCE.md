@@ -104,10 +104,14 @@ The render prints a `LAYOUT:` line for each problem it sees in the camera frame 
 
 | Mark | Put it on | Reported when |
 |---|---|---|
-| `data-layout="text"` | Every element holding words or numbers; `Label`, `Note` and `Tag` already carry it | It crosses a shape's edge, overlaps other text or an icon, leaves the frame, or sits on texture without a paper backing |
+| `data-layout="text"` | Every element holding words or numbers; `Label`, `Note` and `Tag` already carry it | It crosses a shape's edge, overlaps other text or an icon, leaves the frame, sits on texture without a paper backing, or is a backed label with no visible shape within 160 px |
 | `data-layout="shape"` with `data-name` | Every drawn object the viewer must see whole: a box, a dot, a person, an SVG group | It is cut by the frame edge |
 | `data-layout="icon"` with `data-name` | Every small pictogram | Any text touches it, or the frame edge cuts it |
 | `data-layout="texture"` with `data-name` | Hatching (`Hatch` marks itself), a crowd or any dense pattern | Text without a paper backing sits on it |
+
+The floating rule counts shapes and icons drawn at more than 20% opacity; a texture is not something to label, and the beat's `Note` is exempt because it sits alone bottom left. A raw `<text>` without a backing is not checked for it.
+
+The `SHOWN:` line also compares each text with the narration, word by word: it ends with a verdict when the voice never says the text, or says it more than 2 s after the text appears. A text with no letters in it (`25%`, `1 / 4`) gets no verdict.
 
 Anything wholly outside the frame is off camera and not reported; anything the frame cuts is. Text wholly inside a shape (a number in its box) is fine. A single `path`, `rect` or `circle` is judged by its fill and stroke, so a label inside a round shape is fine; a group is judged by its box, so a flag on a round group can be a false alarm. Confirm it on a `scripts/still.sh` frame.
 

@@ -160,6 +160,13 @@ export function layoutCheck({ Resvg, DOMParser, XMLSerializer, font, width: W = 
           if (share === undefined || share > 0) out.push(`${quote(t.el)} sits on texture "${name(x.el)}" without a paper backing`);
         }
     });
+    // A backed label with nothing visible to label. The Note sits alone by design, so it is skipped; textures are
+    // something to stand on, not to label.
+    const near = [...shapes, ...icons].filter((s) => effectiveOpacity(s.el) > 0.2);
+    const gap = (a, b) => Math.max(0, b.x0 - a.x1, a.x0 - b.x1, b.y0 - a.y1, a.y0 - b.y1);
+    for (const t of texts)
+      if (t.el.hasAttribute("data-backed") && !t.el.hasAttribute("data-role") && effectiveOpacity(t.el) > 0.5 && near.every((s) => gap(t.b, s.b) > 160))
+        out.push(`${quote(t.el)} floats on empty paper: no shape is visible within 160 px`);
     return [...new Set(out)];
   };
 

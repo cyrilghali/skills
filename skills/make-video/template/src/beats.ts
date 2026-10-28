@@ -60,16 +60,31 @@ const ramp = (t: number, id: string, delay: number, dur: number, easing: (x: num
 export const word = (id: string, phrase: string) => {
   const beat = BEATS[id];
   if (!beat) throw new Error(`Unknown beat "${id}"; beats are: ${Object.keys(BEATS).join(", ")}`);
-  const said = (measured as unknown as Record<string, [string, number][]>)[id];
-  if (said) {
-    const want = phrase.toLowerCase().split(/\s+/).map((w) => w.replace(/[^\w']/g, "")).filter(Boolean);
-    const k = said.findIndex((_, i) => want.every((w, j) => said[i + j]?.[0] === w));
-    if (k < 0) throw new Error(`Beat "${id}" never says "${phrase}" in its measured words: ${beat.text}`);
-    return said[k][1];
+  const t = find(beat, phrase);
+  if (t === undefined) throw new Error(`Beat "${id}" never says "${phrase}"${(measured as unknown as Record<string, unknown>)[id] ? " in its measured words" : ""}: ${beat.text}`);
+  return t;
+};
+
+/** Seconds into the video when the narration first says `phrase`, by the same matching as word(); undefined when no beat says it. */
+export const said = (phrase: string) => {
+  for (const beat of Object.values(BEATS)) {
+    const t = find(beat, phrase);
+    if (t !== undefined) return beat.start + t;
   }
-  const i = beat.text.toLowerCase().indexOf(phrase.toLowerCase());
-  if (i < 0) throw new Error(`Beat "${id}" never says "${phrase}": ${beat.text}`);
-  return (beat.seconds * spoken(beat.text.slice(0, i))) / spoken(beat.text);
+};
+
+// Whole words, lowercased and stripped of punctuation, each with where it starts in the text; the measured words in
+// words.json are stored the same way, so a phrase matches either source word for word.
+const tokens = (text: string) => [...text.matchAll(/\S+/g)].map((m) => ({ w: m[0].toLowerCase().replace(/[^\w']/g, ""), i: m.index })).filter((t) => t.w);
+
+const find = (beat: Beat, phrase: string) => {
+  const want = tokens(phrase).map((t) => t.w);
+  const measuredWords = (measured as unknown as Record<string, [string, number][]>)[beat.id];
+  const words = measuredWords
+    ? measuredWords.map(([w, t]) => ({ w, t }))
+    : tokens(beat.text).map(({ w, i }) => ({ w, t: (beat.seconds * spoken(beat.text.slice(0, i))) / spoken(beat.text) }));
+  const k = words.findIndex((_, i) => want.every((w, j) => words[i + j]?.w === w));
+  return k < 0 ? undefined : words[k].t;
 };
 
 // Characters are not spoken at an even pace: a spelled-out acronym like HTTPS takes about
