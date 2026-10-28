@@ -70,7 +70,7 @@ Dropped, with the number that ruled each one out:
 | Skip the layout check | 40 to 53 s | 51 s, inside the spread | Clean pass |
 | Drop the ink wobble | 40 to 53 s; 99 s in the earlier pass | 46 s, inside the spread; 75 s in the earlier pass | One per pass. On the flat render, shapes, hatching and ink together cost 3 s |
 
-One gotcha cost 28 minutes. ffmpeg's `blend` never ends when one input loops (`-stream_loop -1`) unless the filter gets `shortest=1`. The first finish pass ran for 1,714 s before it was stopped. `render.sh` now passes `blend=all_mode=multiply:shortest=1`.
+One gotcha cost 28 minutes. ffmpeg's `blend` never ends when one input loops (`-stream_loop -1`) unless the filter gets `shortest=1`. The first finish pass ran for 1,714 s before it was stopped. `render.sh` now passes `blend=all_mode=multiply:shortest=1`. That is not enough when the render dies before its first frame: `blend` then waits forever for a first pair while the grain keeps looping, and each crash left an ffmpeg using a core. The port bounds the loop to the video's length in seconds and kills its ffmpeg when it exits, throws or gets SIGINT or SIGTERM. After a resvg panic and after a SIGINT, no ffmpeg was left 5 s later.
 
 ## What does the browser cost by itself?
 
