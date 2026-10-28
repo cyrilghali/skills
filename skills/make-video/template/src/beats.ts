@@ -73,9 +73,10 @@ export const said = (phrase: string) => {
   }
 };
 
-// Whole words, lowercased and stripped of punctuation, each with where it starts in the text; the measured words in
-// words.json are stored the same way, so a phrase matches either source word for word.
-const tokens = (text: string) => [...text.matchAll(/\S+/g)].map((m) => ({ w: m[0].toLowerCase().replace(/[^\w']/g, ""), i: m.index })).filter((t) => t.w);
+// Whole words, lowercased and stripped of punctuation (accents kept, as the voice script keeps them), each with where
+// it starts in the text; the measured words in words.json are stored the same way, so a phrase matches either source
+// word for word.
+const tokens = (text: string) => [...text.matchAll(/\S+/g)].map((m) => ({ w: m[0].toLowerCase().replace(/[^\p{L}\p{N}']/gu, ""), i: m.index })).filter((t) => t.w);
 
 const find = (beat: Beat, phrase: string) => {
   const want = tokens(phrase).map((t) => t.w);
