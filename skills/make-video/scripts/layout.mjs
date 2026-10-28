@@ -18,7 +18,7 @@ export function layoutCheck({ Resvg, DOMParser, XMLSerializer, font, width: W = 
     return false;
   };
   const opacityOf = (e) => {
-    const css = /(?:^|;)\s*opacity:\s*([\d.]+)/.exec(e.getAttribute("style") ?? "")?.[1];
+    const css = /(?:^|;)\s*opacity:\s*([^;]+)/.exec(e.getAttribute("style") ?? "")?.[1];
     return Number(e.getAttribute("opacity") || 1) * Number(css ?? 1);
   };
   const effectiveOpacity = (el) => {

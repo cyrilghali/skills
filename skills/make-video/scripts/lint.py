@@ -4,7 +4,7 @@ import re
 import sys
 from pathlib import Path
 
-KIT = {"theme.ts", "look.tsx", "kit.tsx", "beats.ts", "Root.tsx", "index.ts"}
+KIT = {"theme.ts", "look.tsx", "kit.tsx", "beats.ts", "frame.ts"}
 CHECKS = [
     (re.compile(r"#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(|[\"'](white|black)[\"']"), "a literal color; use color.* from theme.ts so the palette holds"),
     (re.compile(r"fontFamily:\s*[\"']"), "a literal font; use hand or mono from theme.ts"),

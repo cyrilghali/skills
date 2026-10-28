@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
-# Usage: render.sh <project-dir> [preview|final]  ->  prints the MP4 path.
+# Usage: render.sh <project-dir> [preview|final|720p]  ->  prints the MP4 path.
 # Voices beats.json, makes the sounds, lints the style, type-checks, bakes the paper, renders and mixes the sound.
 # Prints voice:, STYLE:, LAYOUT: and SHOWN: lines to stderr. Draws frames on one worker per CPU unless EXPLAINER_WORKERS says otherwise.
 set -euo pipefail
-project=$(cd "${1:?usage: render.sh <project-dir> [preview|final]}" && pwd)
+project=$(cd "${1:?usage: render.sh <project-dir> [preview|final|720p]}" && pwd)
 quality=${2:-preview}
 here=$(cd "$(dirname "$0")" && pwd)
 case $quality in
   preview) scale=0.5 ;;
   final) scale=1 ;;
-  *) echo "quality must be preview or final" >&2; exit 2 ;;
+  720p) scale=0.6666666666666666 ;;
+  *) echo "quality must be preview, final or 720p" >&2; exit 2 ;;
 esac
 vlog=$(mktemp)
 uv run -q --python 3.12 --with kokoro-onnx --with soundfile --with av --with faster-whisper python "$here/voice.py" "$project" >"$vlog" 2>&1 || { cat "$vlog" >&2; exit 1; }
