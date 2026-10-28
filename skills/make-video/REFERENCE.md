@@ -126,6 +126,7 @@ The measurements behind the render pipeline are in RESEARCH.md.
 
 - Every frame is drawn flat and gets the paper afterwards: `scripts/finish.sh` bakes the paper texture, vignette and grain once per size with `scripts/finish-tex.py` into the cache, and the render multiplies them over the frames in ffmpeg in planar RGB (`format=gbrp`, `blend=all_mode=multiply:shortest=1`). Inked areas pick up a faint paper texture. On a farm, run the pass on each chunk as it lands and phase the grain loop on the chunk's first frame; `blend` without `shortest=1` never ends when the grain input loops.
 - The ink wobble is not filtered per frame: its noise depends only on the boil seed, so the render builds one pixel map per seed and moves each frame's pixels by it. Labels are drawn after, as they sit outside the `ink` group. Equal frames (a hold cycles through the 12 seeds) are drawn once, and every attribute number is rounded to three decimals so the tail of an easing settles into equal frames.
+- For 720p, run `scripts/render.sh <folder> 720p`. It draws 1280x720 frames, between the preview and the final.
 - For a long series, render at 24 fps: set `"fps": 24` in `src/timeline.json` (re-voicing keeps it). Every move is timed in seconds, so nothing shifts, and there are a fifth fewer frames to draw.
 - The sound is mixed apart from the frames: the render writes the sound list (each clip, cue and its start) to `out/audio.json` from frame 0, and `scripts/mix.py` mixes it with numpy in about a second.
 - Profile before splitting a slow render across machines. Time a 90-frame sample with each heavy layer turned off in turn. Run the baseline before and after the variants on the same host state, and treat any gap smaller than the baseline's own drift as noise. Label each row for what the command did: deleting a layer is not a gain, so time the pass that adds the removed layer back before quoting a net multiplier. Guessing the per-frame cost was wrong four times under the old browser renderer. Build the farm only if the sample shows the cost is not one layer you can remove or bake.
@@ -140,7 +141,7 @@ The measurements behind the render pipeline are in RESEARCH.md.
 
 - Draw everything as SVG. Text is a `<text>` element with `fontFamily`, `fontSize` and `fill`; it does not wrap, so keep each line short. HTML elements and CSS (`div`, `style` layout, `box-shadow`) draw nothing; the render prints a `LAYOUT:` line naming any HTML element it finds.
 - Write math with Unicode (`a² + b²`, `log₂ n`), and a raised or lowered part with `<tspan baselineShift="super">` or `"sub"` and a smaller `fontSize`.
-- Fonts come from the files in the cache's `fonts/` folder, which `scripts/setup.sh` fills. For another font, add its TTF there and put its family name in `src/theme.ts`.
+- Fonts come from the files in the cache's `fonts/` folder, which `scripts/setup.sh` fills. For another font, add its TTF there under a name that starts with the family name without spaces (`JetBrainsMono-…` for `JetBrains Mono`), and put the family name in `src/theme.ts`. The render stops when a family in the theme has no file, since resvg would draw it in another font.
 - Every animation is a pure function of `t`: no `useState`, no `setTimeout`.
 - `scripts/still.sh <folder> <frame> <png>` renders one finished frame in a few seconds; use it to watch a moment while you work.
 
