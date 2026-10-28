@@ -18,6 +18,25 @@ export const uid = (prefix: string) => `${prefix}-${engine.ids++}`;
 
 type Extrapolate = "clamp" | "extend" | "identity";
 
+/** Rejects a bad range with the same words as Remotion, so a typo fails loudly instead of drawing NaN. */
+const check = (input: number, inRange: readonly number[], outRange: readonly number[]) => {
+  if (input === undefined) throw new Error("input can not be undefined");
+  if (inRange === undefined) throw new Error("inputRange can not be undefined");
+  if (outRange === undefined) throw new Error("outputRange can not be undefined");
+  if (inRange.length !== outRange.length)
+    throw new Error(`inputRange (${inRange.length}) and outputRange (${outRange.length}) must have the same length`);
+  for (const [name, range] of [["inputRange", inRange], ["outputRange", outRange]] as const) {
+    if (range.length < 1) throw new Error(`${name} must have at least 1 element`);
+    for (const v of range) {
+      if (typeof v !== "number") throw new Error(`${name} must contain only numbers`);
+      if (!Number.isFinite(v)) throw new Error(`${name} must contain only finite numbers, but got [${range.join(",")}]`);
+    }
+  }
+  for (let i = 1; i < inRange.length; i++)
+    if (!(inRange[i] > inRange[i - 1])) throw new Error(`inputRange must be strictly monotonically increasing but got [${inRange.join(",")}]`);
+  if (typeof input !== "number") throw new TypeError("Cannot interpolate an input which is not a number");
+};
+
 /** Maps `input` from `inRange` to `outRange`, piece by piece; past the ends it extends, clamps or returns the input. */
 export const interpolate = (
   input: number,
@@ -25,7 +44,9 @@ export const interpolate = (
   outRange: readonly number[],
   opts: { easing?: (x: number) => number; extrapolateLeft?: Extrapolate; extrapolateRight?: Extrapolate } = {},
 ) => {
+  check(input, inRange, outRange);
   const { easing = (x: number) => x, extrapolateLeft = "extend", extrapolateRight = "extend" } = opts;
+  if (inRange.length === 1) return outRange[0];
   let i = 1;
   while (i < inRange.length - 1 && inRange[i] < input) i++;
   const [a, b] = [inRange[i - 1], inRange[i]];
@@ -68,6 +89,7 @@ const calc = (t: number, a1: number, a2: number) => ((A(a1, a2) * t + B(a1, a2))
 const slope = (t: number, a1: number, a2: number) => 3 * A(a1, a2) * t * t + 2 * B(a1, a2) * t + C(a1);
 
 const bezier = (x1: number, y1: number, x2: number, y2: number) => {
+  if (!(x1 >= 0 && x1 <= 1 && x2 >= 0 && x2 <= 1)) throw new Error("bezier x values must be in [0, 1] range");
   const size = 11;
   const step = 1 / (size - 1);
   const samples = new Float32Array(size);
