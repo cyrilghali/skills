@@ -148,12 +148,18 @@ Same scene, same machine, same day. The machine was busier than for the earlier 
 | Measure | Preview | Final | 1-minute load |
 |---|---|---|---|
 | `render.sh`, warm, whole run | 17.2 and 18.0 s; 31.5 s on the first run | 41.2 and 41.5 s | 19 to 28 at the start |
+| `render.sh`, warm, whole run, re-timed the next day with the orphaned ffmpeg gone | 13.1 and 10.5 s | 24.3 and 24.8 s | 16 to 33 |
+| Render step alone at 1080p, libx264 crf 18, two runs | | 21.7 and 22.6 s | 31 to 45 |
 | Render step alone: draw, probes, finish, encode | 11.4 to 12.2 s, four runs | 34.1 and 37.3 s | 27 to 38 |
 | Texture bake (paper and six grain frames) | 1.5 s, against 16.4 s in Chrome | | not recorded |
 | One finished 1080p frame (`scripts/still.sh`) | | 2.6 to 3.9 s | up to 52 |
 | PSNR against an older Remotion final | | 26.4 dB | |
 
 Of 472 frames, 241 are drawn; the other 231 repeat an earlier frame and reuse its pixels. Per preview frame, React's markup takes about 5 ms, rounding attribute numbers 3.6 ms, resvg's scene 44 ms and the label layer 25 ms. A frame that gets the shown-text probe adds about 29 ms of probe and 15 ms of XML parsing. In one run, scanning every frame took about 3.5 s of the 12 s preview step.
+
+The re-timed final matches the prototype's 23 to 25 s, so the 41 s of the first day was the leftover ffmpeg, not the port. The machine never went quiet for that re-time: Spotlight indexing held the 1-minute load at 16 for over an hour, and the script gave up waiting after 40 minutes.
+
+The hardware encoder does not earn its place. On the same frames, `h264_videotoolbox` at libx264's bitrate (10.6 Mbit/s) took 15.8 and 15.5 s for the 1080p render step against libx264's 21.7 and 22.6 s, but scored 37.9 dB against a lossless encode of the same frames where libx264 scored 39.5 dB. At 16 Mbit/s it reached 38.5 dB in 15.9 s with a file 55% larger. A third off the render step for 1 to 1.7 dB less quality fails the rule that a renderer choice rests on quality or speed alone, so libx264 stays.
 
 The older Remotion final is the one the eval runs used. It was rendered before the flat-render fix was committed; which pipeline drew it was not checked. Against it, the prototype's two-frame check also gave 26 to 27 dB, so the port scores where the prototype did. Drawn with the textures Chrome baked, the port scores 26.8 dB, so the texture bake is not where the gap comes from. The resvg paper alone scores 32.7 dB against Chrome's.
 
@@ -172,7 +178,7 @@ The benchmark script is not shipped, and the Manim and resvg prototypes are not 
    time scripts/render.sh <project> final;   uptime
    ```
 
-   On the machine above, at load 19 to 28, a warm run of a 16-second video took 17 to 18 s for the preview and 41 s for the final. On a quiet machine the two runs should agree within a few seconds.
+   On the machine above, at load 16 to 33, a warm run of a 16-second video took 10 to 13 s for the preview and 24 to 25 s for the final. On a quiet machine the two runs should agree within a few seconds.
 2. Point `EXPLAINER_CACHE` at an empty folder (with the `fonts` folder copied in) and delete `<project>/public/tex`, then run the preview again. The paper and grain bake adds about 1.5 s; the finish frames are baked once more per size.
 3. To time the render step alone, run it by hand from the skill folder:
 
@@ -194,6 +200,8 @@ Noise on the machine these numbers came from:
 | resvg tuned, three runs each | 1 to 2.6 s | not recorded |
 | resvg port, preview render step, four runs | 11.4 to 12.2 s | 27 to 38 |
 | resvg port, `render.sh` final, two runs | 41.2 and 41.5 s | 19 to 28 |
+| resvg port, `render.sh` final, two runs the next day | 24.3 and 24.8 s | 16 to 33 |
+| resvg port, `render.sh` preview, two runs the next day | 13.1 and 10.5 s | 16 to 29 |
 | Manim tuned, two runs each | 16.3 and 16.4 s; 7.7 and 7.6 s | 4 to 12 |
 
 ## What is still open?
@@ -204,7 +212,7 @@ Noise on the machine these numbers came from:
 - The cold preview after the fix took 78 s against 36 s warm. It also voiced the clips afresh, and its split between bake and voice was not measured.
 - ~~Rendering the React scene files to SVG was never timed.~~ About 5 ms a frame; see "What does the shipped port measure?".
 - ~~No pipeline was checked for identical pixels across two runs.~~ The resvg port gives identical pixels.
-- The port's final took 41 s against the prototype's 23 to 25 s, and its preview 17 to 18 s against 9 to 10 s. The port's runs had load 19 to 38 and the prototype's load was not recorded, so how much is load and how much is the port was not measured. Time both on a quiet machine before tuning.
+- ~~The port's final took 41 s against the prototype's 23 to 25 s.~~ Re-timed with the leftover ffmpeg gone: 24.3 and 24.8 s, the prototype's figure. No timing in this paper comes from a quiet machine; the lowest 1-minute load at the start of a run was 16.
 - A nested `<svg>` other than the full-frame one can still hit the resvg 2.6 abort. No scene has one yet.
 - The 90-second projection was not re-run with the shipped port.
 - REFERENCE.md's 24 fps advice was not measured here.
