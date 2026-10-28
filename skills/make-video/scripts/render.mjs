@@ -152,7 +152,7 @@ import { Explainer } from "./src/Explainer";
 import { FrameContext } from "./src/frame";
 import { GrainTexture, PaperTexture } from "./src/look";
 export { sound } from "./src/Explainer";
-export { BEATS, DURATION, FPS, saying } from "./src/beats";
+export { BEATS, DURATION, FPS, said, saying } from "./src/beats";
 export { hand, mono } from "./src/theme";
 export const frame = (n, measure) => renderToStaticMarkup(createElement(FrameContext.Provider, { value: { n, measure } }, createElement(Explainer)));
 export const paper = () => renderToStaticMarkup(createElement(PaperTexture));
@@ -254,12 +254,30 @@ export const grain = (seed) => renderToStaticMarkup(createElement(GrainTexture, 
     const scans = new Array(total);
     const chunks = Array.from({ length: Math.ceil(total / 16) }, (_, i) => [i * 16, Math.min(total, i * 16 + 16)]);
     await pool(chunks, async (w, c) => (await ask(w, { scan: c })).forEach((r, i) => (scans[c[0] + i] = r)));
+    // The words of a shown text, as a narration would say them: numerals have no letters, so they match nothing. The
+    // layout probe cuts a text at 30 characters, so that cut's last word may be partial.
+    const spokenWords = (text) => {
+      const words = text.toLowerCase().split(/\s+/).map((w) => w.replace(/[^\p{L}']/gu, "")).filter((w) => /\p{L}/u.test(w));
+      return text.length >= 30 ? words.slice(0, -1) : words;
+    };
+    // More than this many seconds between a text appearing and the voice saying it reads as the wrong cue.
+    const LATE = 2;
+    const verdict = (l) => {
+      const m = /^SHOWN: ([\d.]+)s ("(?:[^"\\]|\\.)*")/.exec(l);
+      const words = spokenWords(JSON.parse(m[2]));
+      // A project made before said() existed keeps rendering, without verdicts.
+      if (!words.length || !scene.said) return "";
+      const at = scene.said(words.join(" "));
+      const shownAt = Number(m[1]);
+      if (at === undefined) return "; the voice never says it";
+      return at - shownAt > LATE ? `; the voice says it at ${at.toFixed(1)}s, ${(at - shownAt).toFixed(1)}s later` : "";
+    };
     // A LAYOUT: line prints once; a SHOWN: line once per text, ignoring digits so a running counter counts once.
     const printed = new Set();
     const lines = scans.flatMap((r) => r.lines);
     for (const l of [...lines.filter((l) => l.startsWith("LAYOUT:")), ...lines.filter((l) => l.startsWith("SHOWN:"))]) {
       const key = l.startsWith("SHOWN:") ? "SHOWN:" + l.split('"')[1].replace(/[0-9.]/g, "") : l;
-      if (!printed.has(key)) console.error(l);
+      if (!printed.has(key)) console.error(l.startsWith("SHOWN:") ? l + verdict(l) : l);
       printed.add(key);
     }
     const first = new Map();

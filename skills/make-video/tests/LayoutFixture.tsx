@@ -1,5 +1,5 @@
 import React from "react";
-import { Label, type Sound } from "./kit";
+import { Label, Note, type Sound } from "./kit";
 import { Hatch } from "./look";
 import { color, hand } from "./theme";
 
@@ -16,6 +16,9 @@ export const Explainer: React.FC = () => (
       <rect data-layout="shape" data-name="offcamera" {...box(2100, 600, 200, 100)} />
       <line data-layout="shape" data-name="rule" x1={1200} y1={800} x2={1600} y2={800} stroke={color.ink} strokeWidth={2} />
       <rect data-layout="icon" data-name="bell" {...box(700, 680, 60, 60)} />
+      <rect data-layout="shape" data-name="anchor" {...box(860, 290, 40, 20)} />
+      <rect data-layout="shape" data-name="pad" {...box(1480, 570, 40, 20)} />
+      <rect data-layout="shape" data-name="unseen" opacity={0} {...box(470, 790, 50, 20)} />
       <g opacity={0.5} data-layout="shape" data-name="far">
         <rect {...box(4400, 300, 200, 100)} />
       </g>
@@ -34,5 +37,12 @@ export const Explainer: React.FC = () => (
     <Label x={400} y={350} p={1} opacity={0} text="hidden" />
     <Label x={730} y={720} p={1} text="ring" />
     <Label x={1500} y={480} p={1} text="backed" />
+    <Label x={1100} y={540} p={1} text="floating" />
+    <Label x={400} y={800} p={1} text="ghost" />
+    <Label x={400} y={600} p={1} text="near" />
+    <Note t={1} id="only" phrase="layout" text="a note alone" />
+    <Label x={250} y={100} p={1} text="unsaid words" />
+    <Label x={540} y={100} p={1} text="later words" />
+    <Label x={830} y={100} p={1} text="layout check" />
   </>
 );

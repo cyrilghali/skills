@@ -63,7 +63,7 @@ const Backing: React.FC<{ x0: number; y0: number; w: number; h: number }> = ({ x
 };
 
 /** Hand-lettered text on its own paper backing; (x, y) is the left edge or the centre of the box, by `anchor`. */
-const Backed: React.FC<{ x: number; y: number; anchor: "left" | "middle"; p: number; opacity: number; text: string; size: number; c: string; weight: number }> = ({
+const Backed: React.FC<{ x: number; y: number; anchor: "left" | "middle"; p: number; opacity: number; text: string; size: number; c: string; weight: number; role?: "note" }> = ({
   x,
   y,
   anchor,
@@ -73,6 +73,7 @@ const Backed: React.FC<{ x: number; y: number; anchor: "left" | "middle"; p: num
   size,
   c,
   weight,
+  role,
 }) => {
   const measure = useMeasure();
   if (p <= 0 || opacity <= 0) return null;
@@ -83,7 +84,7 @@ const Backed: React.FC<{ x: number; y: number; anchor: "left" | "middle"; p: num
   const x0 = anchor === "left" ? x : x - w / 2;
   const y0 = y - h / 2;
   return (
-    <g data-layout="text" data-backed opacity={opacity}>
+    <g data-layout="text" data-backed data-role={role} opacity={opacity}>
       <Backing x0={x0} y0={y0} w={w} h={h} />
       <text x={x0 + 10} y={y0 + size * HAND.baseline} {...font}>
         {typed(text, p)}
@@ -113,7 +114,7 @@ export const Note: React.FC<{ t: number; id: string; phrase: string; text: strin
   const next = until ?? ids[ids.indexOf(id) + 1];
   const p = at(t, id, word(id, phrase) - 0.1, Math.min(1.2, 0.05 * text.length));
   const out = next ? at(t, next, -0.3, 0.4) : 0;
-  return <Backed x={124} y={968} anchor="left" p={p} opacity={1 - out} text={text} size={46} c={color.ink} weight={400} />;
+  return <Backed x={124} y={968} anchor="left" p={p} opacity={1 - out} text={text} size={46} c={color.ink} weight={400} role="note" />;
 };
 
 /** A monospace chip centred on (x, y) for code names, `path:line` references and values. */
