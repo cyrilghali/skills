@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Renders a fixture with known layout defects and checks that render.sh reports exactly those:
-# nothing for the hidden label, the off-camera shape and labels, or the backed label on hatching.
+# nothing for the hidden label, the off-camera shapes and labels, or the backed label on hatching. The half-transparent
+# shape two screens away once crashed resvg.
 set -euo pipefail
 here=$(cd "$(dirname "$0")/.." && pwd)
 work=$(mktemp -d)

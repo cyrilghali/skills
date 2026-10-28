@@ -13,7 +13,10 @@ fonts=${EXPLAINER_CACHE:-$HOME/.cache/make-video}/fonts
 mkdir -p "$fonts"
 for f in gaegu/Gaegu-Light.ttf gaegu/Gaegu-Regular.ttf gaegu/Gaegu-Bold.ttf jetbrainsmono/JetBrainsMono%5Bwght%5D.ttf; do
   out="$fonts/$(basename "$f" | sed 's/%5Bwght%5D/-Variable/')"
-  [ -s "$out" ] || { curl -fsSL -o "$out.tmp" "https://raw.githubusercontent.com/google/fonts/main/ofl/$f" && mv "$out.tmp" "$out"; }
+  [ -s "$out" ] && continue
+  curl -fsSL -o "$out.tmp" "https://raw.githubusercontent.com/google/fonts/main/ofl/$f" ||
+    { rm -f "$out.tmp"; echo "could not download the font $(basename "$out"); check the network and run setup.sh again" >&2; exit 1; }
+  mv "$out.tmp" "$out"
 done
 uv run -q --python 3.12 --with faster-whisper python -c "from faster_whisper import download_model; download_model('${WHISPER_MODEL:-small.en}')" >/dev/null
 if [ -n "${ELEVENLABS_API_KEY:-}" ]; then echo "voice: elevenlabs"; else echo "voice: kokoro ($dir)"; fi
