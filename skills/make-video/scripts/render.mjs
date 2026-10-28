@@ -4,7 +4,7 @@
 // Renders src/Explainer.tsx to SVG with React, rasterizes each frame with resvg on worker threads, and streams the
 // frames in order into one ffmpeg that multiplies the baked paper, vignette and grain over them. Prints each
 // LAYOUT: and SHOWN: line once to stderr; `video` also writes out/audio.json for scripts/mix.py and
-// <out>.beats.txt (each beat's end time, one per line) for scripts/frames.sh.
+// out/beats.txt (each beat's end time, one per line) for scripts/frames.sh.
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { once } from "node:events";
@@ -225,7 +225,7 @@ export const grain = (seed) => renderToStaticMarkup(createElement(GrainTexture, 
     });
     writeFileSync(join(project, "out", "audio.json"), JSON.stringify({ duration: total / fps, fps, voice, cues, music }, null, 1) + "\n");
     const beatTimes = [...endFrames(scene).keys()].sort((a, b) => a - b).map((n) => (n / fps).toFixed(2));
-    writeFileSync(out.replace(/\.mp4$/, ".beats.txt"), beatTimes.join("\n") + "\n");
+    writeFileSync(join(project, "out", "beats.txt"), beatTimes.join("\n") + "\n");
 
     const workers = Array.from(
       { length: Number(process.env.EXPLAINER_WORKERS) || availableParallelism() },
