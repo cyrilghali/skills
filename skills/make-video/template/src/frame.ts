@@ -1,20 +1,10 @@
-/** What scripts/render.mjs sets before it renders a frame, and what the scene registers while it renders. */
-export type Sound = { file: string; start: number; end?: number; volume?: number };
+import { createContext, useContext } from "react";
 
-export const engine = {
-  frame: 0,
-  /** Width in pixels of a one-line SVG <text> element, measured by resvg. */
-  measure: (_text: string): number => 0,
-  ids: 0,
-  voice: [] as Sound[],
-  cues: [] as Sound[],
-  music: undefined as number | undefined,
-};
+/** The frame being drawn and the renderer's text measure (the width in pixels of a one-line SVG <text> element). */
+export const FrameContext = createContext<{ n: number; measure: (svgText: string) => number }>({ n: 0, measure: () => 0 });
 
-export const useCurrentFrame = () => engine.frame;
-
-/** A frame-unique id for a clip path or filter. */
-export const uid = (prefix: string) => `${prefix}-${engine.ids++}`;
+export const useCurrentFrame = () => useContext(FrameContext).n;
+export const useMeasure = () => useContext(FrameContext).measure;
 
 type Extrapolate = "clamp" | "extend" | "identity";
 

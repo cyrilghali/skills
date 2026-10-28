@@ -43,8 +43,8 @@ When an episode ends on a beat that lists the next episode's questions, show the
 | `mix(p, a, b)`, `chain(start, [[p1, v1], ...])` | A value between two states; a value moved through several in order |
 | `BEATS.id.start`, `.end`, `.seconds` | Beat timing, for an animation that should last the whole sentence |
 | `useCurrentFrame()`, `random(seed)`, `interpolate` (`src/kit.tsx`) | The frame being drawn; a repeatable random number for jitter; a value mapped between ranges |
-| `<Background />`, `<Voiceover />`, `<Music />` | The paper colour, the narration and the music bed; they go first |
-| `<Cue beat delay sound>` | A tick, whoosh, swell or chime at a moment |
+| `<Background />` | The paper colour; it goes first |
+| `export const sound: Sound = { music, cues }` | The music bed's level, and the cues, each `{ beat, delay, sound, volume }`: a tick, whoosh, swell or chime `delay` seconds into the beat. The narration needs no entry: every beat's clip plays at the beat's start |
 | `<Label x y p text>` | A lowercase hand-lettered label on its own paper backing, typed on as `p` goes 0 to 1 |
 | `<Note t id phrase text>` | The beat's note, bottom left, typed on as the voice says `phrase`, gone at the next beat |
 | `<Tag x y opacity>` | A monospace chip for a code name, a `path:line` or a value |
@@ -128,7 +128,7 @@ The measurements behind the render pipeline are in RESEARCH.md.
 - The ink wobble is not filtered per frame: its noise depends only on the boil seed, so the render builds one pixel map per seed and moves each frame's pixels by it. Labels are drawn after, as they sit outside the `ink` group. Equal frames (a hold cycles through the 12 seeds) are drawn once, and every attribute number is rounded to three decimals so the tail of an easing settles into equal frames.
 - For 720p, run `scripts/render.sh <folder> 720p`. It draws 1280x720 frames, between the preview and the final.
 - For a long series, render at 24 fps: set `"fps": 24` in `src/timeline.json` (re-voicing keeps it). Every move is timed in seconds, so nothing shifts, and there are a fifth fewer frames to draw.
-- The sound is mixed apart from the frames: the render writes the sound list (each clip, cue and its start) to `out/audio.json` from frame 0, and `scripts/mix.py` mixes it with numpy in about a second.
+- The sound is mixed apart from the frames: the render writes the sound list (each beat's clip and each cue with its start) to `out/audio.json` from the scene's `sound` export and the beats, and `scripts/mix.py` mixes it with numpy in about a second.
 - Profile before splitting a slow render across machines. Time a 90-frame sample with each heavy layer turned off in turn. Run the baseline before and after the variants on the same host state, and treat any gap smaller than the baseline's own drift as noise. Label each row for what the command did: deleting a layer is not a gain, so time the pass that adds the removed layer back before quoting a net multiplier. Guessing the per-frame cost was wrong four times under the old browser renderer. Build the farm only if the sample shows the cost is not one layer you can remove or bake.
 - To split frames across machines, weight each chunk by the machine's measured frames per second and take the frame count from `DURATION` in `src/beats.ts`, never from a second copy of the pause rule. Join the chunks with ffmpeg's concat and `-shortest`, since AAC pads the audio by about 36 ms.
 - While the user waits for the first result, put every machine on one episode, in story order. Spreading episodes across machines made the first episode take about 3 hours; with all machines on one episode it took about 50 minutes.

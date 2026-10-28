@@ -1,12 +1,22 @@
 import React from "react";
 import { at, BEATS, FPS, move, word } from "./beats";
-import { Background, Cue, Label, Music, Note, Tag, useCurrentFrame, Voiceover } from "./kit";
+import { Background, Label, Note, type Sound, Tag, useCurrentFrame } from "./kit";
 import { boilSeed, camera, Counter, dim, Finish, Guide, Hatch, InkDefs } from "./look";
 import { color } from "./theme";
 
 const R = 300;
 const SUN = 70;
 const circle = (x: number, y: number, r: number) => `M ${x - r} ${y} a ${r} ${r} 0 1 1 ${2 * r} 0 a ${r} ${r} 0 1 1 ${-2 * r} 0 Z`;
+
+export const sound: Sound = {
+  music: 0.22,
+  cues: [
+    { beat: "intro", delay: word("intro", "planet"), sound: "tick" },
+    { beat: "orbit", delay: 0.2, sound: "whoosh" },
+    { beat: "orbit", delay: word("orbit", "the sun") - 0.4, sound: "swell" },
+    { beat: "year", delay: BEATS.year.seconds + 0.3, sound: "chime" },
+  ],
+};
 
 export const Explainer: React.FC = () => {
   const frame = useCurrentFrame();
@@ -34,12 +44,6 @@ export const Explainer: React.FC = () => {
   return (
     <>
       <Background />
-      <Voiceover />
-      <Music />
-      <Cue beat="intro" delay={word("intro", "planet")} sound="tick" />
-      <Cue beat="orbit" delay={0.2} sound="whoosh" />
-      <Cue beat="orbit" delay={word("orbit", "the sun") - 0.4} sound="swell" />
-      <Cue beat="year" delay={BEATS.year.seconds + 0.3} sound="chime" />
 
       <svg width={1920} height={1080} style={{ position: "absolute" }}>
         <InkDefs seed={boilSeed(frame)} />
