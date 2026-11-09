@@ -1,0 +1,6 @@
+PRODUCTION INCIDENT
+ incident-triage          investigate-first     executor   verifier   PR flow   deploy-watch
+        │                        │                  │          │         │           │
+────────●────────────────────────●──────────────────●──────────●─────────●───────────●────▶ time
+  read-only evidence,     only if cause still     fix        prove      ship      healthy, watch
+  2-3 mitigations         unclear                            it works             or regression

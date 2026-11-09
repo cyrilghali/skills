@@ -1,0 +1,6 @@
+.claude/
+node_modules/
+# Material tied to private code or data: kept and backed up locally, never published.
+**/private/
+__pycache__/
+*.pyc

@@ -1,0 +1,6 @@
+TEXT A HUMAN READS
+ prose            deslop-en          verifier (cold read)       publish
+   │                  │                      │                     │
+───●──────────────────●──────────────────────●─────────────────────●────▶ time
+ question +        remove filler       rerun after every       doc, ticket,
+ answer first                          revision                PR body

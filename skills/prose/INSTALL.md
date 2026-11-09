@@ -1,6 +1,6 @@
 # Install
 
-The skill works as instructions alone. The gate is optional and adds a hook that blocks a reply or a document write until the mechanical tells are gone.
+The skill works as instructions alone. The gate is optional and adds a hook that names the mechanical tells in a reply and blocks a document write until they are gone.
 
 ## The skill
 
@@ -43,24 +43,24 @@ A JSON object with a `reason` naming the tells means the gate works. No output m
 
 | Mode | Fires on | Text linted |
 | -- | -- | -- |
-| `stop` | every reply | the last assistant message, at most two attempts per session |
+| `stop` | every reply | the last assistant message, findings shown as a system message, never blocks |
 | `doc` | `Write` or `Edit` of a `.md` file | the file on disk (a path that does not exist is skipped) |
 | `doc` | a Linear save (`save_document`, `save_issue`) | the content, description and patch strings of the call |
 
-Skipped on purpose: files under `~/.claude/`, `.claude/`, `memory/`, `CLAUDE.md`, `node_modules/`. Inside a text: fenced code, blockquotes, inline code and link targets are not linted; tables are exempt from the sentence and paragraph limits but not from the em dash check.
+Skipped on purpose: files under `~/.claude/`, `.claude/`, `memory/`, `CLAUDE.md`, `node_modules/`, `~/.config/` (dotfile reference tables, not prose). Inside a text: fenced code, blockquotes, inline code and link targets are not linted; tables are exempt from the sentence and paragraph limits but not from the em dash check.
 
 | Check | Threshold |
 | -- | -- |
 | emphasis and scaffolding words (French and English) | any |
 | AI tells (delve, leverage, seamless, "it is worth noting", ...) | any |
 | openers that flatter and closers that offer more ("great question", "let me know if") | any |
-| sentence-start glue ("that said", "firstly", a dangling "this ensures") | any |
+| sentence-start glue ("that said", "firstly", a dangling "this means") | any |
 | hedge stacks and pair-ups ("may potentially", "not only X but also Y") | any |
 | bullets in changelog voice ("Added X") | any |
-| test counts in prose ("412 tests pass") | any |
+| test counts in prose ("N tests pass") | any |
 | exclamation marks | any |
 | em dashes | any, tables and headings included |
-| a label and a colon standing in for a sentence ("Résultat : ...", "Bottom line: ...") | any |
+| a label and a colon standing in for a sentence ("Coût : ...", "Bottom line: ...") | any |
 | status emoji | any, tables and headings included |
 | generic headings (Overview, Summary, Contexte, ...) | any |
 | sentence length | 40 words |

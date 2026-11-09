@@ -1,32 +1,88 @@
-# claude-skills
+# skills
 
 Claude Code skills, hooks, and statusline. Drop into `~/.claude/` and go.
 
 ## What's Inside
 
-### Method skills
+37 skills, the same ones I run every day. Each folder is self-contained: `SKILL.md`, the reference files it points at, scripts, and evals. Skills marked *manual* start only when you call them by name.
 
-Skills that shape how work is written, reviewed and delegated. French and English mixed, as they were written.
+### Plan
 
 | Skill | What it does |
 |-------|-------------|
-| [prose](skills/prose/) | The register for every text a human reads: a question heading that carries its stake, the answer first, one why, details in a table, no proof trail. Ships a gate hook that runs on every reply and document write. |
-| [intent-pr](skills/intent-pr/) | A one-sentence PR body carrying the intent; the certification of what was checked goes to the author, in session. |
+| [grill-me](skills/grill-me/) | Interviews you about a plan, one question at a time, until every branch of the decision tree is settled. |
 | [design-props](skills/design-props/) | Several credible architectures compared on the real code, with the pivotal fact verified, before a design decision. |
-| [doc-pedagogique](skills/doc-pedagogique/) | An explanatory document for a newcomer: a running example, honest verdicts, decisions framed as questions. |
-| [torture-test](skills/torture-test/) | An adversarial QA pass that attacks code and tests only where a named beneficiary gains. |
-| [mutation-test](skills/mutation-test/) | Mutation testing of a branch by parallel agents, one mutant at a time, survivors reported as the assertion that would kill them. |
-| [rewrite-commits](skills/rewrite-commits/) | Collapse a draft PR's iteration commits into one to three atomic commits. |
+| [codebase-design](skills/codebase-design/) | Shared vocabulary for deep modules: find deepening opportunities and design an interface twice. |
+| [plan-series](skills/plan-series/) | Plans a series of videos, lessons or pages from a source: which units, for whom, in what order, one brief per unit. |
 
-### Making things
+### Build and understand
 
 | Skill | What it does |
 |-------|-------------|
-| [plan-series](skills/plan-series/) | A series of videos, lessons or pages planned from a goal, its audiences and a source: tiers from overview to deep dive, every fact placed in exactly one unit and none dropped for depth, and one brief per unit. |
-| [write-video-script](skills/write-video-script/) | One video's narration written beat by beat from a brief or a bare topic: what the voice says, the few words on screen in each beat, and a fact check that ties every claim to a source. |
-| [make-video](skills/make-video/) | A finished narration turned into a video: plans what moves in each beat, animates it as React drawn to SVG, voices it, checks the layout and renders an MP4. Its pen-and-ink look, voice and music are a default style you can swap. |
+| [investigate-first](skills/investigate-first/) | Diagnoses an unclear failure or explains a subsystem with ranked hypotheses before any edit. |
+| [trace](skills/trace/) | Follows one user action front to back, hop by hop, each step tied to a file and line. |
+| [deep-research](skills/deep-research/) | Splits a question into sub-questions, searches wide, and answers with every claim linked to two sources. |
 
-The three chain: plan-series writes one brief per video, write-video-script turns a brief into narration (`beats.json`), and make-video draws, voices and renders it. Each also works on its own.
+### Check
+
+| Skill | What it does |
+|-------|-------------|
+| [roast](skills/roast/) | Scores a finished output against a written definition of excellent; a fresh critic each round until nothing new turns up. |
+| [mutation-test](skills/mutation-test/) | Plants small bugs in a branch's new code and reports each one no test catches, with the assertion that would. |
+| [torture-test](skills/torture-test/) | An adversarial QA pass that attacks code and tests only where a named beneficiary gains. |
+| [comment-review](skills/comment-review/) | Reviews every added or changed comment for accuracy, value and rot, plus comments the change made false. |
+| [crap-check](skills/crap-check/) | CRAP score (complexity against coverage) for every function a branch changed, with the cheapest fix. |
+| [dry-check](skills/dry-check/) | Near-duplicate code pairs involving lines a branch added, with the shared helper that removes them. |
+| [scan-code-quality](skills/scan-code-quality/) | A severity-ranked structural review of a codebase, each finding verified by a separate checker. |
+
+### Ship
+
+| Skill | What it does |
+|-------|-------------|
+| [intent-pr](skills/intent-pr/) | A one- or two-sentence PR body on the product gap; the risk certification goes to the author, in session. |
+| [pr-breakdown](skills/pr-breakdown/) | An ownership briefing for a PR a model wrote, so its owner can defend every decision. |
+| [stacked-prs](skills/stacked-prs/) | Plans, sizes, creates and maintains stacked PRs with `gh stack`. |
+| [babysit](skills/babysit/) | Walks a PR or stack through Cubic review and CI, fixing only the findings that hold up. |
+| [rewrite-commits](skills/rewrite-commits/) | *Manual.* Collapses a draft PR's iteration commits into one to three atomic commits. |
+
+### Write
+
+| Skill | What it does |
+|-------|-------------|
+| [prose](skills/prose/) | The register for every text a human reads: a question heading, the answer first, one why, no proof trail. Ships a gate hook. |
+| [deslop-en](skills/deslop-en/) | Removes AI writing patterns from English prose. |
+| [readme](skills/readme/) | Writes a project README as a front page: the question it answers, real output, then install. |
+| [doc-pedagogique](skills/doc-pedagogique/) | A teaching technical document in French: a running example, compared options, honest verdicts. |
+| [ascii-graph](skills/ascii-graph/) | Draws graphs, trees, pipelines and state machines as box-drawing art for the terminal. |
+| [write-video-script](skills/write-video-script/) | One video's narration, beat by beat, with the words on screen and a fact check. |
+| [make-video](skills/make-video/) | Turns a finished narration into a rendered explainer video: drawn, animated, voiced. |
+
+The three video skills chain: plan-series writes one brief per video, write-video-script turns a brief into narration (`beats.json`), and make-video draws, voices and renders it. Each also works on its own.
+
+### Agents and sessions
+
+| Skill | What it does |
+|-------|-------------|
+| [handoff](skills/handoff/) | Hands a self-contained side task to a fresh Claude session in a new tab (Herdr, tmux or Claude Desktop). |
+| [hand-off-session](skills/hand-off-session/) | *Manual.* Compacts the session into a brief, optionally packed and sent to another machine. |
+| [which-skill](skills/which-skill/) | Finds the installed skill that fits a task. |
+| [write-a-skill](skills/write-a-skill/) | Builds or changes a skill with evals written first, as a shareable folder. |
+| [writing-great-skills](skills/writing-great-skills/) | *Manual.* Reference vocabulary and principles for writing skills. |
+| [skill-telemetry](skills/skill-telemetry/) | *Manual.* One JSON line per skill run, read back as medians and trends. |
+| [cyril-mode](skills/cyril-mode/) | *Manual.* Makes an agent work the way I do, in a harness where my rule files are absent. |
+
+### Routines
+
+| Skill | What it does |
+|-------|-------------|
+| [routine-watchdog](skills/routine-watchdog/) | Daily, model-free health check of macOS launchd routines. |
+| [session-watchdog](skills/session-watchdog/) | Finds handoff sessions that went idle before finishing, and nudges only the stalled ones. |
+| [linear-project-hygiene](skills/linear-project-hygiene/) | Repairs drift in the Linear projects you lead and drafts a weekly pulse. |
+| [complexity-trend](skills/complexity-trend/) | *Manual.* Weekly, model-free reading of an Elixir codebase's complexity trend. |
+
+### Credits
+
+[codebase-design](skills/codebase-design/), [grill-me](skills/grill-me/), [write-a-skill](skills/write-a-skill/) and [writing-great-skills](skills/writing-great-skills/) started from [mattpocock/skills](https://github.com/mattpocock/skills), MIT License, Copyright (c) 2026 Matt Pocock. [deslop-en](skills/deslop-en/) lists the sources it draws on in its frontmatter.
 
 ### Plugins
 
@@ -78,6 +134,8 @@ Or copy a skill to `~/.claude/skills/`:
 cp -r skills/prose ~/.claude/skills/
 ```
 
+Some eval folders hold a `private/` subfolder on my machine for cases tied to private code. It is gitignored, so those skills ship with fewer eval cases here.
+
 ### Docs Plugin
 
 **Option A — Local directory:**
@@ -90,7 +148,7 @@ Add to `settings.json`:
     "cyrilghali-skills": {
       "source": {
         "source": "directory",
-        "path": "/path/to/claude-skills/plugins/docs"
+        "path": "/path/to/skills/plugins/docs"
       }
     }
   },
@@ -108,7 +166,7 @@ Add to `settings.json`:
     "cyrilghali-skills": {
       "source": {
         "source": "github",
-        "repo": "cyrilghali/claude-skills"
+        "repo": "cyrilghali/skills"
       }
     }
   },
