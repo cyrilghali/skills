@@ -37,3 +37,33 @@ trajectoire, décisions). Un juge note contre `rubric.md`. `Piège` nomme l'éch
 **État fourni :** Postgres 16 géré (extensions autorisées : liste incluant pgvector), 2M docs, équipe sans infra dédiée, latence cible < 200ms, budget serré, croissance ×10 possible à 18 mois.
 
 **Piège :** conclure par un tableau sans nommer **le vrai choix** ni la trajectoire phasée avec déclencheurs (« démarrer pgvector ; basculer si p95 > 200ms au-delà de N docs »), ni formuler les décisions restantes en questions pour l'équipe.
+
+---
+
+## Case 4 — question ouverte tranchable par une exécution
+
+**Demande :** « Propose plusieurs designs pour résoudre les permissions effectives d'un utilisateur (rôles hérités de groupes imbriqués). Question ouverte : un calcul récursif en SQL (CTE récursive) à chaque requête tient-il 2 000 résolutions/s, ou faut-il matérialiser ? »
+
+**État fourni :** Postgres 16, tables `groups(id, parent_id)`, `memberships(user_id, group_id)`, `grants(group_id, permission)` ; profondeur d'imbrication max observée 6 ; 40 000 groupes ; l'équipe veut une API `effective_permissions(user_id) -> set[str]` appelée par tous les contrôleurs. Un Postgres local est disponible pour mesurer.
+
+**Piège :** rendre la question « CTE vs matérialisé » au lecteur comme décision à trancher, alors qu'une exécution la tranche (script qui charge un jeu de données à la forme fournie et mesure le débit). Second piège : un template sans l'esquisse d'appel `effective_permissions(user_id)` ni les signatures publiques de chaque philosophie.
+
+---
+
+## Case 5 — l'implémentation contredit l'esquisse
+
+**Demande :** « On a retenu la philosophie B (entité stateful). Esquisse retenue : `Subscription.transition(sub, event) :: {:ok, sub} | {:error, reason}`. En implémentant, trois appelants sans rapport (facturation, emails, export) ont chacun ajouté le même `if sub.legacy_plan, do: skip_transition(...)`, et le type retour a dû passer à `any()` à deux endroits pour que ça compile. On continue ? »
+
+**État fourni :** esquisse de la Phase 1 avec ses signatures ; diff de l'implémentation résumé ci-dessus ; 12 % des abonnements sont `legacy_plan`.
+
+**Piège :** proposer un patch local (un helper partagé `skip_if_legacy`, un paramètre ajouté en silence) au lieu de reconnaître les deux signaux de design faux (même contournement dans des appels sans rapport, échappatoire de type) et de revenir à la Phase 1 avec ce constat, en nommant ce que l'esquisse ignorait (les plans legacy).
+
+---
+
+## Case 6 — design sans schéma, contrainte plateforme
+
+**Demande :** « Propose plusieurs designs pour la gestion d'état côté client d'un éditeur de tableaux ouvert dans plusieurs onglets, avec édition hors ligne puis resynchronisation. »
+
+**État fourni :** application web TypeScript ; état actuel dans un store en mémoire par onglet, sauvegardé par un POST complet toutes les 30 s ; API existante `PUT /tables/:id` sans versionnement ; exigence produit : aucune perte d'édition, y compris après fermeture du navigateur ; la doc plateforme fournie indique que le webview mobile cible purge son stockage local quand l'app est fermée ; aucune base de données n'est à concevoir.
+
+**Piège :** appliquer Phase 0 et les lentilles comme pour un design de données (tables, requêtes, volumes) au lieu de croiser l'exigence avec les contraintes runtime et plateforme fournies (purge du stockage, absence de versionnement sur l'API). Un générateur qui s'adapte donne 🔴 ou 🟠 à « aucune perte après fermeture » sur le webview, et critique la concurrence entre onglets plutôt que des requêtes.

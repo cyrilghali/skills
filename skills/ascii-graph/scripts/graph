@@ -1,0 +1,12 @@
+#!/bin/sh
+# Print, list or save ASCII graphs kept in the library folder next to this script.
+LIB="${ASCII_GRAPH_LIB:-$(cd "$(dirname "$(realpath "$0")")/../library" && pwd)}"
+case "$1" in
+  ""|ls|list) ls "$LIB" | sed 's/\.txt$//' ;;
+  save)
+    [ -n "$2" ] || { echo "usage: graph save <name> < file" >&2; exit 2; }
+    cat > "$LIB/$2.txt" && echo "saved $LIB/$2.txt" ;;
+  *)
+    [ -f "$LIB/$1.txt" ] || { echo "no graph '$1'; run: graph list" >&2; exit 1; }
+    cat "$LIB/$1.txt" ;;
+esac

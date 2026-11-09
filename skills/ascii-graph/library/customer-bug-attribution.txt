@@ -1,0 +1,23 @@
+ ┌──────────────────────────┐
+ │ Linear issue labeled Bug │  N in 90 days
+ └────────────┬─────────────┘
+              │ also labeled Support?
+              ▼
+ ┌──────────────────────────┐
+ │ customer bug             │
+ └──────┬────────────┬──────┘
+        │            │
+  PR attached     no PR attached
+        │            │
+        ▼            ▼
+ ┌────────────┐   not attributed
+ │ fix PR     │
+ │ (title     │
+ │ often not  │
+ │ "fix")     │
+ └──────┬─────┘
+        │ git blame on the lines it changed (local clone of the repo)
+        ▼
+ ┌──────────────────────────┐
+ │ PR that caused the bug   │
+ └──────────────────────────┘

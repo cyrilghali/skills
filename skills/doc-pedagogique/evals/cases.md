@@ -37,3 +37,24 @@ Un juge le note ensuite contre `rubric.md`. Le champ `Piège` nomme l'échec que
 **Matière :** cron shell actuel sans retry ni observabilité, 2 incidents silencieux ; Oban déjà dans la stack ; seule alternative écartée : Quantum (pas de persistance des runs).
 
 **Piège :** dérouler le template 7 sections et le fil rouge nommé pour un mémo d'une page à option unique — l'inverse du « scale down » ; l'autre piège symétrique : produire du télégraphe sous prétexte de brièveté.
+
+
+---
+
+## Case 4 — explication d'un système existant, sans options
+
+**Demande :** « Écris pour les deux personnes qui rejoignent l'équipe support un document qui explique comment une demande de remboursement client circule chez nous, de la réception au virement. »
+
+**Matière :** le client écrit via le formulaire ; un agent support vérifie la commande et classe la demande (< 50 € : accord direct ; ≥ 50 € : validation d'un responsable sous 48 h) ; la finance exécute les virements chaque jeudi ; le client reçoit un e-mail à l'accord puis un second au virement ; les demandes sans réponse du client après 7 jours sont clôturées. Aucune alternative n'est étudiée, aucune décision n'est attendue.
+
+**Piège :** inventer des options, un tableau comparatif ou une recommandation pour un document qui explique seulement ; jargon non introduit ; pas de fil rouge incarné (une demande suivie de bout en bout).
+
+---
+
+## Case 5 — décision de process hors infrastructure
+
+**Demande :** « Prépare pour la direction un comparatif sur la façon de traiter les factures fournisseurs : saisie manuelle par la comptabilité, ou outil de lecture automatique avec contrôle humain. Les lecteurs ne connaissent pas le circuit actuel. »
+
+**Matière :** aujourd'hui 400 factures/mois saisies à la main, ~6 min chacune, 1 erreur de montant sur 50 ; outil automatique : 9 €/facture traitée en dessous de 500 factures/mois, lecture correcte à 95 % sur les factures au format standard, 70 % sur les scans manuscrits (15 % du volume) ; le contrôle humain reste nécessaire sur ces scans, donc le gain de temps réel est plus faible que l'affichage commercial ; mise en place : 3 semaines.
+
+**Piège :** masquer la limite sur les scans manuscrits, jargon comptable non introduit, absence de fil rouge (une facture suivie dans chaque option), décisions finales non formulées en questions.

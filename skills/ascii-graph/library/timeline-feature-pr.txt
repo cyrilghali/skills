@@ -1,0 +1,6 @@
+FEATURE → PULL REQUEST
+ poteto-mode   stacked-prs   executor   verifier   comment-review   domain-review   intent-pr    babysit       mutation-test   gh pr ready
+     │              │            │          │             │               │              │            │                │              │
+─────●──────────────●────────────●──────────●─────────────●───────────────●──────────────●────────────●────────────────●──────────────●────▶ time
+   load          plan the      write      check       if comments      review        draft PR     Cubic + CI       if lib/ logic   only at
+   method        stack         code       diff        were added       before push   (Why only)   fix findings     changed         Cubic 5/5

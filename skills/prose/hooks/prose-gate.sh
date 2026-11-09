@@ -4,7 +4,7 @@
 # and of decision-prose (register of a document). Replaces deslop-gate.sh.
 #
 #   prose-gate.sh stop   Stop hook: lint the reply Claude just wrote.
-#   prose-gate.sh doc    PostToolUse hook on Write|Edit of a .md file and on
+#   prose-gate.sh doc    PostToolUse hook on Write|Edit of a .md or .html file and on
 #                        the Linear save_document / save_issue tools: lint the
 #                        document text that was written.
 #
@@ -18,18 +18,39 @@
 # heading line that is not a question. Judgment calls (answer first, one why,
 # what a cold reader lacks, false agency, rhythm) stay in the skills.
 #
-# Guardrails: fail-open on any missing input; in stop mode an attempt cap so a
-# stubborn reply still gets through.
+# Guardrails: fail-open on any missing input. Stop mode never blocks: a block
+# makes the whole reply come out a second time, which doubles its token cost,
+# so the findings reach the user as a system message and the reply stands.
+# Doc mode still blocks: a document rewrite is one Edit.
 set -uo pipefail
 
 SKILL_DIR=$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)
 MODE=${1:-stop}
-MAX_ATTEMPTS=2
 MAX_SENTENCE=40
 MAX_PARAGRAPH=120
 
 input=$(cat)
 command -v jq >/dev/null 2>&1 || exit 0
+
+# ---------- HTML pages: the same text a reader sees, in the markdown shapes the checks know ----------
+# style/script/svg dropped; h1-h3 become "## " lines; table rows, blockquotes and pre blocks take
+# the markdown prefixes the prose filter skips; inline code keeps its backticks; entities unescaped.
+html_to_text() {
+  perl -0777 -pe '
+    s{<(style|script|svg)\b[^>]*>.*?</\1>}{}gis;
+    s{<!--.*?-->}{}gs;
+    s{<pre\b[^>]*>(.*?)</pre>}{"\n```\n".$1."\n```\n"}gise;
+    s{<h[1-3]\b[^>]*>}{\n\n## }gi;  s{</h[1-3]>}{\n}gi;
+    s{<blockquote\b[^>]*>}{\n> }gi;
+    s{<tr\b[^>]*>}{\n| }gi;
+    s{<(p|div|li|br|h[4-6]|section|article|figcaption)\b[^>]*>}{\n}gi;
+    s{<code\b[^>]*>(.*?)</code>}{`$1`}gis;
+    s{<[^>]+>}{ }g;
+    s{&nbsp;}{ }g; s{&amp;}{&}g; s{&lt;}{<}g; s{&gt;}{>}g; s{&quot;}{"}g; s{&#0*39;|&apos;}{\x27}g;
+    s{&#x([0-9a-f]+);}{chr(hex($1))}gie; s{&#(\d+);}{chr($1)}ge;
+    s{[ \t]+}{ }g; s{\n[ \t]+}{\n}g; s{\n{3,}}{\n\n}g;
+  ' "$1" 2>/dev/null
+}
 
 # ---------- collect the text to lint ----------
 text=""
@@ -51,15 +72,19 @@ case "$MODE" in
       Write|Edit)
         file=$(printf '%s' "$input" | jq -r '.tool_input.file_path // empty' 2>/dev/null)
         case "$file" in
-          *.md) ;;
+          *.md|*.html|*.htm) ;;
           *) exit 0 ;;
         esac
-        # Files the user never reads as documents: memory, skills, hooks, plans.
+        # Files the user never reads as documents: memory, skills, hooks, plans, dotfile config,
+        # and handoff briefs, which only the next session reads.
         case "$file" in
-          "$HOME/.claude/"*|*/.claude/*|*/memory/*|*/CLAUDE.md|*/node_modules/*) exit 0 ;;
+          "$HOME/.claude/"*|*/.claude/*|*/memory/*|*/CLAUDE.md|*/node_modules/*|"$HOME/.config/"*|"$HOME/.local/state/handoffs/"*) exit 0 ;;
         esac
         [ -f "$file" ] || exit 0
-        text=$(cat "$file")
+        case "$file" in
+          *.html|*.htm) text=$(html_to_text "$file") ;;
+          *) text=$(cat "$file") ;;
+        esac
         label="$file"
         ;;
       mcp__linear-server__save_document|mcp__linear-server__save_issue)
@@ -76,6 +101,14 @@ case "$MODE" in
   *) exit 0 ;;
 esac
 
+
+# ---------- required formats are not prose ----------
+# YAML frontmatter at the top of a file (skill and agent definitions) is key: value data.
+text=$(printf '%s\n' "$text" | awk 'NR == 1 && /^---[[:space:]]*$/ { fm = 1; next } fm && /^---[[:space:]]*$/ { fm = 0; next } !fm { print }')
+# A handoff brief's five headings are fixed by its launcher; drop them when the brief carries all five.
+if printf '%s\n' "$text" | grep -qx '## Task' && printf '%s\n' "$text" | grep -qx '## Ask the user for'; then
+  text=$(printf '%s\n' "$text" | grep -vxE '## (Task|Context|Deliverable|Verification|Ask the user for)')
+fi
 [ -n "$text" ] && printf '%s' "$text" | grep -q . || exit 0
 
 # ---------- prose only: drop fenced code, quotes, tables, inline code, links ----------
@@ -135,11 +168,12 @@ if printf '%s\n' "$text" | awk '/^[[:space:]]*```/ { fence = !fence; next } fenc
   add "em dashes. Use a comma, two sentences, or a colon inside the sentence."
 fi
 
-# 2b. A label and a colon standing in for a sentence ("Résultat : ...", "Bottom line: ...",
+# 2b. A label and a colon standing in for a sentence ("Coût : ...", "Bottom line: ...",
 # "- **Cost:** two days"): one to three words opening a line or a sentence, then a spaced colon.
 # A colon glued to its left neighbour (14:30, https://) is not a label.
 labels=$(printf '%s\n' "$prose" | grep -oE "(^|[.!?] +)([-*] |[0-9]+\. |#+ )?(\*\*)?[[:alpha:]][[:alnum:]'’-]*( [[:alnum:]'’-]+){0,2}(\*\*)? ?:(\*\*)? +[^ ]" 2>/dev/null \
-  | sed -E 's/^[.!?] +//; s/^([-*] |[0-9]+\. |#+ )//; s/\*\*//g; s/ *:.*$//' | sort -fu | head -6)
+  | sed -E 's/^[.!?] +//; s/^([-*] |[0-9]+\. |#+ )//; s/\*\*//g; s/ *:.*$//' \
+  | grep -vE '^[a-z0-9]+(-[a-z0-9]+)+$' | sort -fu | head -6)
 [ -n "$labels" ] && add "labels standing in for a sentence: $(printf '%s' "$labels" | paste -sd, - | sed 's/,/, /g'). Write the sentence; the label becomes its subject or goes."
 
 # 2c. Status emoji, in tables and headings too.
@@ -203,18 +237,7 @@ Rewrite before finishing: answer first, one why, details in a table, no proof tr
 
 case "$MODE" in
   stop)
-    session=$(printf '%s' "$input" | jq -r '.session_id // "nosession"' 2>/dev/null || echo nosession)
-    counter="/tmp/claude-prose-gate-${session}.n"
-    n=$( [ -f "$counter" ] && cat "$counter" || echo 0 )
-    n=$((n + 1))
-    if [ "$n" -ge "$MAX_ATTEMPTS" ]; then
-      rm -f "$counter"
-      jq -n --arg m "[prose-gate] still failing after ${MAX_ATTEMPTS} attempts, letting the reply through: $(printf '%s' "$findings" | head -c 300)" \
-        '{suppressOutput: true, systemMessage: $m}'
-      exit 0
-    fi
-    printf '%s' "$n" > "$counter"
-    jq -n --arg r "Prose gate (attempt ${n}/${MAX_ATTEMPTS}). ${reason}" '{decision: "block", reason: $r}'
+    jq -n --arg m "[prose-gate] $(printf '%s' "$findings" | head -c 400)" '{suppressOutput: true, systemMessage: $m}'
     ;;
   doc)
     jq -n --arg r "$reason" '{decision: "block", reason: $r}'

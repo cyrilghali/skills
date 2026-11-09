@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>local.session-watchdog</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>__HOME__/.local/bin/claude</string>
+    <string>-p</string>
+    <string>Run the session-watchdog skill as its scheduled routine (list with --notify). Call its script by the absolute path __HOME__/.claude/skills/session-watchdog/scripts/watchdog.py.</string>
+    <string>--model</string>
+    <string>sonnet</string>
+    <string>--effort</string>
+    <string>high</string>
+    <string>--permission-mode</string>
+    <string>dontAsk</string>
+    <string>--allowedTools</string>
+    <string>Bash(__HOME__/.claude/skills/session-watchdog/scripts/watchdog.py *) Read</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>__HOME__</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/usr/local/bin:/opt/homebrew/bin:__HOME__/.local/bin:/usr/bin:/bin</string>
+  </dict>
+  <key>StartCalendarInterval</key>
+  <array>
+    <dict><key>Hour</key><integer>9</integer><key>Minute</key><integer>30</integer></dict>
+    <dict><key>Hour</key><integer>12</integer><key>Minute</key><integer>30</integer></dict>
+    <dict><key>Hour</key><integer>15</integer><key>Minute</key><integer>30</integer></dict>
+    <dict><key>Hour</key><integer>18</integer><key>Minute</key><integer>30</integer></dict>
+  </array>
+  <key>StandardOutPath</key>
+  <string>__HOME__/Library/Logs/session-watchdog.log</string>
+  <key>StandardErrorPath</key>
+  <string>__HOME__/Library/Logs/session-watchdog.log</string>
+</dict>
+</plist>

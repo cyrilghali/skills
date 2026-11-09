@@ -1,56 +1,51 @@
 ---
 name: torture-test
 description: Adversarial QA pass that tries to break code and its test suite only where a named beneficiary gains from it — hostile inputs, invariant/property checks, concurrency and retry storms, resource ceilings, interrupted state — with mutation testing delegated to the mutation-test skill. Findings first, new tests second, documented confidence instead of padding. Use when the user says "break this", "torture test", "harden the tests", "QA pass", or before shipping risky logic (money, concurrency, migrations, parsers).
+metadata:
+  category: verify
 ---
 
 # Torture testing
 
-Le but n'est pas d'écrire plus de tests, c'est de trouver ce qui casse et qui
-s'en soucie. **Règle du bénéficiaire (porte d'entrée, pas conseil)** : avant
-chaque attaque, répondre à « quelle défaillance visible — pour l'utilisateur
-final, l'astreinte, le mainteneur, la perf — ce test attraperait-il ? ».
-Pas de réponse → l'attaque ne se lance pas.
+Find what breaks and who cares, instead of writing more tests. Before each attack, answer one question: which visible failure would this test catch, and for whom (the end user, the on-call engineer, the maintainer, or performance)? With no answer, do not run the attack. This beneficiary rule is a gate, not advice.
 
-## Arsenal — choisir 2 ou 3 axes selon le code, jamais tout
+## Pick only the axes where this code can really fail
 
-1. **Mutation** — robustesse de la suite face au code : déléguée entièrement à
-   la skill mutation-test (opérateurs, contrat d'exécutant, scoring).
-2. **Entrées hostiles** — vide, énorme, unicode/emoji/NUL, négatif, bornes ±1,
-   encodage cassé, TZ/DST/29 février, locale, injection dans les champs libres.
-3. **Invariants (property)** — roundtrip encode/decode, idempotence des
-   retries, somme conservée (argent !), tri stable, monotonie. Seulement si
-   l'invariant existe vraiment dans le domaine — ne pas en inventer.
-4. **Concurrence & répétition** — double-submit, retry après timeout
-   (l'opération a-t-elle eu lieu ?), événements hors ordre, deux workers sur la
-   même ressource.
-5. **Ressources** — N×100 pour trouver le plafond perf (mesurer, pas deviner),
-   dépendance lente ou morte, disque plein simulé, mémoire bornée.
-6. **État interrompu** — crash entre deux écritures, replay d'un job à moitié
-   fait, migration partielle, cache incohérent avec la source.
+Never run every axis by default. Justify each axis you leave out in one line.
 
-## Règles de valeur
+1. **Delegate mutation to the mutation-test skill.** It owns how well the test suite resists changes to the code: the operators, the agent contract and the scoring.
+2. **Feed hostile inputs.** Try empty, huge, unicode, emoji or NUL, negative, a boundary plus or minus one, broken encoding, time zone, daylight saving or 29 February, locale, and injection in free-text fields.
+3. **Check invariants that really exist in the domain.** Candidates: an encode then decode round trip, idempotent retries, a conserved sum (money!), a stable sort, monotonicity. Never invent one. Write the attack as a property test with the project's library (StreamData and `ExUnitProperties` in Elixir, Hypothesis in Python, fast-check in TypeScript), never as fixed examples. Make the generator reach the values the code treats specially, and check that it produces them before counting the property as passed.
 
-- **Oracle obligatoire** : chaque torture porte une attente vérifiable. « Ça
-  n'a pas crashé » n'est un oracle que pour les attaques de robustesse pure.
-- **Findings avant tests** : un bug trouvé se rapporte (repro minimal, impact,
-  bénéficiaire touché) AVANT d'écrire quoi que ce soit. Le fix n'est pas dans
-  cette passe — et un test qui entérinerait le comportement douteux est refusé.
-- **Budget** : ~10 attaques max par passe. Chaque test ajouté cite son
-  bénéficiaire en une ligne (nom du test ou description).
-- **Zéro padding** : une torture qui passe ne produit pas de test — elle
-  produit une ligne de confiance documentée dans le triage.
+   Check that the library is already in the dependencies. If it is not, do not add it; report an uncovered axis in the triage instead. For a bug found without the library, keep one killer test on its minimal repro, never a sample of examples.
+4. **Repeat and overlap operations.** Try a double submit, a retry after a timeout (did the operation happen?), out-of-order events, and two workers on the same resource.
+5. **Starve resources.** Multiply the load by 100 to find the performance ceiling (measure it, do not guess). Try a slow or dead dependency, a simulated full disk, and bounded memory.
+6. **Interrupt state.** Try a crash between two writes, a replay of a half-done job, a partial migration, and a cache out of step with its source.
 
-## Exécution
+## Make each attack earn its place
 
-- **Un module** : en direct, dans la session.
-- **Une branche large** : agents exécutants parallèles, contrat façon
-  mutation-test phase 1 — préflight propre (`git status --porcelain` vide),
-  baseline verte avant toute attaque, un axe par agent, revert prouvé,
-  interdits commit/push.
+- Give every torture an oracle: a checkable expectation. "It did not crash" is an oracle only for pure robustness attacks.
+- Report findings before writing tests. Report a bug you find (minimal repro, impact, beneficiary hit) before you write anything. The fix is not part of this pass. Refuse a test that would lock in the doubtful behavior.
+- Keep to about 10 attacks per pass at most. Make each attack and each test cite, in one line, who sees which concrete failure ("<who> sees <which wrong value or state>"), never a role alone.
+- Add no padding. A torture that passes produces no test; it produces one line of documented confidence in the triage. Write no test to "lock" a behavior that is already correct.
 
-## Triage final (le livrable)
+## Run the attacks
 
-1. **Bugs trouvés** — repro minimal + bénéficiaire touché + sévérité.
-2. **Trous réels** — tests tueurs ajoutés, chacun avec sa ligne bénéficiaire ;
-   kill-check : le test échoue sur le comportement cassé, passe sur le sain.
-3. **Tortures passées** — confiance documentée, zéro ligne de code ajoutée.
+For one module, run them directly in the session.
+
+For a wide branch, run parallel executor agents under a contract in the style of the one mutation-test gives its agents. Each agent starts from a clean preflight (`git status --porcelain` prints nothing) and a green baseline before any attack. Each agent takes one axis, proves its revert, and never commits or pushes. Each agent reports `PASS` (torture passed, confidence documented), `ISSUES` (bug or bugs found, repro and beneficiary cited), or `BLOCKED` (preflight or baseline unusable), never a prose summary alone. When an agent drops out, continue with the others and relaunch it once; a second failure becomes an uncovered axis in the triage, never a torture passed by default.
+
+## Write the triage for the user
+
+The triage is the deliverable. Give it to the user as the final message, in four parts:
+
+1. **List the bugs found**, each with its minimal repro, the beneficiary hit and its severity.
+2. **List the real gaps**: the killer tests added, each with its beneficiary line and its kill check (the test fails on the broken behavior and passes on the healthy one).
+3. **List the tortures passed** as documented confidence, with zero lines of code added.
+4. **List the uncovered axes**: an agent that dropped out twice on a wide branch, or a property library missing from the dependencies. A named gap is never counted as a passed torture.
+
+Record the run with `skill-record torture-test attacks=A bugs_found=B gaps_closed=G uncovered_axes=U`, once, only when the run finished; a dry run or an aborted run records nothing. Here attacks is the number of attacks run, and gaps_closed the number of killer tests added in part 2.
+
+Sources : le contrat PASS/ISSUES/BLOCKED et la reprise sur décrochage
+adaptent la skill `swarm` de pstack par poteto
+(github.com/cursor/plugins/tree/main/pstack, MIT, Lauren Tan).

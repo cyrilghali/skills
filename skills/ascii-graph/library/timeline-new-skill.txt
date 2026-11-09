@@ -1,0 +1,6 @@
+NEW OR EDITED SKILL
+ write-a-skill       evals (subagents)       leak audit       scratch-copy run       commit / backup
+      │                     │                    │                   │                     │
+──────●─────────────────────●────────────────────●───────────────────●─────────────────────●────▶ time
+  pin job, check       5 cases, one         no personal       proves it            repo or backup
+  overlap, write       scorer per case      paths             travels              routine

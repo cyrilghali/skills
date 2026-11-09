@@ -1,0 +1,8 @@
+CUSTOMER BUG, TRACED TO ITS PR
+ Linear          Linear            Linear            GitHub        git blame        pr-outcomes
+   │               │                 │                 │              │                 │
+───●───────────────●─────────────────●─────────────────●──────────────●─────────────────●────▶ time
+ labeled        also labeled      fix PR attached   fix PR         lines it changed  counted on
+ Bug            Support                             merged         point to the      the PR that
+ N in 90d       a subset are      if none,                         PR that caused    caused it
+                customer bugs     stops here                       the bug

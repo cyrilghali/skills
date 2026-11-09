@@ -1,51 +1,61 @@
 ---
 name: doc-pedagogique
-description: Rédiger un document technique pédagogique en français soigné — contexte avant jargon, exemple fil rouge, options comparées, verdicts honnêtes. Use when writing a French technical document that compares several options or must onboard a reader who doesn't know the subject (design doc, étude, note d'architecture), or when the user rejects a draft as "difficilement compréhensible" or "français moyen". Not for short notes to an expert audience — scale down instead.
+description: Writes a teaching technical document in polished French, with context before jargon, one running example, compared options and honest verdicts. Use when writing a French technical document that compares several options or must onboard a reader who doesn't know the subject (design doc, étude, note d'architecture, "doc pédagogique", "fil rouge"), or when the user rejects a draft as "difficilement compréhensible" or "français moyen". Not for short notes to an expert audience — scale down instead.
+metadata:
+  category: write
 ---
 
-# Document pédagogique
+# Teaching document in French
 
-Le lecteur cible découvre le sujet. Il doit comprendre le problème en 60 secondes et lire le document d'un trait, sans avoir le code ni le contexte sous les yeux.
+Write for a reader who is discovering the subject. They must understand the problem in 60 seconds and read the document in one sitting, without the code or the context in front of them.
 
-## Structure (dans cet ordre)
+## Lay out the sections in this order
 
-1. **Chapeau** — ce que le document compare/explique et comment le lire (4-6 lignes).
-2. **D'où on part** — comment le système fonctionne aujourd'hui, en langage humain. Aucun terme technique avant son introduction.
-3. **Le problème, sur un exemple** — le fil rouge (voir plus bas), puis les questions qu'on ne sait pas répondre, une par une.
-4. **Ce que le produit demande** — les exigences, reliées à leurs sources (brief, roadmap).
-5. **Les options** — une section par option, template identique (voir plus bas).
-6. **Comparaison** — un tableau + 3-5 enseignements en prose (« le vrai choix est X contre Y », « Z est un complément, pas un concurrent »).
-7. **Recommandation** — trajectoire phasée + **décisions à trancher formulées en questions** (« L'escalation est-elle au scope de septembre ? Si oui… »).
+Sections 1 to 3 apply to every document. Sections 4 to 7 apply only when the document compares options or settles a choice. A document that explains a system with no choice to make leaves them out. A short request merges or drops the sections it does not need. Keep the French section titles in the document.
 
-## Le fil rouge
+1. **Chapeau**: what the document compares or explains and how to read it (4-6 lines).
+2. **D'où on part**: how the system works today, in human language. Introduce every technical term before you use it.
+3. **Le problème, sur un exemple**: the running example (see below), then the questions nobody can answer today, one by one.
+4. **Ce que le produit demande**: the requirements, each linked to its source (brief, roadmap).
+5. **Les options**: one section per option, all on the same template (see below).
+6. **Comparaison**: one table plus 3-5 lessons in prose, such as « le vrai choix est X contre Y » or « Z est un complément, pas un concurrent ».
+7. **Recommandation**: a phased trajectory, then the decisions to take, written as questions, such as « L'escalation est-elle au scope de septembre ? Si oui… ».
 
-Un exemple concret unique et nommé (« le fichier de Léa, détecté le 1er mars, résolu le 12 ») introduit dans la section problème, puis **rejoué dans chaque option** : « sur notre exemple, voici ce qui s'écrit, où ». C'est lui qui rend le modèle de données tangible — un lecteur ne comprend pas un schéma, il comprend ce qui arrive à Léa.
+## Carry one running example through the whole document
 
-## Template par option
+Pick one concrete, named example, such as « le fichier de Léa, détecté le 1er mars, résolu le 12 ». Introduce it in the problem section, then replay it in every option: « sur notre exemple, voici ce qui s'écrit, où ». The example is what makes the data model tangible, because a reader does not understand a schema, they understand what happens to Léa.
 
-- **L'idée** — 2-3 phrases, aucun nom de table avant de l'avoir expliqué.
-- **Sur notre exemple** — le fil rouge rejoué dans ce design.
-- **Ce qu'il faut construire** — liste numérotée, ordonnée par dépendance, chiffrée si possible.
-- **Ce que ça donne** — par audience (admin, employé, produit futur).
-- **Où ça coince** — les vraies limites, en gras la plus grave. Jamais omises : la crédibilité du document vient de là.
-- **En une phrase** — le verdict.
+## Write every option on the same template
 
-## Règles de français
+- **L'idée**: 2-3 sentences, with no table name before it has been explained.
+- **Sur notre exemple**: the running example replayed in this design.
+- **Ce qu'il faut construire**: a numbered list, ordered by dependency, with figures when possible.
+- **Ce que ça donne**: one entry for each audience the option touches (users, teams, future product changes).
+- **Où ça coince**: the real limits, the worst one in bold. Never leave them out, because the document's credibility comes from them.
+- **En une phrase**: the verdict.
 
-- Prose rédigée, phrases complètes. Jamais de télégraphe (`A → B → échec`), de fragments, ni d'abréviations inventées.
-- Un terme technique = en `code` + expliqué **à sa première apparition**, jamais après.
-- Guillemets français « », espaces insécables avant : ; ? !, accents sur les majuscules (À, É).
-- Une idée par phrase ; couper toute phrase qui exige une relecture.
-- Chiffres et unités précis (« ~6 j-h », « 31 figures »), pas de « rapidement » ou « facilement ».
+## Build each diagram in layers
 
-## Règle de production
+Never introduce a diagram with three or more elements in one go, because the reader cannot follow a system that appears already assembled. Draw a short series of diagrams instead, each one redrawing the previous and adding a single element. For a flow A → B → C, draw A → B first, then the same diagram with C, then with the return path or the last piece. A single complete diagram, kept for the end, is a reference, not teaching. Skip the diagram for a simple point.
 
-Les sous-agents/workflows produisent la **matière** (recherche, propositions longues, synthèses). La **passe finale s'écrit dans le contexte principal** — par l'assistant qui a tout le contexte, phrase par phrase — jamais en publiant ou en assemblant la prose compressée de sous-agents : elle produit un français moyen et un texte qui se lit comme un scorecard. Compresser soi-même = choisir ce qu'on omet, pas raccourcir les phrases.
+## Follow these French rules
 
-## Exemplaire de référence
+- Write full prose in complete sentences. Never use telegraph style (`A → B → échec`), fragments, or invented abbreviations.
+- Put each technical term in `code` and explain it at its first appearance, never later.
+- Use French quotation marks « », a non-breaking space before : ; ? !, and accents on capitals (À, É).
+- Give each sentence one idea. Cut any sentence that needs a second read.
+- Give precise figures and units (« ~6 j-h », « 31 figures »), never « rapidement » or « facilement ».
 
-Garde à côté du skill le document qui a fait basculer ton lecteur après rejet d'une version compressée par agents. On s'y réfère pour le ton, le fil rouge (un personnage nommé qu'on suit de bout en bout) et le template par option.
+## Write the final pass yourself, in the main context
 
-## Finition
+Let subagents and workflows produce the material: research, long proposals, syntheses. Write the final pass in the main context yourself, as the assistant that holds the whole context, sentence by sentence. Never publish or assemble the compressed prose of subagents, because it produces average French and a text that reads like a scorecard. Do the compression yourself, and compress by choosing what to leave out, not by shortening sentences.
 
-Cible : lisible en 10-12 minutes. Relire en se demandant à chaque section « un nouveau sur le projet comprend-il sans moi ? ». Clore la livraison en dirigeant les yeux du lecteur vers les 1-2 sections qui portent la décision (voir la voix de certification du CLAUDE.md global).
+## Learn from the reference document
+
+When `private/EXEMPLAR.md` exists beside this file, read it: it is the document that won the user over (« exactement ce que je voulais ») after they rejected a version compressed by agents. Use it for the tone, the running example and the option template. It describes a private product, so it is not published.
+
+## Finish the document
+
+Give it the length the subject needs: a rich comparison reads in 10-12 minutes, a short note in 2-3. Reread each section asking « un nouveau sur le projet comprend-il sans moi ? ». Close the delivery by pointing the reader's eyes at the 1-2 sections that carry the decision, in the certification voice: say in the first person what you checked, which risks that covers, and what needs the reader's review.
+
+Sources : la construction de schéma par couches adapte le skill `teach` de pstack par poteto (MIT).

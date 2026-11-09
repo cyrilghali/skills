@@ -1,0 +1,6 @@
+PLAN OR DESIGN
+ grill-me          write-plan        harden-plan        stacked-prs        → feature flow
+    │                  │                  │                  │                    │
+────●──────────────────●──────────────────●──────────────────●────────────────────●────▶ time
+  resolve each      turn decisions     stress-test        split into         one timeline
+  open decision     into a plan        the plan           stacked PRs        per PR

@@ -1,0 +1,6 @@
+BUG, CAUSE UNKNOWN
+ poteto-mode   investigate-first   debug-systematically   executor   verifier   domain-review   → PR flow
+     │                │                    │                  │          │            │               │
+─────●────────────────●────────────────────●──────────────────●──────────●────────────●───────────────●────▶ time
+   load          ranked causes,       prove the root       fix at     prove the    review        see timeline-
+   method        evidence first       cause                the source fix works    before push   feature-pr
