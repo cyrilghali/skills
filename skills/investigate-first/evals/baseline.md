@@ -46,7 +46,7 @@ Two more case 9 runs on an earlier wording of the flaky-failure line were not ju
 - The repro-command gate: both arms ran code first on cases 8-10, so these cases show no effect from it. A case where the old text theorizes from code is still missing.
 - Tagged debug logs and the cleanup grep: 0 of 9 runs in either arm added a log.
 - The lines added after these runs, listed in `coverage.md`.
-- The short-code line's word target: the final runs came in at 137-147 words against 332 for the old text, all with a short list. Case 11 was written in the same session as that line, so it is held out in time only; a case written by an agent that has not read the skill is still missing.
+- The short-code line's word target: runs under the earlier "about 100 words" wording came in at 137-147 words against 332 for the old text, all with a short list. Case 11 was written in the same session as that line, so it is held out in time only; a case written by an agent that has not read the skill is still missing.
 - The description's "where should this live" and "performance regressions" triggers: no case covers them yet.
 
 Two fresh-agent leak audits read the skill diff against every case and fixture. The second, on the text after the round-2 hypotheses change, found no line restating a case.
@@ -59,7 +59,7 @@ Held-out case 10: 19. Case 4: 19. Case 5: 18. Case 7: 20. All PASS. These runs c
 
 Case 8: 18. Case 9: 19. Held-out case 10: 18 (no prediction stated that run). All PASS, and judges reran each repro on a pristine copy: same output, no diff, no leftover debug lines.
 
-Case 2 failed on length with the round-3 text (17, dim 8: 0) and with the old text (18, dim 8: 0, about 28 lines), so the inflation predates this edit. After one line telling a question about a few lines of code to get a few lines back, case 2 passed with 19 in about 9 lines. Case 3 on that text: 17, PASS, losing points on evidence grading and length. Round 3 also changed the evidence-grading line, which every question uses, so that line may explain part of case 3's drop (old 20, then 19, 18, 17, one run each).
+Case 2 failed on length with the round-3 text (17, dim 8: 0) and with the old text (18, dim 8: 0, about 28 lines), so the inflation predates this edit. After one line telling a question about a few lines of code to get a few lines back, case 2 passed with 19 at 266 words, still with a bullet list. Case 3 on that text: 17, PASS, losing points on evidence grading and length. Round 3 also changed the evidence-grading line, which every question uses, so that line may explain part of case 3's drop (old 20, then 19, 18, 17, one run each).
 
 ## Final text after roast round 4, one run each unless noted
 
@@ -73,3 +73,9 @@ The short-code line now asks for about 100 words in plain sentences. The case 2 
 | 3 | 18 | |
 
 All PASS. The short answers still used a numbered or bullet list, so dim 8 stayed at 1. Judge replies: `final-round4.md` and `final-round4-c3.md` in the eval scratch folder; earlier rounds' replies are in the session log.
+
+## Committed text (round 5), one run each
+
+The round-5 text raised the short-code target from about 100 to about 150 words to match the rubric, and dropped the rubric rule that capped a list at dim 8 = 1. That moves the bar toward what the runs produced; the gain it still shows is 131-145 words against 332 for the old text.
+
+Case 2: 20 (145 words). Case 11: 20 (131 words). Case 8: 19, repro rerun on a pristine copy, no diff, no debug lines, no extra files, so the reworded cleanup line kept the harness rule intact. Judge replies: `final-committed.md` in the eval scratch folder. A fresh leak audit of the final short-code line found no leak.
