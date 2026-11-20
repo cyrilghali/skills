@@ -1,6 +1,6 @@
 # investigate-first baseline
 
-Run 20/11/2026. "Old" is the skill before the red-command gate. "New" is the text with it. Judges were blind to the arm. For cases 8-10 they reran each report's repro command on a pristine fixture copy. No no-skill arm was run: these runs test this edit against the previous text.
+Run 20/11/2026. "Old" is the skill before the red-command gate. "New" is the text with it. Judges were blind to the arm. For cases 8-10 they reran each report's repro command on a pristine fixture copy. These runs test this edit against the previous text; the no-skill arm is at the end.
 
 ## Cases 8-10, three runs per arm (first new draft)
 
@@ -43,7 +43,9 @@ Two more case 9 runs on an earlier wording of the flaky-failure line were not ju
 
 ## Not yet proven
 
-- The repro-command gate: both arms ran code first on cases 8-10, so these cases show no effect from it. A case where the old text theorizes from code is still missing.
+(The no-skill arm now exists; see the last section.)
+
+- The repro-command gate: no effect on cases 8-10, where every arm ran code first. It showed one on real-use case 13 (see the last sections).
 - Tagged debug logs and the cleanup grep: 0 of 9 runs in either arm added a log.
 - The lines added after these runs, listed in `coverage.md`.
 - The short-code line's word target: runs under the earlier "about 100 words" wording came in at 137-147 words against 332 for the old text, all with a short list. Case 11 was written in the same session as that line, so it is held out in time only; a case written by an agent that has not read the skill is still missing.
@@ -79,3 +81,39 @@ All PASS. The short answers still used a numbered or bullet list, so dim 8 staye
 The round-5 text raised the short-code target from about 100 to about 150 words to match the rubric, and dropped the rubric rule that capped a list at dim 8 = 1. That moves the bar toward what the runs produced; the gain it still shows is 131-145 words against 332 for the old text.
 
 Case 2: 20 (145 words). Case 11: 20 (131 words). Case 8: 19, repro rerun on a pristine copy, no diff, no debug lines, no extra files, so the reworded cleanup line kept the harness rule intact. Judge replies: `final-committed.md` in the eval scratch folder. A fresh leak audit of the final short-code line found no leak.
+
+## No skill loaded, one run per case
+
+Same requests, fresh agents told not to load any skill, judged blind with the same rubric. Skill column: the latest run of the current text (cases 1, 4-7, 9 ran on earlier wordings of it; see above).
+
+| Case | No skill | Skill |
+|---|---|---|
+| 1 | 19 | 19 |
+| 2 | 17, FAIL (311 words) | 20 |
+| 3 | 17 | 18 |
+| 4 | 19 | 19 |
+| 5 | 18 | 18 |
+| 6 | 16 | 17 |
+| 7 | 16 | 20 |
+| 8 | 18 | 19 |
+| 9 | 17 | 19 |
+| 10 | 18 | 18 |
+| 11 | 18, FAIL (192 words) | 20 |
+
+Without the skill, 9 of 11 pass. Its two failures are short code questions answered at length. Where the skill gains points: it proposes no fix nobody asked for (no-skill lost dim 3 on cases 3-6 and 8-10), and it states predictions and the smallest failing input (no-skill got dim 10: 1 on all three runnable cases). Both arms ran the code first on cases 8-10, so the repro gate still shows no effect on these cases. Judge replies: `K-runnable.md`, `K-paper-a.md`, `K-paper-b.md`.
+
+## Case 3 isolation
+
+Two runs on the current text scored 19 and 19. Two runs with "incidental ones included" removed from the evidence-grading line scored 19 and 20. The earlier 17 and 18 were run-to-run spread, not that phrase, so it stays. Judge replies: `H-case3.md`.
+
+## Cases from real use (12-14), one run per arm
+
+Three past sessions where an agent named a cause before running anything, rebuilt as small runnable projects with the domain renamed. Judges saw the two reports per case under neutral names, reran each repro on a clean copy, diffed the run folder and grepped for leftover debug lines.
+
+| Case | No skill | Skill |
+|---|---|---|
+| 12, redirect loop | 17 | 19 |
+| 13, empty first scan | 13, FAIL | 18 |
+| 14, deadline missed some days | 13, FAIL | 19 |
+
+This is the first place the repro gate shows an effect. Without the skill, case 13 named the cause from reading the code and only reran the replay; with it, the run changed the delay and showed the scan succeed. Without the skill, case 14 cited no source and proposed fixes. The agent that wrote these cases had read the skill, so their traps may lean toward what it checks. Judge replies: `X12.md`, `X13.md`, `X14.md`.

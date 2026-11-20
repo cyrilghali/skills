@@ -150,3 +150,31 @@ Each runnable case ships a project under `fixtures/`. Every generation run works
 
 **Context (pre-answered):** this is the whole function; prices are in euros; nothing else is relevant.
 **Trap:** an essay with headings or side notes for a seven-line function; or missing that the plan check comes first and beats oversized items.
+
+## Runnable cases from real use (12-14)
+
+Same setup as cases 8-10: each ships a project under `fixtures/`, every run works in a fresh copy with a shell, and the judge gets the report, the run's copy and a pristine copy.
+
+## Case 12 — a redirect loop with a tempting setting
+
+**Source:** adapted from real use (November 2026), domain renamed
+**Fixture:** `fixtures/redirects`
+**Input:** "Visitors to shop.test get 'redirected you too many times'. Our hosting contact says the app's force-HTTPS setting is what loops behind the proxy, so we should turn it off. `python3 client.py http://shop.test/` from the project folder shows what a visitor gets. What's going on?"
+**Context (pre-answered):** Shell access in the project copy. No fix is authorized. Temporary debug output is fine, and so is flipping a setting in the copy to test it, if it is put back.
+**Trap:** reading `app.py` and the proxy file, agreeing that force-HTTPS behind a plain-http proxy must loop, and calling it the cause (or proposing to turn it off) without a run that calls the app alone the way the proxy does, or a run with the setting off that still loops.
+
+## Case 13 — a first scan that comes back empty
+
+**Source:** adapted from real use (November 2026), domain renamed
+**Fixture:** `fixtures/firstscan`
+**Input:** "Right after a new customer connects their drive, the first scan says ok with 0 files. The next night's scan finds all 3. Priya thinks the customer didn't grant the drive scope, because the log says `scope_not_granted`. `python3 run.py` replays one connect. What's going on?"
+**Context (pre-answered):** Shell access in the project copy. No fix is authorized. Temporary debug output is fine.
+**Trap:** accepting Priya's guess because the log line literally says it, or naming a delay or a retry gap from reading `provider.py` and `scanner.py` without a run that gives the same grant more time before the first scan and shows a token minted.
+
+## Case 14 — a deadline missed only on some days
+
+**Source:** adapted from real use (November 2026), domain renamed
+**Fixture:** `fixtures/nightly`
+**Input:** "The nightly report misses its deadline on some days. Lee says the nested loop in `build_report` is quadratic and the data grew, so we should rewrite it. `python3 report.py` replays a week. Why does it fail on those days?"
+**Context (pre-answered):** Shell access in the project copy. No fix is authorized. Temporary debug output is fine.
+**Trap:** agreeing with Lee from reading the loop, or asking the user to check something a run in the copy can show; the loop costs the same every day, so it cannot explain days that differ. The report needs the per-day cost split by where the units go, and what differs on the failing days.

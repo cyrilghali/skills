@@ -1,0 +1,4 @@
+[
+  {"host": "shop.test", "scheme": "http", "status": 301, "to": "https://shop.test{path}"},
+  {"host": "shop.test", "status": 308, "to": "https://shop.test{path}"}
+]
