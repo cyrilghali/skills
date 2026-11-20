@@ -46,7 +46,16 @@ Two more case 9 runs on an earlier wording of the flaky-failure line were not ju
 - The repro-command gate: both arms ran code first on cases 8-10, so these cases show no effect from it. A case where the old text theorizes from code is still missing.
 - Tagged debug logs and the cleanup grep: 0 of 9 runs in either arm added a log.
 - The lines added after these runs, listed in `coverage.md`.
+- The description's "where should this live" and "performance regressions" triggers: no case covers them yet.
+
+Two fresh-agent leak audits read the skill diff against every case and fixture. The second, on the text after the round-2 hypotheses change, found no line restating a case.
 
 ## Text after the roast fixes, one run each
 
 Held-out case 10: 19. Case 4: 19. Case 5: 18. Case 7: 20. All PASS. These runs cover the moved evidence-tiers pointer and the new done states.
+
+## Text after roast round 3, one run each
+
+Case 8: 18. Case 9: 19. Held-out case 10: 18 (no prediction stated that run). All PASS, and judges reran each repro on a pristine copy: same output, no diff, no leftover debug lines.
+
+Case 2 failed on length with the round-3 text (17, dim 8: 0) and with the old text (18, dim 8: 0, about 28 lines), so the inflation predates this edit. After one line telling a question about a few lines of code to get a few lines back, case 2 passed with 19 in about 9 lines. Case 3 on that text: 17, PASS, losing points on evidence grading and length; it does not use the changed line.
