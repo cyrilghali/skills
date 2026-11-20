@@ -22,3 +22,15 @@
 | 18 | research the best open-source job queue libraries for Python and compare them | no | yes |
 | 19 | the build fails with "module not found: lodash", just install it and rerun | no | yes |
 | 20 | follow the request from the signup button to the database and give me the call chain | no | yes |
+
+## Results
+
+Each query ran three times in a fresh headless session (three turns, plan mode) inside a small sample project. "Fired" means the skill was called or its folder was read.
+
+| Description | Should-fire runs that fired | Queries passing (open / held out) | False fires |
+|---|---|---|---|
+| Previous, imperative "Diagnose ambiguous failures..." | 4 of 30 | 6 of 12 / 5 of 8 | 0 |
+| "Investigates before any code changes..." (rejected) | 0 of 30 | 6 of 12 / 4 of 8 | 0 |
+| Current, "Diagnoses bugs, flaky tests and slowdowns..." | 6 of 30 | 7 of 12 / 5 of 8 | 0 |
+
+The current description fires most and never on a near miss, so it stays. The gain is small. Explanation questions (how it works, why it was built, where code belongs) never fired with any wording: the model reads the code and answers directly. Only failure reports fire, and only some of the time.

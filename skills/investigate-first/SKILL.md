@@ -1,6 +1,6 @@
 ---
 name: investigate-first
-description: Diagnose ambiguous failures before editing, explain how a subsystem works, or answer placement/ownership questions before changing it. Use for unknown causes, intermittent behavior, performance regressions, "restate this issue", "how does X work", "why was this built this way", "why did you do X and not Y", "where should this live", or investigations needing evidence-ranked hypotheses.
+description: Diagnoses bugs, flaky tests and slowdowns whose cause is unknown, reproducing the failure before any fix, and answers "how does X work", "why was this built this way", "why did you do X and not Y" and "where should this live". Use when something fails only sometimes, a cause is guessed but unproven, or the user asks to restate an issue. Not for tracing one user action hop by hop (trace).
 metadata:
   category: build
 ---
