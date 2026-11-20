@@ -17,14 +17,14 @@ Gather evidence before changing product code.
 When the task is a failure (an error, a wrong output, a slowdown, a flaky test) and you can run code, get one command that goes red on it before you read code to build a theory.
 
 - The command drives the real code path and asserts the reported symptom itself, not "it ran". It gives the same verdict every run, finishes in seconds, and runs unattended. Try the cheapest seam first: a failing test, a script or curl against the running app, a CLI call on a fixture input, a replayed captured input, a throwaway harness.
-- For a failure that comes and goes, loop the trigger and count the failure rate. Raise the rate until it is high enough to debug: pin the clock, seed random numbers, isolate the filesystem, freeze the network.
+- For a failure that comes and goes, loop the trigger and count the failure rate. Make the verdict repeatable where you can: pin the clock, seed random numbers, isolate the filesystem, freeze the network. Otherwise raise the failure rate until it is high enough to debug.
 - Shrink the repro: cut inputs, steps and config one at a time, rerunning after each cut, until removing any one part makes it pass.
 - Done when you have run the command, watched it fail on the reported symptom, and kept the command and its output for the report.
 - When no such command can be built, stop and say so: what you tried, and the access or artifact that would let you (an environment that shows the failure, a redacted log or captured request). When the evidence came to you as text with nothing to run, reason from it and say that nothing was run. Never present output you did not produce.
 
 ## Hypotheses and probes
 
-- Rank three to five hypotheses by evidence, using `references/evidence-tiers.md` to grade each claim, incidental ones included. Each states the prediction that would prove it wrong: "if X is the cause, changing Y makes the failure go away". Test the cheapest one first, changing one thing at a time.
+- While the cause is open, rank at least two hypotheses by evidence, using `references/evidence-tiers.md` to grade each claim, incidental ones included. List only what the evidence leaves open. Each states the prediction that would prove it wrong: "if X is the cause, changing Y makes the failure go away". Test the cheapest one first, changing one thing at a time.
 - Temporary debug logs are allowed while investigating. Give each one a unique tag, such as `[DEBUG-a4f2]`. Before reporting, grep the tag to prove they are gone, confirm the code is back to its starting state, and rerun the repro command.
 
 ## Explaining code and choices
