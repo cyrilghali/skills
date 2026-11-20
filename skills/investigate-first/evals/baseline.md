@@ -46,6 +46,7 @@ Two more case 9 runs on an earlier wording of the flaky-failure line were not ju
 - The repro-command gate: both arms ran code first on cases 8-10, so these cases show no effect from it. A case where the old text theorizes from code is still missing.
 - Tagged debug logs and the cleanup grep: 0 of 9 runs in either arm added a log.
 - The lines added after these runs, listed in `coverage.md`.
+- The short-code line's word target: the final runs came in at 137-147 words against 332 for the old text, all with a short list. Case 11 was written in the same session as that line, so it is held out in time only; a case written by an agent that has not read the skill is still missing.
 - The description's "where should this live" and "performance regressions" triggers: no case covers them yet.
 
 Two fresh-agent leak audits read the skill diff against every case and fixture. The second, on the text after the round-2 hypotheses change, found no line restating a case.

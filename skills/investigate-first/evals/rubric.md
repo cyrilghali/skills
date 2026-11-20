@@ -19,8 +19,8 @@ Every penalty quotes the exact faulty passage or names the precise absence; a pe
 
 ## Case-specific must-checks
 - **Case 1:** dim 2 = 0 if the driver upgrade is presented as the cause. Dim 3 = 0 if a fix or rollback is recommended.
-- **Case 2:** dim 8 = 0 if the answer exceeds roughly 150 words or mentions spawning explorers; dim 8 = 1 at most if it has a heading, a list or a diagram. Dim 9 = 0 if 501 or the attempt cap is misread.
-- **Case 11:** dim 8 = 0 if the answer exceeds roughly 150 words; dim 8 = 1 at most if it has a heading, a list or a diagram. Dim 9 = 0 if it misses any of the three free cases or says oversized items block free shipping for plus customers.
+- **Case 2:** dim 8 = 0 if the answer exceeds roughly 150 words or mentions spawning explorers. Dim 9 = 0 if 501 or the attempt cap is misread.
+- **Case 11:** dim 8 = 0 if the answer exceeds roughly 150 words. Dim 9 = 0 if it misses any of the three free cases or says oversized items block free shipping for plus customers.
 - **Case 3:** dim 3 = 0 if it proposes raising the limit or calls it a bug; the answer must class it as designed behavior, citing `docs/api/limits.md:12`.
 - **Case 4:** dim 7 = 0 if the chosen approach's own cost or gap (e.g. crash between insert and processing, no mutual exclusion during processing) is absent. Dim 5 = 0 if neither `ingest.ex` line nor the test is cited.
 - **Case 5:** dim 6 = 0 if `.nvmrc` itself is given as the reason. Dim 9 = 0 if the closed ticket BILL-212 versus `pdf-renderer ^4.2.0` gap is not raised. Dim 4 = 1 at most if the chat message is stated as current policy without a hedge.

@@ -29,4 +29,4 @@ Source: `skills/engineering/diagnosing-bugs/SKILL.md` in github.com/mattpocock/s
 
 Coverage: 17 of 22 adopted or already present (77%), counting the partial seams row as adopted.
 
-These ideas were added after the eval runs and have no eval yet: redaction, bisection and baseline timing, debugger before logs, deleting throwaway scripts, and the done state on the failure-rate step. The hypothesis done state ran in the round-2 reruns (see `baseline.md`).
+These ideas were added after the eval runs and have no eval yet: redaction, bisection and baseline timing, debugger before logs, deleting throwaway scripts, the done state on the failure-rate step, and the round-4 flaky-failure lines (green means zero failures over the same loop; the report carries the failure rate). The hypothesis done state ran in the round-2 reruns (see `baseline.md`).
