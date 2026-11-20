@@ -11,7 +11,7 @@ Source: `skills/engineering/diagnosing-bugs/SKILL.md` in github.com/mattpocock/s
 | Tighten the loop: fast, sharp, deterministic | Adopted | First repro bullet |
 | Raise the failure rate for intermittent failures | Adopted | Second repro bullet |
 | Stop and ask for an artifact when no loop exists | Adopted | Last repro bullet |
-| The repro shows the user's own symptom | Adopted | "asserts the reported symptom itself" |
+| The repro shows the user's own symptom | Adopted | "fails on the user's own symptom" |
 | Shrink until every part is load-bearing | Adopted | Shrink bullet |
 | Three to five falsifiable hypotheses | Adopted, changed | "At least two"; a fixed count padded short answers in the evals |
 | Show the ranked list to the user | Cut | The skill reports once, at the end, and the ranked list goes in that report |
@@ -29,4 +29,4 @@ Source: `skills/engineering/diagnosing-bugs/SKILL.md` in github.com/mattpocock/s
 
 Coverage: 17 of 22 adopted or already present (77%), counting the partial seams row as adopted.
 
-These ideas were added after the eval runs and have no eval yet: redaction, bisection and baseline timing, debugger before logs, deleting throwaway scripts, and the done states on the failure-rate and hypothesis steps.
+These ideas were added after the eval runs and have no eval yet: redaction, bisection and baseline timing, debugger before logs, deleting throwaway scripts, and the done state on the failure-rate step. The hypothesis done state ran in the round-2 reruns (see `baseline.md`).

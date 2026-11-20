@@ -131,3 +131,22 @@ Each runnable case ships a project under `fixtures/`. Every generation run works
 **Input:** "The scoreboard puts Bears last even though they have 100 points. Maya thinks the API sends the scores unsorted and the page just prints them in that order. `node page.js` prints the ranking. What's wrong?"
 **Context (pre-answered):** Shell access in the project copy. No fix is authorized.
 **Trap:** accepting Maya's guess because the API data is indeed unsorted, without a run that isolates the sort; or explaining the cause without the smallest list of scores that still ranks wrong.
+
+## Case 11 — a short "when does X happen" question in another language (held out)
+
+**Source:** synthetic
+**Input:** "When does a customer get free shipping here?"
+
+```js
+// shipping.js
+1  function shippingFee(cart, user) {
+2    if (user.plan === "plus") return 0;
+3    const subtotal = cart.items.reduce((sum, i) => sum + i.price * i.qty, 0);
+4    if (subtotal >= 50 && !cart.hasOversized) return 0;
+5    if (cart.items.length === 0) return 0;
+6    return cart.express ? 12 : 5;
+7  }
+```
+
+**Context (pre-answered):** this is the whole function; prices are in euros; nothing else is relevant.
+**Trap:** an essay with headings or side notes for a seven-line function; or missing that the plan check comes first and beats oversized items.

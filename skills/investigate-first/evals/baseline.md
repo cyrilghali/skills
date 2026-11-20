@@ -58,4 +58,17 @@ Held-out case 10: 19. Case 4: 19. Case 5: 18. Case 7: 20. All PASS. These runs c
 
 Case 8: 18. Case 9: 19. Held-out case 10: 18 (no prediction stated that run). All PASS, and judges reran each repro on a pristine copy: same output, no diff, no leftover debug lines.
 
-Case 2 failed on length with the round-3 text (17, dim 8: 0) and with the old text (18, dim 8: 0, about 28 lines), so the inflation predates this edit. After one line telling a question about a few lines of code to get a few lines back, case 2 passed with 19 in about 9 lines. Case 3 on that text: 17, PASS, losing points on evidence grading and length; it does not use the changed line.
+Case 2 failed on length with the round-3 text (17, dim 8: 0) and with the old text (18, dim 8: 0, about 28 lines), so the inflation predates this edit. After one line telling a question about a few lines of code to get a few lines back, case 2 passed with 19 in about 9 lines. Case 3 on that text: 17, PASS, losing points on evidence grading and length. Round 3 also changed the evidence-grading line, which every question uses, so that line may explain part of case 3's drop (old 20, then 19, 18, 17, one run each).
+
+## Final text after roast round 4, one run each unless noted
+
+The short-code line now asks for about 100 words in plain sentences. The case 2 rule now counts words and caps a list at dim 8 = 1, since a line count let a 266-word answer with a bullet list pass.
+
+| Case | Score | Words |
+|---|---|---|
+| 2, two runs | 18, 19 | 137, 139 (old text: 332) |
+| 11, held out, written after the line | 19 | 147 |
+| 10, held out | 18 | |
+| 3 | 18 | |
+
+All PASS. The short answers still used a numbered or bullet list, so dim 8 stayed at 1. Judge replies: `final-round4.md` and `final-round4-c3.md` in the eval scratch folder; earlier rounds' replies are in the session log.
