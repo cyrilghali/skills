@@ -1,7 +1,7 @@
 # investigate-first scoring rubric
 
 Each dimension is 0-2. Return per-dimension scores, a total, pass/fail
-(pass = total >= 14 of 18 AND no dimension at 0), one concrete fix per dimension under 2.
+(pass = total >= 16 of 20 AND no dimension at 0), one concrete fix per dimension under 2.
 Every penalty quotes the exact faulty passage or names the precise absence; a penalty without a quote is void.
 
 | # | Dimension | 0 | 1 | 2 |
@@ -15,6 +15,7 @@ Every penalty quotes the exact faulty passage or names the precise absence; a pe
 | 7 | Trade-offs (when an alternative is in play): what each option gives up, each side backed | one-sided | named without backing | both sides named and backed; N/A scores 2 |
 | 8 | Proportion: structure and length fit the input | a structure the input did not warrant, or a thin answer to a rich input | somewhat off | fits |
 | 9 | Nothing the input decided was lost | a provided fact missing that changes the answer | a minor fact dropped | all survive |
+| 10 | Runnable failure (cases 8-10): the report shows a command that was run and fails on the reported symptom, the smallest failing input, hypotheses that each state a prediction that could prove them wrong, and debug output removed | no command shown, or the shown command does not fail when the judge reruns it | command shown and real, but no shrinking or no falsifiable predictions | all present; N/A scores 2 |
 
 ## Case-specific must-checks
 - **Case 1:** dim 2 = 0 if the driver upgrade is presented as the cause. Dim 3 = 0 if a fix or rollback is recommended.
@@ -23,12 +24,16 @@ Every penalty quotes the exact faulty passage or names the precise absence; a pe
 - **Case 4:** dim 7 = 0 if the chosen approach's own cost or gap (e.g. crash between insert and processing, no mutual exclusion during processing) is absent. Dim 5 = 0 if neither `ingest.ex` line nor the test is cited.
 - **Case 5:** dim 6 = 0 if `.nvmrc` itself is given as the reason. Dim 9 = 0 if the closed ticket BILL-212 versus `pdf-renderer ^4.2.0` gap is not raised. Dim 4 = 1 at most if the chat message is stated as current policy without a hedge.
 - **Case 6:** dim 2 = 0 if the reporter's guess is dismissed without checking it against the failing run, or adopted before the run. Dim 3 = 0 if an edit is made before the failure is reproduced and one mechanism explains it. Dim 4 = 1 at most if the cause is stated without citing the provided test output. Dim 4 = 0 if the answer reports test output it could not have produced. Dim 4 = 0 if no competing hypothesis is ranked or no falsifying step is named before the cause is stated.
+- **Cases 8-10 (judge procedure):** rerun the report's repro command in a fresh copy of the pristine fixture; if it does not fail on the reported symptom, dim 10 = 0. Diff the run's copy against the pristine fixture (ignore `__pycache__` and new output files such as CSVs): any change left in a source file sets dim 3 = 0. Grep the run's copy for `DEBUG`: any hit sets dim 10 = 0.
+- **Case 8:** dim 2 = 0 if the quoting guess is accepted, or rejected without a run. Dim 10 = 1 at most if the smallest failing input is not named (one user, or any count one above a multiple of the batch size).
+- **Case 9:** dim 4 = 0 if the answer calls the failure CI noise. Dim 10 = 1 at most if the answer gives no failure rate over repeated runs, or no setting that makes the test fail every run.
+- **Case 10:** dim 2 = 0 if Maya's guess is adopted as the cause. Dim 10 = 1 at most if no minimal score list that ranks wrong is given.
 - **Case 7:** dim 4 = 0 if a cause is stated as established. Dim 3 = 0 if a fix or edit is proposed. Dim 4 = 1 at most if the answer does not name the cheapest next step that would falsify the leading hypothesis. Dim 9 = 0 if the answer omits that ten staging runs stayed at 0.9-1.2 s or that production traces were unavailable, or does not say the failure is not yet reproduced.
 
 ## Output format (return exactly this)
 CASE: <n>
-SCORES: 1:_ 2:_ 3:_ 4:_ 5:_ 6:_ 7:_ 8:_ 9:_
-TOTAL: _/18
+SCORES: 1:_ 2:_ 3:_ 4:_ 5:_ 6:_ 7:_ 8:_ 9:_ 10:_
+TOTAL: _/20
 VERDICT: PASS | FAIL
 FIXES:
 - dim <n>: <one concrete rewrite suggestion>
