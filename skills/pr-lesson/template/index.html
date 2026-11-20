@@ -1,0 +1,331 @@
+<title>PR Lessons</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* One reading column; figures are the content, text explains them. shadcn neutral tokens; spacing 4 8 12 16 24 40. */
+:root {
+  --bg: #fafafa; --surface: #ffffff; --fg: #0a0a0a; --muted: #525252; --faint: #6b6b6b;
+  --border: #e5e5e5; --line: #8a8a8a; --hover: #f5f5f5;
+  --here: #1d4ed8; --here-fg: #ffffff; --bad: #b91c1c; --bad-bg: #fef2f2; --warn: #92400e; --warn-bg: #fffbeb;
+  --font: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --r: 8px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0a0a0a; --surface: #141414; --fg: #fafafa; --muted: #a3a3a3; --faint: #949494;
+  --border: #262626; --line: #6b6b6b; --hover: #1f1f1f;
+  --here: #60a5fa; --here-fg: #0a0a0a; --bad: #f87171; --bad-bg: #2b1111; --warn: #fbbf24; --warn-bg: #2a1f06;
+  color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0a0a0a; --surface: #141414; --fg: #fafafa; --muted: #a3a3a3; --faint: #949494;
+  --border: #262626; --line: #6b6b6b; --hover: #1f1f1f;
+  --here: #60a5fa; --here-fg: #0a0a0a; --bad: #f87171; --bad-bg: #2b1111; --warn: #fbbf24; --warn-bg: #2a1f06;
+  color-scheme: dark }
+
+* { box-sizing: border-box }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 14px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  -webkit-font-smoothing: antialiased }
+a { color: inherit }
+button { font: inherit; color: inherit }
+code, .mono { font-family: var(--mono); font-size: 12px }
+:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; border-radius: 4px }
+.wrap { max-width: 880px; margin: 0 auto; padding-block: 40px; display: grid; gap: 24px; min-width: 0 }
+
+/* index */
+#index { max-width: 760px; margin: 0 auto; width: 100% }
+.top h1 { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; margin: 0 }
+.top p { color: var(--muted); margin: 4px 0 0; max-width: 36rem }
+.status { font-size: 12px; color: var(--muted); margin: 8px 0 0 }
+.top .stale { margin: 16px 0 0; padding: 12px 16px; border: 1px solid var(--warn); border-radius: var(--r); background: var(--warn-bg); color: var(--warn); max-width: none }
+.find { display: block; width: 100%; margin: 24px 0 0; min-height: 36px; padding: 4px 12px; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); color: var(--fg); font: inherit }
+.find::placeholder { color: var(--faint) }
+.find[hidden] { display: none }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; padding: 0; list-style: none }
+.chips a { display: inline-flex; align-items: center; gap: 8px; min-height: 28px; padding: 2px 12px; border: 1px solid var(--border); border-radius: 999px;
+  background: var(--surface); text-decoration: none; font-size: 13px; transition: background .15s ease-out }
+.chips a:hover { background: var(--hover) }
+.chips a[aria-current="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg) }
+.chips .c { font-size: 12px; opacity: .7; font-variant-numeric: tabular-nums }
+#list { display: grid; gap: 24px; margin-top: 24px }
+.day { display: grid; gap: 8px }
+.day h2 { font-size: 13px; font-weight: 600; margin: 0; color: var(--muted) }
+.rows { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden }
+.rows li + li { border-top: 1px solid var(--border) }
+.rows a { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 16px; padding: 12px 16px; text-decoration: none; transition: background .15s ease-out }
+.rows a:hover { background: var(--hover) }
+.lesson h2:focus { outline: none }
+.rows a:focus-visible { outline-offset: -2px; background: var(--hover) }
+.rows .skip { display: grid; gap: 4px; padding: 12px 16px; color: var(--muted) }
+.rows .skip .t { font-weight: 400 }
+.rows .skip a { display: inline; padding: 0; text-decoration: underline; text-decoration-color: var(--faint); text-underline-offset: 3px }
+.rows .skip a:hover { background: none; color: var(--fg) }
+.rows .t { font-weight: 500; overflow-wrap: anywhere }
+.rows .m, .rows .o { color: var(--muted); font-size: 12px; grid-column: 1; overflow-wrap: anywhere }
+.rows .o { font-size: 13px }
+.rows .n { color: var(--muted); font-size: 12px; white-space: nowrap; font-variant-numeric: tabular-nums; grid-row: 1; grid-column: 2; align-self: center }
+.more { justify-self: start; min-height: 32px; padding: 4px 16px; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); cursor: pointer; transition: background .15s ease-out }
+.more:hover { background: var(--hover) }
+.skel { height: 64px; border-radius: var(--r); margin-top: 8px; background: linear-gradient(90deg, var(--hover), var(--border), var(--hover)); background-size: 200% 100%; animation: sh 1.4s ease-in-out infinite }
+@keyframes sh { to { background-position: -200% 0 } }
+.queue { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r) }
+.queue summary { font-weight: 500; color: var(--muted) }
+.queue .rows { border: 0; border-top: 1px solid var(--border); border-radius: 0 0 var(--r) var(--r) }
+.empty, .error { color: var(--muted); padding: 24px 0; margin: 0 }
+.back { display: inline-flex; align-items: center; min-height: 28px; color: var(--muted); text-decoration: none; font-size: 13px }
+.back:hover { color: var(--fg) }
+.open-pr { display: flex; gap: 8px 16px; flex-wrap: wrap; align-items: center }
+.open-pr a { color: var(--muted); font-size: 13px }
+.open-pr a:first-child { display: inline-flex; align-items: center; min-height: 36px; padding: 4px 16px; border-radius: var(--r); background: var(--fg); color: var(--bg);
+  text-decoration: none; font-weight: 500; font-size: 14px; transition: opacity .15s ease-out }
+.open-pr a:first-child:hover { opacity: .85 }
+
+/* lesson */
+.lesson { display: grid; gap: 40px; min-width: 0 }
+.lesson header { display: grid; gap: 8px }
+.eyebrow { margin: 0; color: var(--muted); font-size: 12px }
+.lesson h2 { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; margin: 0; text-wrap: balance }
+.intro { margin: 0; max-width: 68ch }
+.prtitle { margin: 0; color: var(--muted); font-size: 13px; overflow-wrap: anywhere }
+.made { margin: 0; font-size: 12px; color: var(--muted); max-width: 76ch }
+.note { margin: 0; padding: 12px 16px; border: 1px dashed var(--border); border-radius: var(--r); color: var(--muted); max-width: 76ch }
+.lesson > .note { margin-top: -24px }
+figure { margin: 0; display: grid; gap: 8px; min-width: 0 }
+figure h3, .guess h3 { font-size: 14px; font-weight: 600; margin: 0; text-wrap: balance }
+h4 { font-size: 13px; font-weight: 600; margin: 16px 0 4px }
+.tag { justify-self: start; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted);
+  border: 1px solid var(--border); border-radius: var(--r); padding: 1px 8px; text-wrap: balance }
+figcaption { color: var(--muted); font-size: 13px; max-width: 72ch }
+.cite { font-family: var(--mono); font-size: 12px; color: var(--muted); text-decoration: underline; text-decoration-color: var(--faint); text-underline-offset: 3px; white-space: nowrap }
+.cite:hover { color: var(--fg) }
+
+.fig { width: 880px; max-width: none; height: auto; display: block }
+.wide { overflow-x: auto; border-radius: var(--r) }
+.hint { display: none; margin: 0; font-size: 12px; color: var(--muted) }
+@media (max-width: 911px) { .hint { display: block } }
+.hint.t { display: none }
+@media (max-width: 700px) { .hint.t { display: block } }
+.fig text { font-family: var(--font); fill: var(--fg); font-size: 13px }
+.fig .b { font-weight: 600 }
+.fig .sub { fill: var(--muted); font-size: 12px }
+.fig .code { font-family: var(--mono); font-size: 12px; fill: var(--muted) }
+.fig .band { fill: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: .05em }
+.fig .box { fill: var(--surface); stroke: var(--line) }
+.fig .row { stroke: var(--fg); stroke-width: 1.2 }
+.fig .pill { fill: none; stroke: var(--line) }
+.fig .pill.done { stroke: var(--fg) }
+.fig .arrow { stroke: var(--fg); stroke-width: 1.3; fill: none }
+.fig .here { stroke: var(--here); stroke-width: 2 }
+.fig .flag { fill: var(--here) }
+.fig .flag-t { fill: var(--here-fg); font-size: 12px; font-weight: 700; letter-spacing: .03em }
+.fig .bandbg { fill: var(--bg) }
+.fig .tagbox { fill: var(--bg); stroke: var(--line) }
+.fig .tag-t { fill: var(--muted); font-size: 12px; font-weight: 600 }
+.fig .life { stroke: var(--line); stroke-dasharray: 3 4 }
+.fig .rule { stroke: var(--line) }
+.fig .badge { fill: var(--fg) }
+.fig .badge-t { fill: var(--bg); font-size: 12px; font-weight: 700 }
+.seq text { font-size: 12px }
+.fig .lost .arrow { stroke: var(--bad) }
+.fig .lost text { fill: var(--bad); font-weight: 600 }
+.fig .lost .badge { fill: var(--bad) }
+.fig .lost .badge-t { fill: var(--bg) }
+.fig .known text { fill: var(--muted) }
+.fig .known .arrow { stroke: var(--muted) }
+.fig .known .badge { fill: var(--muted) }
+
+.cards { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 16px; min-width: 0 }
+.who { font-weight: 600; margin-bottom: 12px }
+.tl { list-style: none; margin: 0; padding: 0; position: relative }
+.tl::before { content: ""; position: absolute; left: 6px; top: 8px; bottom: 8px; width: 1px; background: var(--border) }
+.tl li { position: relative; padding: 0 0 12px 24px }
+.tl li:last-child { padding-bottom: 0 }
+.tl li::before { content: ""; position: absolute; left: 2px; top: 6px; width: 9px; height: 9px; border-radius: 50%; background: var(--fg) }
+.tl small { display: block; font-size: 12px; color: var(--muted) }
+.tl .later::before { background: var(--faint) }
+.tl .missing { color: var(--bad) }
+.tl .missing::before { background: var(--surface); border: 1.5px dashed var(--bad); width: 8px; height: 8px; left: 1.5px }
+.tl .missing .hole { display: block; border: 1.5px dashed var(--bad); border-radius: var(--r); padding: 4px 8px }
+.tl .missing small { color: var(--bad) }
+.tl .added { color: var(--here); font-weight: 500 }
+.tl .added::before { background: var(--here) }
+
+.steps { margin: 8px 0 0; padding-left: 24px; display: grid; gap: 8px; max-width: 76ch }
+.steps .lost { color: var(--bad) }
+.steps .known { color: var(--muted) }
+.seen { font-size: 12px; color: var(--faint) }
+
+.scroll { overflow-x: auto }
+.grid { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 560px; table-layout: fixed }
+.grid th:first-child, .grid tfoot td:first-child { width: 22% }
+.grid code { white-space: normal; overflow-wrap: break-word }
+.grid .cite { white-space: normal; overflow-wrap: anywhere }
+.grid th, .grid td { border: 1px solid var(--border); padding: 8px; text-align: center; vertical-align: middle }
+.grid thead th, .grid tbody th, .grid tfoot td { background: var(--surface) }
+.grid thead th { font-weight: 600 }
+.grid thead th:first-child, .grid tbody th, .grid tfoot td:first-child { text-align: left; font-weight: 500 }
+.grid tfoot td { color: var(--muted) }
+.grid .none { color: var(--muted) }
+.grid .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--fg) }
+.grid small { display: block; color: var(--muted); font-size: 12px }
+.grid .hl th, .grid .hl td { background: var(--hover) }
+
+.guess { display: grid; gap: 12px; border-top: 1px solid var(--border); padding-top: 24px }
+.q { margin: 0; padding-left: 24px; display: grid; gap: 8px; max-width: 72ch; font-weight: 500 }
+details { border: 1px solid var(--border); border-radius: var(--r); background: var(--surface) }
+summary { cursor: pointer; padding: 12px 16px; font-weight: 600; list-style: none }
+summary::-webkit-details-marker { display: none }
+summary::before { content: "›"; display: inline-block; width: 16px; transition: transform .15s ease-out }
+details[open] > summary::before { transform: rotate(90deg) }
+.open-pr a::after, .skip a::after { content: "↗"; margin-left: 4px }
+.answer { padding: 0 16px 16px; display: grid; gap: 8px; max-width: 76ch }
+.answer p, .answer ul { margin: 0 }
+.answer ul { padding-left: 24px; display: grid; gap: 8px }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important } }
+</style>
+
+<main class="wrap">
+  <div id="index">
+    <header class="top">
+      <h1>PR Lessons</h1>
+      <p>One lesson for each pull request of the team. It shows, with figures, how the code worked before the change. Read it, then open the pull request.</p>
+      <p class="status" id="status" role="status">Loading the lessons…</p>
+      <p class="stale" id="stale" role="alert" hidden></p>
+    </header>
+    <input class="find" id="find" type="search" autocomplete="off" aria-label="Find a pull request by its number, its title or its author" placeholder="Find by number, title or author">
+    <ul class="chips" id="chips" aria-label="Show one product area"></ul>
+    <div id="list"></div>
+  </div>
+  <div id="view" hidden>
+    <a class="back" id="back" href="#">← All lessons</a>
+    <div id="lesson" style="margin-top: 16px"></div>
+    <a class="back" id="back2" href="#" style="display: inline-block; margin-top: 24px">← All lessons</a>
+  </div>
+</main>
+
+<script>
+// The lessons live in the page's database, one row per pull request. The page lists them and updates by itself.
+const PAGE = 30;
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+let rows = [], waiting = [], waitingAll = [], queueOpen = false, lastPr = null, checked = null, loaded = false, failed = false, shownHtml = null, limit = PAGE, lastList = "#", lastArea = null, listY = 0;
+
+const when = r => String(r.added || r.written || "");
+const startOfDay = d => { const c = new Date(d); c.setHours(0, 0, 0, 0); return c };
+function dayLabel(iso) {
+  const d = new Date(iso + "T00:00:00");
+  if (isNaN(d)) return "Earlier";
+  const days = Math.round((startOfDay(new Date()) - d) / 86400000);
+  if (days === 0) return "Today";
+  if (days === 1) return "Yesterday";
+  return d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+}
+function workingDaysSince(date) {  // Monday to Friday days that started after `date`, today included
+  let n = 0;
+  for (const d = startOfDay(date); d < startOfDay(new Date()); ) { d.setDate(d.getDate() + 1); if (d.getDay() % 6) n++ }
+  return n;
+}
+const stepsLabel = r => { const n = Number(r.new_steps), all = Number(r.steps);
+  return n === all ? `${all} steps` : `${all} steps, ${n === 0 ? "none" : n} new in this area` };
+const prUrl = r => `https://github.com/${encodeURI(String(r.repo))}/pull/${Number(r.pr)}`;
+
+function status(lessons) {
+  // the program ran at least as late as the newest lesson it wrote
+  const last = [checked, ...rows.map(r => String(r.written || "").slice(0, 10))].filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d || "")).sort().pop() || null;
+  const at = last ? new Date(last + "T00:00:00") : null, known = at && !isNaN(at);
+  const stale = loaded && !failed && known && workingDaysSince(at) >= 2, w = waiting.length;
+  const say = (el, text) => { if (el.textContent !== text) el.textContent = text };  // an unchanged line is not announced again
+  say($("status"), failed ? "The lessons could not be loaded. Reload the page." : !loaded ? "Loading the lessons…"
+    : (lessons === 0 ? "No lesson yet. The first one appears here when a pull request is ready for review."
+      : `${lessons} ${lessons === 1 ? "lesson" : "lessons"}${w ? `, and ${w} pull ${w === 1 ? "request waits" : "requests wait"} for one` : ""}. This list updates by itself when a pull request is ready for review.`) +
+      (known && !stale ? ` The program that writes the lessons last ran ${dayLabel(last).replace(/^(Today|Yesterday)$/, s => s.toLowerCase()).replace(/^([A-Z])/, "on $1")}.` : ""));
+  $("stale").hidden = !stale;
+  if (stale) say($("stale"), `The program that writes the lessons last ran on ${at.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}. Pull requests opened after that day have no lesson here. To start it again, say to Claude: “restart the PR lessons job”.`);
+}
+
+function list(area) {
+  waiting = waitingAll.filter(p => !rows.some(r => r.pr === p.pr && r.repo === p.repo));
+  const sorted = rows.slice().sort((a, b) => when(b).localeCompare(when(a)) || b.pr - a.pr);
+  const counts = new Map();
+  for (const r of sorted) if (r.html) counts.set(r.area, { name: r.area_name || r.area, n: (counts.get(r.area)?.n || 0) + 1 });
+  if (area && !counts.has(area)) area = null;
+  const chip = (href, name, n, on) => `<li><a href="${href}"${on ? ' aria-current="true"' : ""}>${esc(name)} <span class="c">${n}</span></a></li>`;
+  const lessons = sorted.filter(r => r.html).length;
+  $("chips").innerHTML = counts.size < 2 ? "" : chip("#", "All areas", lessons, !area) +
+    [...counts].sort((a, b) => a[1].name.localeCompare(b[1].name)).map(([id, c]) => chip("#area-" + esc(id), c.name, c.n, id === area)).join("");
+  $("find").hidden = loaded && sorted.length + waiting.length < 8;
+  status(lessons);
+  const q = $("find").value.trim().toLowerCase().replace(/^#/, "");
+  const wanted = sorted.filter(r => (!area || r.area === area) && (!q || `${r.pr} ${r.title} ${r.headline || ""} ${r.author}`.toLowerCase().includes(q)));
+  const visible = wanted.slice(0, limit), days = new Map();
+  for (const r of visible) { const k = String(r.written || "").slice(0, 10); (days.get(k) || days.set(k, []).get(k)).push(r) }
+  const item = r => r.html
+    ? `<li><a href="#pr-${esc(r.slug)}"><span class="t">${esc(r.headline || r.title)}</span><span class="n">${stepsLabel(r)}</span>` +
+      (r.headline ? `<span class="o">${esc(r.title)}</span>` : "") +
+      `<span class="m">${esc(r.area_name || r.area)} · #${Number(r.pr)} · ${esc(r.author)}</span></a></li>`
+    : `<li><div class="skip"><span class="t">${esc(r.title)}</span><span class="m">No lesson: ${esc(r.skipped)} · <a href="${esc(prUrl(r))}">#${Number(r.pr)}</a> · ${esc(r.author)}</span></div></li>`;
+  const queue = area ? [] : waiting.filter(p => !q || `${p.pr} ${p.title} ${p.author}`.toLowerCase().includes(q));
+  const opened = p => /^\d{4}-\d{2}-\d{2}/.test(p.opened || "") ? `opened ${new Date(p.opened.slice(0, 10) + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "long" })} · ` : "";
+  const held = $("list").contains(document.activeElement) ? (document.activeElement.id || document.activeElement.getAttribute("href")) : null;
+  $("list").innerHTML = (!loaded ? '<div class="skel"></div><div class="skel"></div><div class="skel"></div>' : "") +
+    (queue.length ? `<details class="queue" id="queue"${queueOpen ? " open" : ""}><summary id="queue-toggle">${queue.length} pull ${queue.length === 1 ? "request waits" : "requests wait"} for a lesson</summary><ul class="rows">${queue.map(p =>
+      `<li><div class="skip"><span class="t">${esc(p.title)}</span><span class="m">Lesson not written yet · ${opened(p)}<a href="${esc(prUrl(p))}">#${Number(p.pr)}</a> · ${esc(p.author)}</span></div></li>`).join("")}</ul></details>` : "") +
+    [...days].map(([day, rs]) => `<section class="day"><h2>${esc(dayLabel(day))}</h2><ul class="rows">${rs.map(item).join("")}</ul></section>`).join("") +
+    (wanted.length > visible.length ? `<button class="more" id="more">Show ${Math.min(PAGE, wanted.length - visible.length)} older pull requests</button>` : "") +
+    (loaded && sorted.length && !wanted.length && !queue.length ? `<p class="empty">No pull request matches “${esc($("find").value.trim())}”. Clear the search box to see every lesson.</p>` : "");
+  outside($("list"));
+  if (held) (held.startsWith("#") || held.startsWith("http") ? [...$("list").querySelectorAll("a")].find(a => a.getAttribute("href") === held) : $(held))?.focus({ preventScroll: true });
+  const details = $("queue");
+  if (details) details.ontoggle = () => { queueOpen = details.open };
+  const more = $("more");
+  if (more) more.onclick = () => { limit += PAGE; list(area) };
+}
+
+function route() {
+  const pr = location.hash.match(/^#pr-([a-z0-9._-]+)$/), area = location.hash.match(/^#area-([A-Za-z0-9._-]+)$/);
+  const wasList = !$("index").hidden;
+  if (pr && wasList) listY = window.scrollY;
+  $("index").hidden = !!pr; $("view").hidden = !pr;
+  if (!pr) {
+    const id = area ? area[1] : null;
+    if (id !== lastArea) { limit = PAGE; lastArea = id }
+    shownHtml = null; lastList = location.hash || "#"; document.title = "PR Lessons"; list(id);
+    if (!wasList) { window.scrollTo(0, listY); [...$("list").querySelectorAll("a")].find(a => a.getAttribute("href") === "#pr-" + lastPr)?.focus({ preventScroll: true }) }
+    return;
+  }
+  $("back").href = $("back2").href = lastList; lastPr = pr[1];
+  const row = rows.find(r => r.slug === pr[1] && r.html);
+  if (!row) {
+    shownHtml = null;
+    $("lesson").innerHTML = `<p class="empty">${failed ? "The lessons could not be loaded. Reload the page." : loaded ? "There is no lesson for this pull request. Go back to the list to see the lessons that exist." : "Loading the lesson…"}</p>`;
+    return;
+  }
+  if (shownHtml === row.html) return;  // a refresh of the list must not close an answer the reader opened
+  shownHtml = row.html; $("lesson").innerHTML = row.html; reach(); outside($("lesson"));
+  const head = $("lesson").querySelector("h2");
+  if (head) { head.tabIndex = -1; head.focus({ preventScroll: true }) } document.title = (row.headline || row.title) + " · PR Lessons"; window.scrollTo(0, 0);
+}
+
+// a link that leaves the page opens in a new tab, so the lesson stays open
+function outside(root) { for (const a of root.querySelectorAll('a[href^="http"]')) { a.target = "_blank"; a.rel = "noopener" } }
+// a figure is a keyboard stop only where it scrolls sideways
+function reach() { for (const box of document.querySelectorAll("#lesson .wide, #lesson .scroll")) { if (box.scrollWidth > box.clientWidth) box.tabIndex = 0; else box.removeAttribute("tabindex") } }
+addEventListener("resize", reach);
+addEventListener("hashchange", route);
+$("find").addEventListener("input", () => { limit = PAGE; list(lastArea) });
+route();
+(async () => {
+  const db = window.claude?.use ? await window.claude.use("db") : null;
+  if (!db) { loaded = true; route(); $("status").textContent = "Sign in to claude.ai to see the lessons. They are stored with this page."; return }
+  const slow = setTimeout(() => { if (!loaded) $("status").textContent = "The lessons are taking longer than usual to load." }, 10000);
+  db.collection("lessons").onSnapshot(snap => {
+    rows = snap.docs.map(d => d.data()).filter(r => r && r.slug && (r.html || r.skipped));
+    if (!snap.metadata?.fromCache || snap.docs.length) { loaded = true; clearTimeout(slow) }
+    failed = false; route();
+  }, () => { clearTimeout(slow); loaded = true; failed = true; route() });
+  db.collection("status").orderBy("day", "desc").limit(1).onSnapshot(snap => { const s = snap.docs[0]?.data() || {}; checked = s.day || null;
+    waitingAll = Array.isArray(s.waiting) ? s.waiting.filter(p => p && p.pr && p.repo) : [];
+    if ($("view").hidden) list(lastArea) }, () => {});
+})();
+</script>

@@ -1,0 +1,22 @@
+# phrase|what to write instead. A reader with English as a second language cannot decode these.
+take turns|say which one waits and until when
+takes turns|say which one waits and until when
+for want of|because there is no
+on the fly|say when it happens
+kicks in|starts, with what starts it
+falls through|say which case handles it next
+falls back|uses X when Y is missing
+under the hood|name the part that does it
+out of the box|by default
+boils down|say the result
+in a nutshell|say the result
+piggyback|say what carries what
+bubbles up|is returned to the caller
+short-circuit|stops at the first match
+rule of thumb|say the rule
+happy path|the case with no error
+on behalf of|for
+fan out|start one job per item
+fans out|starts one job per item
+same bucket|say which count or group it joins
+lands in|say where it is saved or counted
